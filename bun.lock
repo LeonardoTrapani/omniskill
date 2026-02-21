@@ -20,6 +20,22 @@
         "typescript": "catalog:",
       },
     },
+    "apps/cli": {
+      "name": "cli",
+      "dependencies": {
+        "@clack/prompts": "^1.0.1",
+        "@omniscient/api": "workspace:*",
+        "@omniscient/env": "workspace:*",
+        "@trpc/client": "catalog:",
+        "dotenv": "catalog:",
+        "picocolors": "^1.1.1",
+      },
+      "devDependencies": {
+        "@omniscient/config": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/server": {
       "name": "server",
       "dependencies": {
@@ -38,22 +54,6 @@
         "@omniscient/config": "workspace:*",
         "@types/bun": "catalog:",
         "tsdown": "^0.16.5",
-        "typescript": "catalog:",
-      },
-    },
-    "apps/tui": {
-      "name": "native",
-      "dependencies": {
-        "@clack/prompts": "^1.0.1",
-        "@omniscient/api": "workspace:*",
-        "@omniscient/env": "workspace:*",
-        "@trpc/client": "catalog:",
-        "dotenv": "catalog:",
-        "picocolors": "^1.1.1",
-      },
-      "devDependencies": {
-        "@omniscient/config": "workspace:*",
-        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -697,6 +697,8 @@
 
     "class-variance-authority": ["class-variance-authority@0.7.1", "", { "dependencies": { "clsx": "^2.1.1" } }, "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg=="],
 
+    "cli": ["cli@workspace:apps/cli"],
+
     "cli-cursor": ["cli-cursor@5.0.0", "", { "dependencies": { "restore-cursor": "^5.0.0" } }, "sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw=="],
 
     "cli-spinners": ["cli-spinners@2.9.2", "", {}, "sha512-ywqV+5MmyL4E7ybXgKys4DugZbX0FC6LnwrhjuykIjnK9k8OQacQ7axGKnjDXWNhns0xot3bZI5h55H8yo9cJg=="],
@@ -1044,8 +1046,6 @@
     "nanoid": ["nanoid@3.3.11", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w=="],
 
     "nanostores": ["nanostores@1.1.0", "", {}, "sha512-yJBmDJr18xy47dbNVlHcgdPrulSn1nhSE6Ns9vTG+Nx9VPT6iV1MD6aQFp/t52zpf82FhLLTXAXr30NuCnxvwA=="],
-
-    "native": ["native@workspace:apps/tui"],
 
     "negotiator": ["negotiator@1.0.0", "", {}, "sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg=="],
 

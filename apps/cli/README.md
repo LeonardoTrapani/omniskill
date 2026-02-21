@@ -1,4 +1,4 @@
-# native (CLI)
+# cli
 
 Omniscient command-line interface built with `@clack/prompts` and connected to the API via tRPC.
 
@@ -8,7 +8,7 @@ Omniscient command-line interface built with `@clack/prompts` and connected to t
 bun install
 ```
 
-Create `apps/tui/.env` (optional — defaults to local dev server):
+Create `apps/cli/.env` (optional — defaults to local dev server):
 
 ```
 SERVER_URL=http://localhost:3000
@@ -17,7 +17,13 @@ SERVER_URL=http://localhost:3000
 ## Run
 
 ```bash
-bun run dev:native
+bun cli
+```
+
+Or with file watching via turbo:
+
+```bash
+bun run dev:cli
 ```
 
 ## Available commands

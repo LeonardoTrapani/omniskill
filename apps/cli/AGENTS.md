@@ -4,11 +4,11 @@ This package is Omniscient's command-line interface, built with `@clack/prompts`
 
 ## Local defaults
 
-- Run from repo root with `bun run dev:native`.
+- Run from repo root with `bun cli` (direct) or `bun run dev:cli` (turbo with watch).
 - The CLI uses `@clack/prompts` for interactive prompts and `picocolors` for terminal output.
 - tRPC client lives in `src/lib/trpc.ts`; it imports the shared `AppRouter` type from `packages/api`.
 - Command modules live in `src/commands/`; each exports a single async function.
-- Use `@omniscient/env/native` for runtime config (`SERVER_URL`). Do not hardcode host URLs.
+- Use `@omniscient/env/cli` for runtime config (`SERVER_URL`). Do not hardcode host URLs.
 - Keep auth and session behavior aligned with server expectations.
 
 ## Validation

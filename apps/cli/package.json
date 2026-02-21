@@ -1,5 +1,5 @@
 {
-  "name": "native",
+  "name": "cli",
   "private": true,
   "type": "module",
   "module": "src/index.ts",

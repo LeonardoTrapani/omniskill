@@ -20,10 +20,10 @@
   "type": "module",
   "scripts": {
     "dev": "turbo dev",
-    "cli": "cd ../cli && bun dev",
+    "cli": "bun run --cwd apps/cli src/index.ts",
     "build": "turbo build",
     "check-types": "turbo check-types",
-    "dev:native": "turbo -F native dev",
+    "dev:cli": "turbo -F cli dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
     "db:push": "turbo -F @omniscient/db db:push",

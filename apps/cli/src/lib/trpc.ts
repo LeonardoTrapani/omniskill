@@ -1,6 +1,6 @@
 import type { AppRouter } from "@omniscient/api/routers/index";
 
-import { env } from "@omniscient/env/native";
+import { env } from "@omniscient/env/cli";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 
 export const trpc = createTRPCClient<AppRouter>({

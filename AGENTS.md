@@ -12,18 +12,19 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 
 ## Workspace map
 
-- `apps/tui`: command-line interface built with `@clack/prompts`, connected to the server via tRPC.
+- `apps/cli`: command-line interface built with `@clack/prompts`, connected to the server via tRPC.
 - `apps/web`: Next.js web console for managing skills, graph links, and account state.
 - `apps/server`: Hono host for Better Auth and tRPC endpoints.
 - `packages/api`: shared tRPC router and context.
 - `packages/auth`: Better Auth configuration and adapter wiring.
 - `packages/db`: Drizzle schema and migration workflows for Neon Postgres.
-- `packages/env`: typed runtime env contracts for server, web, and native CLI.
+- `packages/env`: typed runtime env contracts for server, web, and CLI.
 - `packages/config`: shared TypeScript config.
 
 ## Canonical commands
 
-- `bun run dev`, `bun run dev:web`, `bun run dev:server`, `bun run dev:native`
+- `bun run dev`, `bun run dev:web`, `bun run dev:server`, `bun run dev:cli`
+- `bun cli` (runs the CLI directly without turbo)
 - `bun run build`, `bun run check-types`, `bun run check`
 - `bun run db:push`, `bun run db:generate`, `bun run db:migrate`, `bun run db:studio`
 
@@ -31,13 +32,13 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 
 - Server env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`.
 - Web env: `NEXT_PUBLIC_SERVER_URL`.
-- Native CLI env: `SERVER_URL` (defaults to `http://localhost:3000`).
+- CLI env: `SERVER_URL` (defaults to `http://localhost:3000`).
 
 ## Progressive disclosure
 
 - `apps/web/AGENTS.md`
 - `apps/server/AGENTS.md`
-- `apps/tui/AGENTS.md`
+- `apps/cli/AGENTS.md`
 - `packages/db/AGENTS.md`
 - `docs/skills-schema.md`
 - `.agents/skills/turborepo/SKILL.md`
