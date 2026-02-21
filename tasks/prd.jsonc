@@ -43,7 +43,7 @@
         "Private resource lookup fails for non-owners without exposing record existence.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "add owner-authenticated create skill mutation",

@@ -220,9 +220,35 @@ export const skillsRouter = router({
         skillName: z.string(),
       }),
     )
-    .query(async () => {
-      // implemented in task 3
-      throw new Error("not implemented");
+    .query(async ({ ctx, input }) => {
+      const skillRows = await db
+        .select()
+        .from(skill)
+        .where(and(eq(skill.slug, input.skillSlug), visibilityFilter(ctx.session)));
+
+      const skillRow = skillRows[0];
+      if (!skillRow) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+
+      const resourceRows = await db
+        .select()
+        .from(skillResource)
+        .where(
+          and(eq(skillResource.skillId, skillRow.id), eq(skillResource.path, input.resourcePath)),
+        );
+
+      const resource = resourceRows[0];
+      if (!resource) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found" });
+      }
+
+      return {
+        ...resource,
+        skillId: skillRow.id,
+        skillSlug: skillRow.slug,
+        skillName: skillRow.name,
+      };
     }),
 
   create: protectedProcedure

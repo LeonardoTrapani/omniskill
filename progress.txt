@@ -33,3 +33,10 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - added `drizzle-orm` as direct dependency of `@omniscient/api`
 - fixed `z.record` to use zod v4 two-arg form throughout
 - typecheck + check pass clean
+
+### task 3: implement resource read by skill and path - DONE
+- implemented `skills.getResourceByPath` query with skillSlug + resourcePath inputs
+- applies same visibility filter as getBySlug: skill must be public or caller's own private
+- private skill resources return NOT_FOUND without leaking existence
+- returns resource fields + parent skill identity (skillId, skillSlug, skillName)
+- typecheck + check pass clean
