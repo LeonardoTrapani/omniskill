@@ -87,7 +87,7 @@
         "Malformed tokens do not produce link targets.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "auto-sync skill_link edges on create and update",

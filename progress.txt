@@ -15,6 +15,7 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - sub-routers mount directly on appRouter object (e.g. `skills: skillsRouter`)
 - neon-http driver does NOT support `db.transaction()` — use sequential queries or `db.batch()` instead
 - tRPC callerFactory: `t.createCallerFactory(appRouter)` for direct procedure calls in tests
+- mention parser: `packages/api/src/lib/mentions.ts` exports `parseMentions(markdown)` → `Mention[]`
 
 ---
 
@@ -60,3 +61,13 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - fixed neon-http transaction bug: replaced `db.transaction()` with sequential queries in both `create` and `update` (neon-http doesn't support transactions)
 - verified with 14 direct tRPC caller tests: auth/ownership guards, field persistence, resource CRUD, cascade deletion
 - typecheck + check pass clean
+
+### task 6: parse obsidian mentions from markdown - DONE
+- created `packages/api/src/lib/mentions.ts` with `parseMentions()` utility
+- regex scans line-by-line for `[[skill:<uuid>]]` and `[[resource:<uuid>]]` tokens
+- both `[[` and `]]` must appear on the same line (split-line tokens ignored)
+- only `skill:` and `resource:` prefixes accepted; malformed tokens silently skipped
+- results deduplicated by `type:targetId` key
+- case-insensitive matching (e.g. `[[Skill:...]]` works)
+- 15 unit tests covering: valid extraction, mixed text, multi-line, dedup, malformed tokens, edge cases
+- typecheck + tests pass clean
