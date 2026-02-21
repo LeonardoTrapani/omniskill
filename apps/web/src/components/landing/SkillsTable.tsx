@@ -123,7 +123,7 @@ export default function SkillsTable({
                   <div className="min-w-0 pr-4">
                     <div className="flex flex-wrap items-baseline gap-x-2">
                       <Link
-                        href={`/dashboard/skills/${skill.slug}`}
+                        href={`/dashboard/skills/${skill.id}`}
                         className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors"
                       >
                         {skill.name}

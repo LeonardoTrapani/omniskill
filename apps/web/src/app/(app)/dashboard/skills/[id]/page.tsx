@@ -5,8 +5,8 @@ import { authClient } from "@/lib/auth-client";
 
 import SkillDetail from "./skill-detail";
 
-export default async function SkillDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function SkillDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   const session = await authClient.getSession({
     fetchOptions: {
@@ -16,8 +16,8 @@ export default async function SkillDetailPage({ params }: { params: Promise<{ sl
   });
 
   if (!session?.user) {
-    redirect(`/login?next=${encodeURIComponent(`/dashboard/skills/${slug}`)}`);
+    redirect(`/login?next=${encodeURIComponent(`/dashboard/skills/${id}`)}`);
   }
 
-  return <SkillDetail slug={slug} />;
+  return <SkillDetail id={id} />;
 }

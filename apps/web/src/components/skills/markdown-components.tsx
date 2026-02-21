@@ -4,11 +4,11 @@ import { ResourceHoverLink, type ResourceLike } from "@/components/skills/resour
 import { Separator } from "@/components/ui/separator";
 
 export function createMarkdownComponents(options: {
-  skillSlug: string;
+  skillId: string;
   skillName?: string;
   findResourceByHref: (href: string) => ResourceLike | null;
 }) {
-  const { skillSlug, skillName, findResourceByHref } = options;
+  const { skillId, skillName, findResourceByHref } = options;
 
   return {
     h1: (props: ComponentPropsWithoutRef<"h1">) => (
@@ -41,7 +41,7 @@ export function createMarkdownComponents(options: {
 
       if (resource) {
         return (
-          <ResourceHoverLink resource={resource} skillSlug={skillSlug} skillName={skillName}>
+          <ResourceHoverLink resource={resource} skillId={skillId} skillName={skillName}>
             {children}
           </ResourceHoverLink>
         );

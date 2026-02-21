@@ -29,26 +29,26 @@ function formatDate(value: string | Date) {
   }).format(date);
 }
 
-export function buildResourceHref(skillSlug: string, resourcePath: string) {
-  const encodedSlug = encodeURIComponent(skillSlug);
+export function buildResourceHref(skillId: string, resourcePath: string) {
+  const encodedId = encodeURIComponent(skillId);
   const encodedPath = resourcePath
     .split("/")
     .filter(Boolean)
     .map((part) => encodeURIComponent(part))
     .join("/");
 
-  return `/dashboard/skills/${encodedSlug}/resources/${encodedPath}` as Route;
+  return `/dashboard/skills/${encodedId}/resources/${encodedPath}` as Route;
 }
 
 export function ResourceHoverLink({
   resource,
-  skillSlug,
+  skillId,
   skillName,
   className,
   children,
 }: {
   resource: ResourceLike;
-  skillSlug: string;
+  skillId: string;
   skillName?: string;
   className?: string;
   children?: ReactNode;
@@ -60,7 +60,7 @@ export function ResourceHoverLink({
     <HoverCard openDelay={120} closeDelay={80}>
       <HoverCardTrigger asChild>
         <Link
-          href={buildResourceHref(skillSlug, resource.path)}
+          href={buildResourceHref(skillId, resource.path)}
           className={className ?? "text-primary underline underline-offset-4"}
         >
           {children ?? resource.path}
@@ -72,7 +72,7 @@ export function ResourceHoverLink({
             <p className="font-medium text-sm truncate">{resource.path}</p>
             <Badge variant="outline">{resource.kind}</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">From skill: {skillName ?? skillSlug}</p>
+          <p className="text-xs text-muted-foreground">From skill: {skillName ?? "—"}</p>
           <Separator />
           <div className="rounded-none border border-border bg-secondary/20 p-3 min-w-0">
             <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">

@@ -124,12 +124,14 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
                   }
                 />
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => router.push(`/skills/${skill.slug}` as Route)}>
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/dashboard/skills/${skill.id}` as Route)}
+                  >
                     <Eye className="w-3.5 h-3.5" />
                     View
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => router.push(`/skills/${skill.slug}/edit` as Route)}
+                    onClick={() => router.push(`/dashboard/skills/${skill.id}/edit` as Route)}
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     Edit

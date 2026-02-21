@@ -142,8 +142,8 @@ export default function SkillGraph() {
           tooltip.style("opacity", "0");
         })
         .on("click", (_event, d) => {
-          if (d.type === "skill" && d.slug) {
-            router.push(`/skills/${d.slug}` as Route);
+          if (d.type === "skill") {
+            router.push(`/dashboard/skills/${d.id}` as Route);
           }
         });
 

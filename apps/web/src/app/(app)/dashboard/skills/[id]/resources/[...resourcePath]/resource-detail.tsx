@@ -27,16 +27,16 @@ function formatDate(value: string | Date) {
 }
 
 export default function ResourceDetail({
-  slug,
+  skillId,
   resourcePath,
 }: {
-  slug: string;
+  skillId: string;
   resourcePath: string;
 }) {
   const resourceQuery = useQuery(
-    trpc.skills.getResourceByPath.queryOptions({ skillSlug: slug, resourcePath }),
+    trpc.skills.getResourceBySkillIdAndPath.queryOptions({ skillId, resourcePath }),
   );
-  const skillQuery = useQuery(trpc.skills.getBySlug.queryOptions({ slug }));
+  const skillQuery = useQuery(trpc.skills.getById.queryOptions({ id: skillId }));
 
   const resources = skillQuery.data?.resources ?? [];
   const resourcesById = useMemo(
@@ -74,16 +74,16 @@ export default function ResourceDetail({
   const markdownComponents = useMemo(
     () =>
       createMarkdownComponents({
-        skillSlug: slug,
+        skillId,
         skillName: skillQuery.data?.name ?? resourceQuery.data?.skillName,
         findResourceByHref,
       }),
-    [slug, skillQuery.data?.name, resourceQuery.data?.skillName, resourcesById, resourcesByPath],
+    [skillId, skillQuery.data?.name, resourceQuery.data?.skillName, resourcesById, resourcesByPath],
   );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [slug, resourcePath]);
+  }, [skillId, resourcePath]);
 
   if (resourceQuery.isLoading) {
     return (
@@ -113,7 +113,7 @@ export default function ResourceDetail({
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-2">
-              <Link href="/skills">
+              <Link href={"/dashboard" as Route}>
                 <Button variant="outline">
                   <ArrowLeft />
                   Back to Skills
@@ -132,13 +132,13 @@ export default function ResourceDetail({
     <main className="min-h-screen bg-background px-6 py-8 md:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-4 flex flex-wrap gap-2">
-          <Link href="/skills">
+          <Link href={"/dashboard" as Route}>
             <Button variant="outline" size="sm">
               <ArrowLeft />
               Back to Skills
             </Button>
           </Link>
-          <Link href={`/dashboard/skills/${slug}` as Route}>
+          <Link href={`/dashboard/skills/${skillId}` as Route}>
             <Button variant="outline" size="sm">
               Parent Skill
               <ArrowUpRight />
@@ -211,7 +211,7 @@ export default function ResourceDetail({
                       <div key={item.id} className="border border-border px-3 py-2">
                         <div className="flex items-center justify-between gap-2">
                           <Link
-                            href={buildResourceHref(slug, item.path)}
+                            href={buildResourceHref(skillId, item.path)}
                             className="text-sm min-w-0 truncate text-primary underline underline-offset-4"
                           >
                             {item.path}
@@ -243,7 +243,7 @@ export default function ResourceDetail({
                 <div className="grid grid-cols-[112px_1fr] gap-2 text-sm">
                   <p className="text-muted-foreground">Parent Skill</p>
                   <Link
-                    href={`/dashboard/skills/${resource.skillSlug}` as Route}
+                    href={`/dashboard/skills/${resource.skillId}` as Route}
                     className="text-primary underline underline-offset-4"
                   >
                     {resource.skillName}

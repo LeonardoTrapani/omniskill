@@ -8,9 +8,9 @@ import ResourceDetail from "./resource-detail";
 export default async function ResourceDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string; resourcePath: string[] }>;
+  params: Promise<{ id: string; resourcePath: string[] }>;
 }) {
-  const { slug, resourcePath } = await params;
+  const { id, resourcePath } = await params;
 
   const session = await authClient.getSession({
     fetchOptions: {
@@ -21,7 +21,7 @@ export default async function ResourceDetailPage({
 
   if (!session?.user) {
     redirect(
-      `/login?next=${encodeURIComponent(`/dashboard/skills/${slug}/resources/${resourcePath.join("/")}`)}`,
+      `/login?next=${encodeURIComponent(`/dashboard/skills/${id}/resources/${resourcePath.join("/")}`)}`,
     );
   }
 
@@ -35,5 +35,5 @@ export default async function ResourceDetailPage({
     })
     .join("/");
 
-  return <ResourceDetail slug={slug} resourcePath={decodedResourcePath} />;
+  return <ResourceDetail skillId={id} resourcePath={decodedResourcePath} />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowUpRight, FileText, Network } from "lucide-react";
@@ -37,13 +38,13 @@ function displayValue(value: unknown) {
   return JSON.stringify(value);
 }
 
-export default function SkillDetail({ slug }: { slug: string }) {
-  const { data, isLoading, isError } = useQuery(trpc.skills.getBySlug.queryOptions({ slug }));
+export default function SkillDetail({ id }: { id: string }) {
+  const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [slug]);
+  }, [id]);
 
   const frontmatter = useMemo(() => (data ? jsonEntries(data.frontmatter) : []), [data]);
   const metadata = useMemo(() => (data ? jsonEntries(data.metadata) : []), [data]);
@@ -82,14 +83,16 @@ export default function SkillDetail({ slug }: { slug: string }) {
     return match ?? null;
   };
 
+  const skillId = data?.id ?? id;
+
   const markdownComponents = useMemo(
     () =>
       createMarkdownComponents({
-        skillSlug: data?.slug ?? slug,
+        skillId,
         skillName: data?.name,
         findResourceByHref,
       }),
-    [data?.name, data?.slug, slug, resourcesById, resourcesByPath],
+    [data?.name, skillId, resourcesById, resourcesByPath],
   );
 
   if (isLoading) {
@@ -121,7 +124,7 @@ export default function SkillDetail({ slug }: { slug: string }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/skills">
+              <Link href={"/dashboard" as Route}>
                 <Button variant="outline">
                   <ArrowLeft />
                   Back to Skills
@@ -138,7 +141,7 @@ export default function SkillDetail({ slug }: { slug: string }) {
     <main className="min-h-screen bg-background px-6 py-8 md:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-4">
-          <Link href="/skills">
+          <Link href={"/dashboard" as Route}>
             <Button variant="outline" size="sm">
               <ArrowLeft />
               Back to Skills
@@ -279,7 +282,7 @@ export default function SkillDetail({ slug }: { slug: string }) {
                           <div className="flex items-center justify-between gap-2">
                             <ResourceHoverLink
                               resource={resource}
-                              skillSlug={data.slug}
+                              skillId={data.id}
                               skillName={data.name}
                               className="text-sm truncate min-w-0 text-primary underline underline-offset-4"
                             >
