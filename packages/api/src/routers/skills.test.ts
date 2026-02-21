@@ -1009,7 +1009,7 @@ describe("rendering", () => {
 
     const result = await anonCaller().skills.getById({ id: source.id });
     expect(result.renderedMarkdown).toContain(
-      `Fetch the skill "Parent Skill" and get reference "helpers/util.ts".`,
+      `Fetch the skill "Parent Skill" and get reference [helpers/util.ts](resource://${res.id}).`,
     );
   });
 

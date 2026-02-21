@@ -5,8 +5,8 @@ import { skill, skillResource } from "@omniscient/db/schema/skills";
 
 import { parseMentions } from "./mentions";
 
-const SKILL_FALLBACK = "`(unknown skill)`";
-const RESOURCE_FALLBACK = "`(unknown resource)` in skill `(unknown skill)`";
+const SKILL_FALLBACK = `Fetch the skill "(unknown skill)" to get details.`;
+const RESOURCE_FALLBACK = `Fetch the skill "(unknown skill)" and get reference "(unknown resource)".`;
 
 export async function renderMentions(markdown: string, currentSkillId?: string): Promise<string> {
   const mentions = parseMentions(markdown);
@@ -15,22 +15,22 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
   const skillIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
   const resourceIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
 
-  // batch-fetch skill slugs
-  const skillSlugMap = new Map<string, string>();
+  // batch-fetch skill names
+  const skillNameMap = new Map<string, string>();
   if (skillIds.length > 0) {
     const rows = await db
-      .select({ id: skill.id, slug: skill.slug })
+      .select({ id: skill.id, name: skill.name })
       .from(skill)
       .where(inArray(skill.id, skillIds));
     for (const row of rows) {
-      skillSlugMap.set(row.id, row.slug);
+      skillNameMap.set(row.id, row.name);
     }
   }
 
-  // batch-fetch resource paths + parent skill slugs
+  // batch-fetch resource paths + parent skill names
   const resourceInfoMap = new Map<
     string,
-    { resourcePath: string; skillSlug: string; skillId: string }
+    { resourcePath: string; skillName: string; skillId: string }
   >();
   if (resourceIds.length > 0) {
     const rows = await db
@@ -43,21 +43,21 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
       .where(inArray(skillResource.id, resourceIds));
 
     const parentSkillIds = [...new Set(rows.map((r) => r.skillId))];
-    const parentSkillSlugMap = new Map<string, string>();
+    const parentSkillNameMap = new Map<string, string>();
     if (parentSkillIds.length > 0) {
       const parentRows = await db
-        .select({ id: skill.id, slug: skill.slug })
+        .select({ id: skill.id, name: skill.name })
         .from(skill)
         .where(inArray(skill.id, parentSkillIds));
       for (const row of parentRows) {
-        parentSkillSlugMap.set(row.id, row.slug);
+        parentSkillNameMap.set(row.id, row.name);
       }
     }
 
     for (const row of rows) {
       resourceInfoMap.set(row.id, {
         resourcePath: row.path,
-        skillSlug: parentSkillSlugMap.get(row.skillId) ?? "(unknown skill)",
+        skillName: parentSkillNameMap.get(row.skillId) ?? "(unknown skill)",
         skillId: row.skillId,
       });
     }
@@ -71,16 +71,18 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     const normalizedId = targetId.toLowerCase();
 
     if (normalizedType === "skill") {
-      const slug = skillSlugMap.get(normalizedId);
-      if (slug) return `\`${slug}\``;
+      const name = skillNameMap.get(normalizedId);
+      if (name) return `Fetch the skill "${name}" to get details.`;
       return SKILL_FALLBACK;
     }
 
     if (normalizedType === "resource") {
       const info = resourceInfoMap.get(normalizedId);
       if (info) {
-        if (currentSkillId && info.skillId === currentSkillId) return `\`${info.resourcePath}\``;
-        return `\`${info.resourcePath}\` in skill \`${info.skillSlug}\``;
+        if (currentSkillId && info.skillId === currentSkillId) {
+          return `See reference "${info.resourcePath}".`;
+        }
+        return `Fetch the skill "${info.skillName}" and get reference [${info.resourcePath}](resource://${normalizedId}).`;
       }
       return RESOURCE_FALLBACK;
     }

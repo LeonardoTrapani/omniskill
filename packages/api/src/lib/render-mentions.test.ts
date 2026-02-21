@@ -66,7 +66,7 @@ describe("renderMentions", () => {
     const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
     const result = await renderMentions(md);
     expect(result).toBe(
-      `See Fetch the skill "TypeScript Basics" and get reference "examples/hooks.ts". for examples.`,
+      `See Fetch the skill "TypeScript Basics" and get reference [examples/hooks.ts](resource://${RESOURCE_ID}). for examples.`,
     );
   });
 
