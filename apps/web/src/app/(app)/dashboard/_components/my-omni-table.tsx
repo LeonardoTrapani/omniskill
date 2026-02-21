@@ -63,9 +63,7 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
       {/* Table Header */}
       <div className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-3">
         <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">#</span>
-        <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">
-          SKILL
-        </span>
+        <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">SKILL</span>
         <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em] text-right">
           ACTIONS
         </span>
@@ -130,7 +128,9 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
                     <Eye className="w-3.5 h-3.5" />
                     View
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/skills/${skill.slug}/edit` as Route)}>
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/skills/${skill.slug}/edit` as Route)}
+                  >
                     <Pencil className="w-3.5 h-3.5" />
                     Edit
                   </DropdownMenuItem>

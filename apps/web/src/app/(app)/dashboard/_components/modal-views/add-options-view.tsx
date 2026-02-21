@@ -6,9 +6,7 @@ import { toast } from "sonner";
 
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
-type ModalAction =
-  | { type: "CUSTOMIZE_SKILL" }
-  | { type: "SKILL_CREATED" };
+type ModalAction = { type: "CUSTOMIZE_SKILL" } | { type: "SKILL_CREATED" };
 
 interface AddOptionsViewProps {
   skill: SelectedSkill;
@@ -52,9 +50,7 @@ export default function AddOptionsView({ skill, dispatch }: AddOptionsViewProps)
             <Copy className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
           )}
           <h3 className="text-sm font-semibold text-foreground mb-1">Add Raw</h3>
-          <p className="text-xs text-muted-foreground">
-            Add this skill as-is to your collection
-          </p>
+          <p className="text-xs text-muted-foreground">Add this skill as-is to your collection</p>
         </button>
 
         <button

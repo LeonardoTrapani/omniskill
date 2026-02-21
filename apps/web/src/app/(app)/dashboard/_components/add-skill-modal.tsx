@@ -2,11 +2,7 @@
 
 import { ArrowLeft, X } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useModalMachine } from "../_hooks/use-modal-machine";
 import type { ModalView } from "../_hooks/use-modal-machine";

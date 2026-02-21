@@ -31,9 +31,7 @@ export default function SkillGraph() {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(null);
 
-  const { data, isLoading, isError } = useQuery(
-    trpc.skills.graph.queryOptions(),
-  );
+  const { data, isLoading, isError } = useQuery(trpc.skills.graph.queryOptions());
 
   const skillCount = data?.nodes.filter((n) => n.type === "skill").length ?? 0;
   const resourceCount = data?.nodes.filter((n) => n.type === "resource").length ?? 0;
@@ -102,12 +100,8 @@ export default function SkillGraph() {
       node
         .append("circle")
         .attr("r", (d) => (d.type === "skill" ? 8 : 3.5))
-        .attr("fill", (d) =>
-          d.type === "skill" ? "var(--primary)" : "var(--muted-foreground)",
-        )
-        .attr("stroke", (d) =>
-          d.type === "skill" ? "var(--primary)" : "none",
-        )
+        .attr("fill", (d) => (d.type === "skill" ? "var(--primary)" : "var(--muted-foreground)"))
+        .attr("stroke", (d) => (d.type === "skill" ? "var(--primary)" : "none"))
         .attr("stroke-width", (d) => (d.type === "skill" ? 1.5 : 0))
         .attr("stroke-opacity", 0.3);
 
@@ -185,23 +179,19 @@ export default function SkillGraph() {
         )
         .force(
           "charge",
-          d3.forceManyBody<GraphNode>().strength((d) =>
-            d.type === "skill" ? -300 : -80,
-          ),
+          d3.forceManyBody<GraphNode>().strength((d) => (d.type === "skill" ? -300 : -80)),
         )
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force(
           "collide",
-          d3.forceCollide<GraphNode>().radius((d) =>
-            d.type === "skill" ? 30 : 12,
-          ),
+          d3.forceCollide<GraphNode>().radius((d) => (d.type === "skill" ? 30 : 12)),
         )
         .on("tick", () => {
           link
-            .attr("x1", (d) => ((d.source as GraphNode).x ?? 0))
-            .attr("y1", (d) => ((d.source as GraphNode).y ?? 0))
-            .attr("x2", (d) => ((d.target as GraphNode).x ?? 0))
-            .attr("y2", (d) => ((d.target as GraphNode).y ?? 0));
+            .attr("x1", (d) => (d.source as GraphNode).x ?? 0)
+            .attr("y1", (d) => (d.source as GraphNode).y ?? 0)
+            .attr("x2", (d) => (d.target as GraphNode).x ?? 0)
+            .attr("y2", (d) => (d.target as GraphNode).y ?? 0);
 
           node.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
         });
@@ -249,11 +239,7 @@ export default function SkillGraph() {
       </div>
 
       {/* Graph container */}
-      <div
-        ref={containerRef}
-        style={{ height: 450 }}
-        className="relative w-full bg-background"
-      >
+      <div ref={containerRef} style={{ height: 450 }} className="relative w-full bg-background">
         {/* Tooltip */}
         <div
           ref={tooltipRef}

@@ -5,9 +5,7 @@ import type { Dispatch } from "react";
 
 import type { ModalView } from "../../_hooks/use-modal-machine";
 
-type ModalAction =
-  | { type: "CHOOSE_EXISTING" }
-  | { type: "CHOOSE_CREATE_NEW" };
+type ModalAction = { type: "CHOOSE_EXISTING" } | { type: "CHOOSE_CREATE_NEW" };
 
 interface ChoiceViewProps {
   dispatch: Dispatch<ModalAction>;

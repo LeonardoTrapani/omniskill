@@ -32,12 +32,36 @@ function debug(...args: unknown[]) {
 }
 
 const BINARY_EXTENSIONS = new Set([
-  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".svg",
-  ".ttf", ".otf", ".woff", ".woff2", ".eot",
-  ".pdf", ".zip", ".gz", ".tar", ".bz2",
-  ".mp3", ".mp4", ".wav", ".ogg", ".webm",
-  ".exe", ".dll", ".so", ".dylib",
-  ".bin", ".dat", ".db", ".sqlite",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".ico",
+  ".svg",
+  ".ttf",
+  ".otf",
+  ".woff",
+  ".woff2",
+  ".eot",
+  ".pdf",
+  ".zip",
+  ".gz",
+  ".tar",
+  ".bz2",
+  ".mp3",
+  ".mp4",
+  ".wav",
+  ".ogg",
+  ".webm",
+  ".exe",
+  ".dll",
+  ".so",
+  ".dylib",
+  ".bin",
+  ".dat",
+  ".db",
+  ".sqlite",
 ]);
 
 type ResourceKind = "reference" | "script" | "asset" | "other";
@@ -58,7 +82,10 @@ function classifyResource(relPath: string): ResourceKind {
   return "other";
 }
 
-async function walkDir(dir: string, baseDir: string): Promise<Array<{ path: string; kind: ResourceKind; content: string }>> {
+async function walkDir(
+  dir: string,
+  baseDir: string,
+): Promise<Array<{ path: string; kind: ResourceKind; content: string }>> {
   const entries: Array<{ path: string; kind: ResourceKind; content: string }> = [];
   let items: string[];
   try {
@@ -72,10 +99,17 @@ async function walkDir(dir: string, baseDir: string): Promise<Array<{ path: stri
     const info = await stat(fullPath);
     if (info.isDirectory()) {
       const nestedSkill = join(fullPath, "SKILL.md");
-      try { await stat(nestedSkill); continue; } catch {}
+      try {
+        await stat(nestedSkill);
+        continue;
+      } catch {}
       const sub = await walkDir(fullPath, baseDir);
       entries.push(...sub);
-    } else if (info.isFile() && item !== "SKILL.md" && !BINARY_EXTENSIONS.has(extname(item).toLowerCase())) {
+    } else if (
+      info.isFile() &&
+      item !== "SKILL.md" &&
+      !BINARY_EXTENSIONS.has(extname(item).toLowerCase())
+    ) {
       const content = await readFile(fullPath, "utf-8");
       entries.push({ path: relPath, kind: classifyResource(relPath), content });
     }
@@ -109,10 +143,14 @@ async function main() {
 
   for (const [slug, skillId] of slugToId) {
     const skillDir = join(parsedSkillsDir, slug);
-    try { await stat(skillDir); } catch { continue; }
+    try {
+      await stat(skillDir);
+    } catch {
+      continue;
+    }
 
     const diskResources = await walkDir(skillDir, skillDir);
-    const missing = diskResources.filter(r => !existingSet.has(`${skillId}:${r.path}`));
+    const missing = diskResources.filter((r) => !existingSet.has(`${skillId}:${r.path}`));
 
     if (missing.length === 0) continue;
 

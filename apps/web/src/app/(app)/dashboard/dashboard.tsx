@@ -19,9 +19,7 @@ export default function Dashboard({ session }: { session: typeof authClient.$Inf
     name: string;
   } | null>(null);
 
-  const { data } = useQuery(
-    trpc.skills.listByOwner.queryOptions({ limit: 50 }),
-  );
+  const { data } = useQuery(trpc.skills.listByOwner.queryOptions({ limit: 50 }));
 
   return (
     <div className="max-w-5xl mx-auto px-6 md:px-10 py-8 space-y-6">
@@ -31,9 +29,7 @@ export default function Dashboard({ session }: { session: typeof authClient.$Inf
 
       <MyOmniTable
         onAddSkill={() => setModalOpen(true)}
-        onDelete={(skillId, skillName) =>
-          setDeleteTarget({ id: skillId, name: skillName })
-        }
+        onDelete={(skillId, skillName) => setDeleteTarget({ id: skillId, name: skillName })}
       />
 
       <AddSkillModal open={modalOpen} onClose={() => setModalOpen(false)} />

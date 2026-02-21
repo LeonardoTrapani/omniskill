@@ -127,10 +127,7 @@ export default function ChatView({ mode, selectedSkill }: ChatViewProps) {
 
       {/* Prompt Input */}
       <div className="mt-3 pt-3 border-t border-border">
-        <PromptInput
-          onSubmit={handleSubmit}
-          className="border border-border"
-        >
+        <PromptInput onSubmit={handleSubmit} className="border border-border">
           <PromptInputTextarea
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
@@ -143,10 +140,7 @@ export default function ChatView({ mode, selectedSkill }: ChatViewProps) {
           />
           <PromptInputFooter>
             <div />
-            <PromptInputSubmit
-              status={status}
-              disabled={!input.trim() && status !== "streaming"}
-            />
+            <PromptInputSubmit status={status} disabled={!input.trim() && status !== "streaming"} />
           </PromptInputFooter>
         </PromptInput>
       </div>

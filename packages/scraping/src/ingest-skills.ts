@@ -113,9 +113,7 @@ async function importSkill(skillDir: string): Promise<ImportedSkill | null> {
       : null;
 
   const sourceUrl =
-    typeof parsed.frontmatter.sourceUrl === "string"
-      ? parsed.frontmatter.sourceUrl
-      : null;
+    typeof parsed.frontmatter.sourceUrl === "string" ? parsed.frontmatter.sourceUrl : null;
 
   if (dryRun) {
     log(`[DRY RUN] Would upsert skill: ${slug} (${parsed.name})`);
@@ -139,10 +137,7 @@ async function importSkill(skillDir: string): Promise<ImportedSkill | null> {
     })
     .onConflictDoUpdate({
       target: skill.slug,
-      targetWhere: and(
-        eq(skill.visibility, "public"),
-        isNull(skill.ownerUserId),
-      ),
+      targetWhere: and(eq(skill.visibility, "public"), isNull(skill.ownerUserId)),
       set: {
         name: parsed.name,
         description: parsed.description,

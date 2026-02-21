@@ -15,8 +15,5 @@ export async function POST() {
   //
   // return result.toDataStreamResponse();
 
-  return Response.json(
-    { error: "AI provider not configured yet" },
-    { status: 501 },
-  );
+  return Response.json({ error: "AI provider not configured yet" }, { status: 501 });
 }

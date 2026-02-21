@@ -136,9 +136,7 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
                   <span className="text-sm font-semibold text-foreground">{skill.name}</span>
                   <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {skill.description}
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{skill.description}</p>
               </div>
               <button
                 onClick={() =>
