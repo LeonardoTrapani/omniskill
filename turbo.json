@@ -30,6 +30,11 @@
     "db:studio": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "scrape:ingest": { "cache": false },
+    "scrape:import-missing": { "cache": false },
+    "scrape:resolve-refs": { "cache": false },
+    "scrape:sync-links": { "cache": false },
+    "scrape:pipeline": { "cache": false }
   }
 }
