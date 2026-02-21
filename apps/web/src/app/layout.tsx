@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Geist_Mono } from "next/font/google";
+import { Geist_Mono, Google_Sans_Code } from "next/font/google";
 
 import "./globals.css";
 import Providers from "@/components/providers";
@@ -8,6 +8,11 @@ import Providers from "@/components/providers";
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+});
+
+const googleSansCode = Google_Sans_Code({
+  subsets: ["latin"],
+  variable: "--font-google-sans-code",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistMono.variable} antialiased`}>
+      <body className={`${geistMono.variable} ${googleSansCode.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -3,7 +3,7 @@ import { and, desc, eq, gt, ilike, inArray, lt, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
-import { skill, skillResource } from "@omniscient/db/schema/skills";
+import { skill, skillLink, skillResource } from "@omniscient/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { syncAutoLinks } from "../lib/link-sync";
@@ -136,6 +136,72 @@ export const skillsRouter = router({
 
       if (visibility) {
         conditions.push(eq(skill.visibility, visibility));
+      }
+
+      if (cursor) {
+        const cursorRows = await db
+          .select({ id: skill.id, createdAt: skill.createdAt })
+          .from(skill)
+          .where(and(eq(skill.id, cursor), ...conditions));
+
+        const cursorRow = cursorRows[0];
+        if (!cursorRow) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cursor" });
+        }
+
+        conditions.push(
+          or(
+            lt(skill.createdAt, cursorRow.createdAt),
+            and(eq(skill.createdAt, cursorRow.createdAt), gt(skill.id, cursorRow.id)),
+          )!,
+        );
+      }
+
+      const rows = await db
+        .select()
+        .from(skill)
+        .where(and(...conditions))
+        .orderBy(desc(skill.createdAt), skill.id)
+        .limit(limit + 1);
+
+      const hasMore = rows.length > limit;
+      const items = hasMore ? rows.slice(0, limit) : rows;
+
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          ownerUserId: row.ownerUserId,
+          visibility: row.visibility,
+          slug: row.slug,
+          name: row.name,
+          description: row.description,
+          frontmatter: row.frontmatter,
+          metadata: row.metadata,
+          sourceUrl: row.sourceUrl,
+          sourceIdentifier: row.sourceIdentifier,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        })),
+        nextCursor: hasMore ? items[items.length - 1]!.id : null,
+      };
+    }),
+
+  listByOwner: protectedProcedure
+    .input(
+      cursorPaginationInput.extend({
+        search: z.string().optional(),
+      }),
+    )
+    .output(paginatedSkillList)
+    .query(async ({ ctx, input }) => {
+      const { cursor, limit, search } = input;
+      const userId = ctx.session.user.id;
+
+      const conditions = [eq(skill.ownerUserId, userId)];
+
+      if (search) {
+        const pattern = `%${search}%`;
+        conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
       }
 
       if (cursor) {
@@ -442,6 +508,131 @@ export const skillsRouter = router({
         .where(eq(skillResource.skillId, input.id));
 
       return await toSkillOutput(updatedSkill, resources);
+    }),
+
+  graph: protectedProcedure
+    .output(
+      z.object({
+        nodes: z.array(
+          z.object({
+            id: z.string(),
+            type: z.enum(["skill", "resource"]),
+            label: z.string(),
+            description: z.string().nullable(),
+            slug: z.string().nullable(),
+            parentSkillId: z.string().nullable(),
+            kind: z.string().nullable(),
+          }),
+        ),
+        edges: z.array(
+          z.object({
+            id: z.string(),
+            source: z.string(),
+            target: z.string(),
+            kind: z.string(),
+          }),
+        ),
+      }),
+    )
+    .query(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+
+      // Fetch all user's skills
+      const skills = await db
+        .select()
+        .from(skill)
+        .where(eq(skill.ownerUserId, userId));
+
+      if (skills.length === 0) {
+        return { nodes: [], edges: [] };
+      }
+
+      const skillIds = skills.map((s) => s.id);
+
+      // Fetch all resources for those skills
+      const resources = await db
+        .select()
+        .from(skillResource)
+        .where(inArray(skillResource.skillId, skillIds));
+
+      const resourceIds = resources.map((r) => r.id);
+
+      // Build node maps for quick lookup
+      const ownedNodeIds = new Set([...skillIds, ...resourceIds]);
+
+      // Fetch all skill_links referencing any owned skill/resource
+      const links =
+        skillIds.length > 0 || resourceIds.length > 0
+          ? await db
+              .select()
+              .from(skillLink)
+              .where(
+                or(
+                  ...(skillIds.length > 0
+                    ? [
+                        inArray(skillLink.sourceSkillId, skillIds),
+                        inArray(skillLink.targetSkillId, skillIds),
+                      ]
+                    : []),
+                  ...(resourceIds.length > 0
+                    ? [
+                        inArray(skillLink.sourceResourceId, resourceIds),
+                        inArray(skillLink.targetResourceId, resourceIds),
+                      ]
+                    : []),
+                ),
+              )
+          : [];
+
+      // Build nodes
+      const nodes = [
+        ...skills.map((s) => ({
+          id: s.id,
+          type: "skill" as const,
+          label: s.name,
+          description: s.description,
+          slug: s.slug,
+          parentSkillId: null,
+          kind: null,
+        })),
+        ...resources.map((r) => ({
+          id: r.id,
+          type: "resource" as const,
+          label: r.path,
+          description: null,
+          slug: null,
+          parentSkillId: r.skillId,
+          kind: r.kind,
+        })),
+      ];
+
+      // Build edges from skill_links — only include where both endpoints are owned
+      const edges: { id: string; source: string; target: string; kind: string }[] = [];
+
+      for (const link of links) {
+        const sourceId = link.sourceSkillId ?? link.sourceResourceId;
+        const targetId = link.targetSkillId ?? link.targetResourceId;
+        if (sourceId && targetId && ownedNodeIds.has(sourceId) && ownedNodeIds.has(targetId)) {
+          edges.push({
+            id: link.id,
+            source: sourceId,
+            target: targetId,
+            kind: link.kind,
+          });
+        }
+      }
+
+      // Add implicit parent edges: each resource → its parent skill
+      for (const r of resources) {
+        edges.push({
+          id: `parent-${r.id}`,
+          source: r.skillId,
+          target: r.id,
+          kind: "parent",
+        });
+      }
+
+      return { nodes, edges };
     }),
 
   delete: protectedProcedure
