@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, ilike, inArray, lt, or } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gt, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
@@ -92,7 +92,7 @@ async function toSkillOutput(
   row: typeof skill.$inferSelect,
   resources: (typeof skillResource.$inferSelect)[],
 ) {
-  const renderedMarkdown = await renderMentions(row.skillMarkdown);
+  const renderedMarkdown = await renderMentions(row.skillMarkdown, row.id);
 
   return {
     id: row.id,
@@ -113,9 +113,172 @@ async function toSkillOutput(
   };
 }
 
+// -- search helpers --
+
+// strict_word_similarity normalizes by max(|trgm(query)|, |trgm(best_substr)|),
+// producing tighter scores than word_similarity which only uses |trgm(query)|.
+const FUZZY_THRESHOLD = 0.15;
+
+function extractSnippet(text: string, query: string, contextChars = 80): string {
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return text.slice(0, contextChars).replace(/\n/g, " ").trim() + "...";
+
+  const start = Math.max(0, idx - Math.floor(contextChars / 2));
+  const end = Math.min(text.length, idx + query.length + Math.floor(contextChars / 2));
+  let snippet = text.slice(start, end).replace(/\n/g, " ").trim();
+  if (start > 0) snippet = "..." + snippet;
+  if (end < text.length) snippet += "...";
+  return snippet;
+}
+
+/**
+ * Build the WHERE condition for fuzzy search.
+ * Uses strict_word_similarity for >= 3 char queries (typo tolerance),
+ * falls back to ILIKE for shorter queries where trigrams don't work well.
+ */
+function searchCondition(query: string) {
+  const pattern = `%${query}%`;
+
+  if (query.length >= 3) {
+    return or(
+      sql`strict_word_similarity(${query}, ${skill.name}) > ${FUZZY_THRESHOLD}`,
+      sql`strict_word_similarity(${query}, ${skill.description}) > ${FUZZY_THRESHOLD}`,
+      sql`strict_word_similarity(${query}, ${skill.slug}) > ${FUZZY_THRESHOLD}`,
+      ilike(skill.skillMarkdown, pattern),
+    );
+  }
+
+  return or(
+    ilike(skill.name, pattern),
+    ilike(skill.description, pattern),
+    ilike(skill.skillMarkdown, pattern),
+  );
+}
+
+// -- search output --
+
+const searchResultItem = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string(),
+  visibility: visibilityEnum,
+  matchType: z.enum(["title", "description", "content"]),
+  score: z.number(),
+  snippet: z.string().nullable(),
+  updatedAt: z.date(),
+});
+
 // -- router --
 
 export const skillsRouter = router({
+  search: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1),
+        scope: z.enum(["own", "all"]).default("own"),
+        limit: z.number().int().min(1).max(50).default(5),
+      }),
+    )
+    .output(z.object({ items: z.array(searchResultItem), total: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { query, scope, limit } = input;
+
+      if (scope === "own" && !ctx.session) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Authentication required to search own skills",
+        });
+      }
+
+      const pattern = `%${query}%`;
+      const useFuzzy = query.length >= 3;
+
+      const scopeCondition =
+        scope === "own"
+          ? eq(skill.ownerUserId, ctx.session!.user.id)
+          : visibilityFilter(ctx.session);
+
+      const matchCondition = searchCondition(query);
+      const whereClause = and(matchCondition, scopeCondition);
+
+      // additive score: trigram similarity base + exact substring bonuses.
+      // the ILIKE bonuses ensure "docker" in a description outranks "doc" trigram overlaps.
+      const scoreExpr = useFuzzy
+        ? sql<number>`LEAST(
+            GREATEST(strict_word_similarity(${query}, ${skill.name}), strict_word_similarity(${query}, ${skill.slug}))
+            + strict_word_similarity(${query}, ${skill.description}) * 0.3
+            + CASE WHEN ${skill.name} ILIKE ${pattern} OR ${skill.slug} ILIKE ${pattern} THEN 0.5
+                   WHEN ${skill.description} ILIKE ${pattern} THEN 0.2
+                   WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 0.05
+                   ELSE 0 END,
+            1.0)`
+        : sql<number>`CASE
+            WHEN ${skill.name} ILIKE ${pattern} THEN 1.0
+            WHEN ${skill.description} ILIKE ${pattern} THEN 0.8
+            WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 0.5
+            ELSE 0
+          END`;
+
+      const [rows, countResult] = await Promise.all([
+        db
+          .select({
+            ...getTableColumns(skill),
+            score: scoreExpr.as("score"),
+            nameScore: useFuzzy
+              ? sql<number>`strict_word_similarity(${query}, ${skill.name})`.as("name_score")
+              : sql<number>`CASE WHEN ${skill.name} ILIKE ${pattern} THEN 1.0 ELSE 0 END`.as(
+                  "name_score",
+                ),
+            descScore: useFuzzy
+              ? sql<number>`strict_word_similarity(${query}, ${skill.description})`.as("desc_score")
+              : sql<number>`CASE WHEN ${skill.description} ILIKE ${pattern} THEN 1.0 ELSE 0 END`.as(
+                  "desc_score",
+                ),
+            contentMatch: sql<boolean>`${skill.skillMarkdown} ILIKE ${pattern}`.as("content_match"),
+          })
+          .from(skill)
+          .where(whereClause)
+          .orderBy(sql`score DESC`, skill.name)
+          .limit(limit),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(skill)
+          .where(whereClause),
+      ]);
+
+      const total = countResult[0]?.count ?? 0;
+
+      const items = rows.map((row) => {
+        const matchType: "title" | "description" | "content" =
+          row.nameScore >= row.descScore && row.nameScore > 0.1
+            ? "title"
+            : row.descScore > 0.1
+              ? "description"
+              : "content";
+
+        const snippet =
+          matchType === "content" && row.contentMatch
+            ? extractSnippet(row.skillMarkdown, query)
+            : null;
+
+        return {
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          description: row.description,
+          visibility: row.visibility,
+          matchType,
+          score: Math.round(row.score * 100) / 100,
+          snippet,
+          updatedAt: row.updatedAt,
+        };
+      });
+
+      return { items, total };
+    }),
+
   list: publicProcedure
     .input(
       cursorPaginationInput.extend({
@@ -538,10 +701,7 @@ export const skillsRouter = router({
       const userId = ctx.session.user.id;
 
       // Fetch all user's skills
-      const skills = await db
-        .select()
-        .from(skill)
-        .where(eq(skill.ownerUserId, userId));
+      const skills = await db.select().from(skill).where(eq(skill.ownerUserId, userId));
 
       if (skills.length === 0) {
         return { nodes: [], edges: [] };
@@ -633,6 +793,79 @@ export const skillsRouter = router({
       }
 
       return { nodes, edges };
+    }),
+
+  duplicate: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        slug: z.string().min(1).optional(),
+      }),
+    )
+    .output(skillOutput)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // fetch source skill + resources (respects visibility)
+      const [source] = await db
+        .select()
+        .from(skill)
+        .where(and(eq(skill.id, input.id), visibilityFilter(ctx.session)));
+
+      if (!source) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+
+      const sourceResources = await db
+        .select()
+        .from(skillResource)
+        .where(eq(skillResource.skillId, source.id));
+
+      const slug = input.slug || source.slug;
+
+      const [created] = await db
+        .insert(skill)
+        .values({
+          ownerUserId: userId,
+          slug,
+          name: source.name,
+          description: source.description,
+          skillMarkdown: source.skillMarkdown,
+          visibility: "private",
+          frontmatter: source.frontmatter,
+          metadata: { importedFrom: { skillId: source.id, slug: source.slug } },
+          sourceUrl: source.sourceUrl,
+          sourceIdentifier: source.sourceIdentifier,
+        })
+        .returning();
+
+      if (!created) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to duplicate skill",
+        });
+      }
+
+      let resources: (typeof skillResource.$inferSelect)[] = [];
+
+      if (sourceResources.length > 0) {
+        resources = await db
+          .insert(skillResource)
+          .values(
+            sourceResources.map((r) => ({
+              skillId: created.id,
+              path: r.path,
+              kind: r.kind,
+              content: r.content,
+              metadata: r.metadata,
+            })),
+          )
+          .returning();
+      }
+
+      await syncAutoLinks(created.id, source.skillMarkdown, userId);
+
+      return await toSkillOutput(created, resources);
     }),
 
   delete: protectedProcedure

@@ -122,9 +122,12 @@ export default function SkillsTable({
                   {/* Skill name + slug */}
                   <div className="min-w-0 pr-4">
                     <div className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <Link
+                        href={`/dashboard/skills/${skill.slug}`}
+                        className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors"
+                      >
                         {skill.name}
-                      </span>
+                      </Link>
                       <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
                       {skill.visibility === "private" && (
                         <span className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5">
