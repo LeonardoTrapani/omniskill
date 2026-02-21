@@ -1,4 +1,9 @@
+import { TRPCError } from "@trpc/server";
+import { and, desc, eq, gt, ilike, or } from "drizzle-orm";
 import { z } from "zod";
+
+import { db } from "@omniscient/db";
+import { skill, skillResource } from "@omniscient/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../index";
 
@@ -22,7 +27,7 @@ const resourceOutput = z.object({
   path: z.string(),
   kind: resourceKindEnum,
   content: z.string(),
-  metadata: z.record(z.unknown()),
+  metadata: z.record(z.string(), z.unknown()),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -31,7 +36,7 @@ const resourceInput = z.object({
   path: z.string().min(1),
   kind: resourceKindEnum.default("reference"),
   content: z.string(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
 // -- skill output --
@@ -45,8 +50,8 @@ const skillOutput = z.object({
   description: z.string(),
   originalMarkdown: z.string(),
   renderedMarkdown: z.string(),
-  frontmatter: z.record(z.unknown()),
-  metadata: z.record(z.unknown()),
+  frontmatter: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()),
   sourceUrl: z.string().nullable(),
   sourceIdentifier: z.string().nullable(),
   resources: z.array(resourceOutput),
@@ -65,6 +70,45 @@ const paginatedSkillList = z.object({
   nextCursor: z.string().uuid().nullable(),
 });
 
+// -- helpers --
+
+type Session = { user: { id: string } };
+
+/** visibility filter: public skills + caller's own private skills */
+function visibilityFilter(session: Session | null) {
+  if (session) {
+    return or(
+      eq(skill.visibility, "public"),
+      and(eq(skill.visibility, "private"), eq(skill.ownerUserId, session.user.id)),
+    );
+  }
+  return eq(skill.visibility, "public");
+}
+
+/** map a skill row + resources array to the output shape */
+function toSkillOutput(
+  row: typeof skill.$inferSelect,
+  resources: (typeof skillResource.$inferSelect)[],
+) {
+  return {
+    id: row.id,
+    ownerUserId: row.ownerUserId,
+    visibility: row.visibility,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    originalMarkdown: row.skillMarkdown,
+    renderedMarkdown: row.skillMarkdown, // task 7 adds actual rendering
+    frontmatter: row.frontmatter,
+    metadata: row.metadata,
+    sourceUrl: row.sourceUrl,
+    sourceIdentifier: row.sourceIdentifier,
+    resources,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 // -- router --
 
 export const skillsRouter = router({
@@ -75,23 +119,91 @@ export const skillsRouter = router({
       }),
     )
     .output(paginatedSkillList)
-    .query(async () => {
-      // implemented in task 2
-      throw new Error("not implemented");
+    .query(async ({ ctx, input }) => {
+      const { cursor, limit, search } = input;
+
+      const conditions = [visibilityFilter(ctx.session)];
+
+      if (cursor) {
+        conditions.push(gt(skill.id, cursor));
+      }
+
+      if (search) {
+        const pattern = `%${search}%`;
+        conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
+      }
+
+      const rows = await db
+        .select()
+        .from(skill)
+        .where(and(...conditions))
+        .orderBy(desc(skill.createdAt), skill.id)
+        .limit(limit + 1);
+
+      const hasMore = rows.length > limit;
+      const items = hasMore ? rows.slice(0, limit) : rows;
+
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          ownerUserId: row.ownerUserId,
+          visibility: row.visibility,
+          slug: row.slug,
+          name: row.name,
+          description: row.description,
+          frontmatter: row.frontmatter,
+          metadata: row.metadata,
+          sourceUrl: row.sourceUrl,
+          sourceIdentifier: row.sourceIdentifier,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        })),
+        nextCursor: hasMore ? items[items.length - 1]!.id : null,
+      };
     }),
 
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .output(skillOutput)
-    .query(async () => {
-      throw new Error("not implemented");
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(skill)
+        .where(and(eq(skill.id, input.id), visibilityFilter(ctx.session)));
+
+      const row = rows[0];
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+
+      const resources = await db
+        .select()
+        .from(skillResource)
+        .where(eq(skillResource.skillId, row.id));
+
+      return toSkillOutput(row, resources);
     }),
 
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
     .output(skillOutput)
-    .query(async () => {
-      throw new Error("not implemented");
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(skill)
+        .where(and(eq(skill.slug, input.slug), visibilityFilter(ctx.session)));
+
+      const row = rows[0];
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+
+      const resources = await db
+        .select()
+        .from(skillResource)
+        .where(eq(skillResource.skillId, row.id));
+
+      return toSkillOutput(row, resources);
     }),
 
   getResourceByPath: publicProcedure
@@ -109,6 +221,7 @@ export const skillsRouter = router({
       }),
     )
     .query(async () => {
+      // implemented in task 3
       throw new Error("not implemented");
     }),
 
@@ -120,8 +233,8 @@ export const skillsRouter = router({
         description: z.string().min(1),
         skillMarkdown: z.string(),
         visibility: visibilityEnum.default("private"),
-        frontmatter: z.record(z.unknown()).default({}),
-        metadata: z.record(z.unknown()).default({}),
+        frontmatter: z.record(z.string(), z.unknown()).default({}),
+        metadata: z.record(z.string(), z.unknown()).default({}),
         sourceUrl: z.string().url().nullish(),
         sourceIdentifier: z.string().nullish(),
         resources: z.array(resourceInput).default([]),
@@ -141,8 +254,8 @@ export const skillsRouter = router({
         description: z.string().min(1).optional(),
         skillMarkdown: z.string().optional(),
         visibility: visibilityEnum.optional(),
-        frontmatter: z.record(z.unknown()).optional(),
-        metadata: z.record(z.unknown()).optional(),
+        frontmatter: z.record(z.string(), z.unknown()).optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
         sourceUrl: z.string().url().nullish(),
         sourceIdentifier: z.string().nullish(),
         resources: z

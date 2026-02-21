@@ -29,7 +29,7 @@
         "Missing ids/slugs return NOT_FOUND semantics.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "implement resource read by skill and path",

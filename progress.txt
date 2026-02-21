@@ -6,8 +6,11 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 
 - tRPC init: `packages/api/src/index.ts` exports `router`, `publicProcedure`, `protectedProcedure`
 - context: `packages/api/src/context.ts` - Better Auth session from Hono req headers
-- DB: `@omniscient/db` for drizzle instance, `@omniscient/db/schema` for table imports
-- zod v4 installed (via catalog) but tRPC uses standard schema protocol; z.object/z.enum work as v3 compat
+- DB: `@omniscient/db` for drizzle instance, `@omniscient/db/schema/skills` for skill table imports
+- zod v4: `z.record` requires two args: `z.record(z.string(), z.unknown())`
+- drizzle-orm added as direct dep of `@omniscient/api` for query builders (eq, and, or, etc.)
+- visibility filter pattern: `visibilityFilter(session)` returns SQL condition for public + owner's private
+- `toSkillOutput()` maps DB row to API shape (skillMarkdown -> originalMarkdown/renderedMarkdown)
 - typecheck: only `apps/server` has `check-types` script; it compiles through workspace imports
 - sub-routers mount directly on appRouter object (e.g. `skills: skillsRouter`)
 
@@ -19,4 +22,14 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - response contracts include `originalMarkdown`, `renderedMarkdown`, `resources`, pagination cursor
 - mounted under `skills` namespace in appRouter
 - all handlers throw "not implemented" - actual logic comes in tasks 2-5
+- typecheck + check pass clean
+
+### task 2: implement public list and get skill queries - DONE
+- implemented `skills.list` with cursor pagination, search by name/slug (ilike)
+- implemented `skills.getById` and `skills.getBySlug` with visibility filter
+- public reads: unauthenticated sees only public; authenticated sees public + own private
+- private skills from other users return NOT_FOUND (no existence leaks)
+- `renderedMarkdown` = `skillMarkdown` for now (task 7 adds rendering)
+- added `drizzle-orm` as direct dependency of `@omniscient/api`
+- fixed `z.record` to use zod v4 two-arg form throughout
 - typecheck + check pass clean
