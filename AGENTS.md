@@ -38,6 +38,7 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 - `apps/server/AGENTS.md`
 - `apps/tui/AGENTS.md`
 - `packages/db/AGENTS.md`
+- `docs/skills-schema.md`
 - `.agents/skills/turborepo/SKILL.md`
 - `.agents/skills/hono/SKILL.md`
 - `.agents/skills/next-best-practices/SKILL.md`

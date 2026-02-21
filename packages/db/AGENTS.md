@@ -17,4 +17,5 @@ This package owns Drizzle schema and migration workflows for Omniscient's Neon P
 
 ## Additional guidance
 
+- `docs/skills-schema.md`
 - `.agents/skills/neon-postgres/SKILL.md`
