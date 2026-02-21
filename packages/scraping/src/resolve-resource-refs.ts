@@ -79,7 +79,11 @@ function resolveResourceRefs(
     return resourceMap.get(normalized) ?? null;
   }
 
-  function replacePath(rawPath: string, original: string, replacement: (uuid: string) => string): string {
+  function replacePath(
+    rawPath: string,
+    original: string,
+    replacement: (uuid: string) => string,
+  ): string {
     const uuid = lookup(rawPath);
     if (uuid) {
       resolved++;
@@ -94,31 +98,30 @@ function resolveResourceRefs(
   // 1. Markdown links [text](./references/...) and [text](./scripts/...) and [text](./assets/...)
   result = result.replace(
     /\[([^\]]+)\]\(\.\/(references|scripts|assets)\/([^)]+)\)/g,
-    (match, text, dir, file) => replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
+    (match, text, dir, file) =>
+      replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
   );
 
   // 2. Markdown links [text](references/...) and [text](scripts/...) and [text](assets/...)
   result = result.replace(
     /\[([^\]]+)\]\((references|scripts|assets)\/([^)]+)\)/g,
-    (match, text, dir, file) => replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
+    (match, text, dir, file) =>
+      replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
   );
 
   // 3. Arrow → references/... (and scripts/, assets/)
-  result = result.replace(
-    /→ (references|scripts|assets)\/(\S+)/g,
-    (match, dir, file) => replacePath(`${dir}/${file}`, match, (uuid) => `→ [[resource:${uuid}]]`),
+  result = result.replace(/→ (references|scripts|assets)\/(\S+)/g, (match, dir, file) =>
+    replacePath(`${dir}/${file}`, match, (uuid) => `→ [[resource:${uuid}]]`),
   );
 
   // 4. Bold **references/...** (and scripts/, assets/)
-  result = result.replace(
-    /\*\*(references|scripts|assets)\/([^*]+)\*\*/g,
-    (match, dir, file) => replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
+  result = result.replace(/\*\*(references|scripts|assets)\/([^*]+)\*\*/g, (match, dir, file) =>
+    replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
   );
 
   // 5. Backtick `references/...` (and scripts/, assets/)
-  result = result.replace(
-    /`(references|scripts|assets)\/([^`]+)`/g,
-    (match, dir, file) => replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
+  result = result.replace(/`(references|scripts|assets)\/([^`]+)`/g, (match, dir, file) =>
+    replacePath(`${dir}/${file}`, match, (uuid) => `[[resource:${uuid}]]`),
   );
 
   return { markdown: result, resolved, unresolved };
@@ -200,10 +203,7 @@ async function main() {
 
       if (!dryRun) {
         // Update DB
-        await db
-          .update(skill)
-          .set({ skillMarkdown: markdown })
-          .where(eq(skill.id, s.id));
+        await db.update(skill).set({ skillMarkdown: markdown }).where(eq(skill.id, s.id));
 
         // Optionally write file to disk
         if (writeFiles) {

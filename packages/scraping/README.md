@@ -84,7 +84,6 @@ metadata:
   version: 1.0.0
 license: MIT
 ---
-
 # Copy Editing
 
 Il contenuto markdown della skill...
@@ -92,12 +91,12 @@ Il contenuto markdown della skill...
 
 ### Classificazione risorse
 
-| Directory   | `kind` nel DB | Descrizione                      |
-|-------------|---------------|----------------------------------|
-| `references/` | `reference` | Documenti di riferimento (.md)   |
-| `scripts/`    | `script`    | Script eseguibili (.ts, .sh, .py)|
-| `assets/`     | `asset`     | File statici (template, config)  |
-| altro          | `other`     | Fallback per directory non mappate |
+| Directory     | `kind` nel DB | Descrizione                        |
+| ------------- | ------------- | ---------------------------------- |
+| `references/` | `reference`   | Documenti di riferimento (.md)     |
+| `scripts/`    | `script`      | Script eseguibili (.ts, .sh, .py)  |
+| `assets/`     | `asset`       | File statici (template, config)    |
+| altro         | `other`       | Fallback per directory non mappate |
 
 ### File binari skippati
 
@@ -150,6 +149,7 @@ Questo e' l'algoritmo centrale. Scansiona il markdown di ogni skill nel DB e sos
 I pattern sono applicati in ordine di specificita' (piu' specifico prima):
 
 #### 1. Markdown link con prefisso `./`
+
 ```
 Input:  [Guida completa](./references/guide.md)
 Output: [[resource:a1b2c3d4-...]]
@@ -157,6 +157,7 @@ Regex:  \[([^\]]+)\]\(\.\/(references|scripts|assets)\/([^)]+)\)
 ```
 
 #### 2. Markdown link senza prefisso
+
 ```
 Input:  [API Reference](references/api.md)
 Output: [[resource:a1b2c3d4-...]]
@@ -164,6 +165,7 @@ Regex:  \[([^\]]+)\]\((references|scripts|assets)\/([^)]+)\)
 ```
 
 #### 3. Freccia `→`
+
 ```
 Input:  → references/configuration.md
 Output: → [[resource:a1b2c3d4-...]]
@@ -171,6 +173,7 @@ Regex:  → (references|scripts|assets)\/(\S+)
 ```
 
 #### 4. Bold `**...**`
+
 ```
 Input:  **references/important-doc.md**
 Output: [[resource:a1b2c3d4-...]]
@@ -178,6 +181,7 @@ Regex:  \*\*(references|scripts|assets)\/([^*]+)\*\*
 ```
 
 #### 5. Backtick `` `...` ``
+
 ```
 Input:  `references/commands.md`
 Output: [[resource:a1b2c3d4-...]]
@@ -214,6 +218,7 @@ Per ogni skill nel DB:
 ### Perche' l'ordine conta
 
 Il pattern `[text](./references/file.md)` deve essere processato PRIMA di `` `references/file.md` `` perche':
+
 - Se processiamo prima il backtick, potremmo matchare un path gia' dentro un markdown link
 - I pattern piu' specifici (con piu' contesto) sono piu' sicuri e hanno meno falsi positivi
 
@@ -266,13 +271,13 @@ Estrae frontmatter YAML e body markdown da un file SKILL.md usando `gray-matter`
 
 ```typescript
 interface ParsedSkill {
-  frontmatter: Record<string, unknown>;  // YAML key-value pairs
-  name: string;                          // frontmatter.name
-  description: string;                   // frontmatter.description
-  markdown: string;                      // body senza frontmatter
+  frontmatter: Record<string, unknown>; // YAML key-value pairs
+  name: string; // frontmatter.name
+  description: string; // frontmatter.description
+  markdown: string; // body senza frontmatter
 }
 
-function parseSkillMd(raw: string): ParsedSkill
+function parseSkillMd(raw: string): ParsedSkill;
 ```
 
 ### `scan-resources.ts`
@@ -281,15 +286,16 @@ Scansiona ricorsivamente una directory skill e restituisce tutte le risorse trov
 
 ```typescript
 interface SkillResourceEntry {
-  path: string;          // Path relativo (es. "references/guide.md")
-  kind: ResourceKind;    // "reference" | "script" | "asset" | "other"
-  content: string;       // Contenuto UTF-8
+  path: string; // Path relativo (es. "references/guide.md")
+  kind: ResourceKind; // "reference" | "script" | "asset" | "other"
+  content: string; // Contenuto UTF-8
 }
 
-function scanResources(skillDir: string): Promise<SkillResourceEntry[]>
+function scanResources(skillDir: string): Promise<SkillResourceEntry[]>;
 ```
 
 Logica:
+
 - Scansione ricorsiva di tutte le sotto-directory
 - Salta `SKILL.md` (il file principale della skill)
 - Salta directory con un proprio `SKILL.md` (nested skill duplicate)
@@ -302,21 +308,21 @@ Risolve riferimenti testuali a ALTRE SKILL (non risorse) nel markdown.
 
 7 pattern riconosciuti:
 
-| # | Pattern                                    | Esempio                                          |
-|---|-------------------------------------------|--------------------------------------------------|
-| 1 | Backtick + "skill"                        | `` the `design-md` skill ``                      |
-| 2 | REQUIRED SUB-SKILL                         | `**REQUIRED SUB-SKILL:** Use ns:skill-name`      |
-| 3 | `npx skills add`                           | `npx skills add owner/repo@skill-name`           |
-| 4 | URL skills.sh                              | `https://skills.sh/owner/repo/skill-name`        |
-| 5 | Related Skills bold                        | `- **copy-editing**: For polishing...`            |
-| 6 | Related Skills link                        | `- [slug](path)`                                 |
-| 7 | Bold inline                                | `**slug** skill`                                 |
+| #   | Pattern             | Esempio                                     |
+| --- | ------------------- | ------------------------------------------- |
+| 1   | Backtick + "skill"  | ``the `design-md` skill``                   |
+| 2   | REQUIRED SUB-SKILL  | `**REQUIRED SUB-SKILL:** Use ns:skill-name` |
+| 3   | `npx skills add`    | `npx skills add owner/repo@skill-name`      |
+| 4   | URL skills.sh       | `https://skills.sh/owner/repo/skill-name`   |
+| 5   | Related Skills bold | `- **copy-editing**: For polishing...`      |
+| 6   | Related Skills link | `- [slug](path)`                            |
+| 7   | Bold inline         | `**slug** skill`                            |
 
 Gestisce namespace (`superpowers:skill-name` → estrae `skill-name`).
 
 ```typescript
-function resolveReferences(markdown: string, slugMap: SlugMap): string
-function getReferencedSlugs(markdown: string): string[]
+function resolveReferences(markdown: string, slugMap: SlugMap): string;
+function getReferencedSlugs(markdown: string): string[];
 ```
 
 ---
@@ -325,39 +331,39 @@ function getReferencedSlugs(markdown: string): string[]
 
 ### `skill`
 
-| Colonna          | Tipo      | Note                                    |
-|------------------|-----------|-----------------------------------------|
-| `id`             | uuid (PK) | Generato automaticamente                |
-| `owner_user_id`  | text      | NULL per skill piattaforma              |
-| `visibility`     | enum      | `"public"` / `"private"`               |
-| `slug`           | text      | Unique per le public (no owner)         |
-| `name`           | text      | Dal frontmatter                         |
-| `description`    | text      | Dal frontmatter                         |
+| Colonna          | Tipo      | Note                                            |
+| ---------------- | --------- | ----------------------------------------------- |
+| `id`             | uuid (PK) | Generato automaticamente                        |
+| `owner_user_id`  | text      | NULL per skill piattaforma                      |
+| `visibility`     | enum      | `"public"` / `"private"`                        |
+| `slug`           | text      | Unique per le public (no owner)                 |
+| `name`           | text      | Dal frontmatter                                 |
+| `description`    | text      | Dal frontmatter                                 |
 | `skill_markdown` | text      | Body con `[[skill:uuid]]` e `[[resource:uuid]]` |
-| `frontmatter`    | jsonb     | YAML frontmatter completo               |
+| `frontmatter`    | jsonb     | YAML frontmatter completo                       |
 
 ### `skill_resource`
 
-| Colonna    | Tipo      | Note                                         |
-|------------|-----------|----------------------------------------------|
-| `id`       | uuid (PK) | Generato automaticamente                     |
-| `skill_id` | uuid (FK) | Riferimento alla skill                       |
-| `path`     | text      | Path relativo (es. `references/guide.md`)    |
+| Colonna    | Tipo      | Note                                               |
+| ---------- | --------- | -------------------------------------------------- |
+| `id`       | uuid (PK) | Generato automaticamente                           |
+| `skill_id` | uuid (FK) | Riferimento alla skill                             |
+| `path`     | text      | Path relativo (es. `references/guide.md`)          |
 | `kind`     | enum      | `"reference"` / `"script"` / `"asset"` / `"other"` |
-| `content`  | text      | Contenuto file UTF-8                         |
+| `content`  | text      | Contenuto file UTF-8                               |
 
 Unique constraint su `(skill_id, path)`.
 
 ### `skill_link`
 
-| Colonna              | Tipo      | Note                                    |
-|----------------------|-----------|-----------------------------------------|
-| `id`                 | uuid (PK) | Generato automaticamente               |
-| `source_skill_id`    | uuid (FK) | Skill che contiene la mention           |
-| `target_skill_id`    | uuid (FK) | Skill referenziata (o NULL)             |
-| `target_resource_id` | uuid (FK) | Risorsa referenziata (o NULL)           |
-| `kind`               | text      | `"mention"` per auto-generated          |
-| `metadata`           | jsonb     | `{ origin: "markdown-auto" }`           |
+| Colonna              | Tipo      | Note                           |
+| -------------------- | --------- | ------------------------------ |
+| `id`                 | uuid (PK) | Generato automaticamente       |
+| `source_skill_id`    | uuid (FK) | Skill che contiene la mention  |
+| `target_skill_id`    | uuid (FK) | Skill referenziata (o NULL)    |
+| `target_resource_id` | uuid (FK) | Risorsa referenziata (o NULL)  |
+| `kind`               | text      | `"mention"` per auto-generated |
+| `metadata`           | jsonb     | `{ origin: "markdown-auto" }`  |
 
 Check constraint: esattamente uno tra `target_skill_id` e `target_resource_id` deve essere non-NULL.
 
@@ -406,16 +412,16 @@ GROUP BY 1;
 
 ## Risultati ultima esecuzione (Feb 2026)
 
-| Metrica                  | Valore |
-|--------------------------|--------|
-| Skill importate          | 149    |
-| Risorse importate        | 1363   |
-| Riferimenti risorse risolti | 578 |
-| Cross-ref skill risolti  | 36 skill |
-| Link auto-generati       | 759    |
-| — skill-to-skill         | 115    |
-| — skill-to-resource      | 644    |
-| Riferimenti irrisolti    | 17 (placeholder/esempi) |
+| Metrica                     | Valore                  |
+| --------------------------- | ----------------------- |
+| Skill importate             | 149                     |
+| Risorse importate           | 1363                    |
+| Riferimenti risorse risolti | 578                     |
+| Cross-ref skill risolti     | 36 skill                |
+| Link auto-generati          | 759                     |
+| — skill-to-skill            | 115                     |
+| — skill-to-resource         | 644                     |
+| Riferimenti irrisolti       | 17 (placeholder/esempi) |
 
 ## Dipendenze
 

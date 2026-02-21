@@ -22,12 +22,19 @@ const { values } = parseArgs({
 const verbose = values.verbose ?? false;
 const dryRun = values["dry-run"] ?? false;
 
-function log(...args: unknown[]) { console.log("[sync-links]", ...args); }
-function debug(...args: unknown[]) { if (verbose) console.log("[debug]", ...args); }
+function log(...args: unknown[]) {
+  console.log("[sync-links]", ...args);
+}
+function debug(...args: unknown[]) {
+  if (verbose) console.log("[debug]", ...args);
+}
 
 // Inline parseMentions (same logic as packages/api/src/lib/mentions.ts)
 type MentionType = "skill" | "resource";
-interface Mention { type: MentionType; targetId: string; }
+interface Mention {
+  type: MentionType;
+  targetId: string;
+}
 
 function parseMentions(markdown: string): Mention[] {
   const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
@@ -67,8 +74,8 @@ async function main() {
       continue;
     }
 
-    const skillMentionIds = mentions.filter(m => m.type === "skill").map(m => m.targetId);
-    const resourceMentionIds = mentions.filter(m => m.type === "resource").map(m => m.targetId);
+    const skillMentionIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
+    const resourceMentionIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
 
     // Validate skill mentions exist
     const existingSkillIds = new Set<string>();
@@ -90,8 +97,8 @@ async function main() {
       for (const r of rows) existingResourceIds.add(r.id);
     }
 
-    const validMentions = mentions.filter(m =>
-      m.type === "skill" ? existingSkillIds.has(m.targetId) : existingResourceIds.has(m.targetId)
+    const validMentions = mentions.filter((m) =>
+      m.type === "skill" ? existingSkillIds.has(m.targetId) : existingResourceIds.has(m.targetId),
     );
 
     if (validMentions.length === 0) {
@@ -99,7 +106,9 @@ async function main() {
       continue;
     }
 
-    debug(`${s.slug}: ${validMentions.length} valid mentions (${skillMentionIds.length} skill, ${resourceMentionIds.length} resource)`);
+    debug(
+      `${s.slug}: ${validMentions.length} valid mentions (${skillMentionIds.length} skill, ${resourceMentionIds.length} resource)`,
+    );
 
     if (!dryRun) {
       // Delete existing auto links
@@ -113,7 +122,7 @@ async function main() {
         );
 
       // Insert new links (no userId for script — use null)
-      const linkValues = validMentions.map(m => ({
+      const linkValues = validMentions.map((m) => ({
         sourceSkillId: s.id,
         sourceResourceId: null,
         targetSkillId: m.type === "skill" ? m.targetId : null,

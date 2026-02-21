@@ -1,9 +1,6 @@
 "use client";
 import Link from "next/link";
 
-import { Plus } from "lucide-react";
-
-import { Button } from "./ui/button";
 import UserMenu from "./user-menu";
 
 export default function Header() {
@@ -14,12 +11,6 @@ export default function Header() {
           omniscient
         </Link>
         <div className="flex items-center gap-2.5">
-          <Link href="/dashboard">
-            <Button size="sm" className="px-3.5">
-              <Plus />
-              Add Skill
-            </Button>
-          </Link>
           <UserMenu />
         </div>
       </div>
