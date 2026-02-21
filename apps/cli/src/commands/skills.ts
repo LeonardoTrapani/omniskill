@@ -73,7 +73,10 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function fetchBrowseSkills(): Promise<{ items: SkillListItem[]; truncated: boolean }> {
+async function fetchBrowseSkills(): Promise<{
+  items: SkillListItem[];
+  truncated: boolean;
+}> {
   const collected: SkillListItem[] = [];
   const seen = new Set<string>();
   let cursor: string | undefined;
@@ -273,7 +276,7 @@ export async function skillsSyncCommand() {
     await trpc.privateData.query();
     authSpinner.stop(pc.green("authenticated"));
   } catch {
-    authSpinner.stop(pc.red("not authenticated - sign in from the web app first"));
+    authSpinner.stop(pc.red("not authenticated - run omniscient login"));
     return;
   }
 

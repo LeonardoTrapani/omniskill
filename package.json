@@ -19,7 +19,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=!cli",
     "cli": "bun run --cwd apps/cli src/index.ts",
     "build": "turbo build",
     "check-types": "turbo check-types",

@@ -3,15 +3,23 @@ import pc from "picocolors";
 
 import { healthCommand } from "./commands/health";
 import { loginCommand } from "./commands/login";
+import { logoutCommand } from "./commands/logout";
 import { skillsInstallCommand, skillsListCommand, skillsSyncCommand } from "./commands/skills";
 import { whoamiCommand } from "./commands/whoami";
 import { supportedAgents } from "./lib/agents";
+
+class UsageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UsageError";
+  }
+}
 
 function parseNumberFlag(value: string, flagName: string): number {
   const parsed = Number(value);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`${flagName} must be a positive integer`);
+    throw new UsageError(`${flagName} must be a positive integer`);
   }
 
   return parsed;
@@ -22,13 +30,14 @@ function parseVisibilityFlag(value: string): "public" | "private" {
     return value;
   }
 
-  throw new Error("--visibility must be one of: public, private");
+  throw new UsageError("--visibility must be one of: public, private");
 }
 
 function printUsage() {
   p.log.info("usage:");
   p.log.info("  omniscient health");
   p.log.info("  omniscient login");
+  p.log.info("  omniscient logout");
   p.log.info("  omniscient whoami");
   p.log.info(
     "  omniscient skills list [--search <query>] [--limit <n>] [--visibility public|private]",
@@ -56,7 +65,7 @@ function parseSkillsListArgs(args: string[]) {
     if (arg === "--search") {
       const value = args[index + 1];
       if (!value) {
-        throw new Error("missing value for --search");
+        throw new UsageError("missing value for --search");
       }
       output.search = value;
       index += 1;
@@ -71,7 +80,7 @@ function parseSkillsListArgs(args: string[]) {
     if (arg === "--limit") {
       const value = args[index + 1];
       if (!value) {
-        throw new Error("missing value for --limit");
+        throw new UsageError("missing value for --limit");
       }
       output.limit = parseNumberFlag(value, "--limit");
       index += 1;
@@ -86,7 +95,7 @@ function parseSkillsListArgs(args: string[]) {
     if (arg === "--visibility") {
       const value = args[index + 1];
       if (!value) {
-        throw new Error("missing value for --visibility");
+        throw new UsageError("missing value for --visibility");
       }
       output.visibility = parseVisibilityFlag(value);
       index += 1;
@@ -98,7 +107,7 @@ function parseSkillsListArgs(args: string[]) {
       continue;
     }
 
-    throw new Error(`unknown flag for skills list: ${arg}`);
+    throw new UsageError(`unknown flag for skills list: ${arg}`);
   }
 
   return output;
@@ -114,7 +123,7 @@ function parseSkillsInstallArgs(args: string[]) {
     }
 
     if (arg.startsWith("-")) {
-      throw new Error(`unknown flag for skills install: ${arg}`);
+      throw new UsageError(`unknown flag for skills install: ${arg}`);
     }
 
     if (!slug) {
@@ -122,7 +131,7 @@ function parseSkillsInstallArgs(args: string[]) {
       continue;
     }
 
-    throw new Error(`unexpected argument: ${arg}`);
+    throw new UsageError(`unexpected argument: ${arg}`);
   }
 
   return { slug };
@@ -145,14 +154,14 @@ async function runSkillsCommand(args: string[]) {
 
   if (args[0] === "sync") {
     if (args.length > 1) {
-      throw new Error(`unexpected argument for skills sync: ${args[1]}`);
+      throw new UsageError(`unexpected argument for skills sync: ${args[1]}`);
     }
 
     await skillsSyncCommand();
     return;
   }
 
-  throw new Error(`unknown skills subcommand: ${args[0]}`);
+  throw new UsageError(`unknown skills subcommand: ${args[0]}`);
 }
 
 async function runFromArgs(args: string[]): Promise<boolean> {
@@ -170,6 +179,11 @@ async function runFromArgs(args: string[]): Promise<boolean> {
     return true;
   }
 
+  if (args[0] === "logout") {
+    await logoutCommand();
+    return true;
+  }
+
   if (args[0] === "whoami") {
     await whoamiCommand();
     return true;
@@ -180,7 +194,7 @@ async function runFromArgs(args: string[]): Promise<boolean> {
     return true;
   }
 
-  throw new Error(`unknown command: ${args[0]}`);
+  throw new UsageError(`unknown command: ${args[0]}`);
 }
 
 async function runInteractiveMenu() {
@@ -191,6 +205,7 @@ async function runInteractiveMenu() {
     options: [
       { value: "health", label: "health check", hint: "ping the API server" },
       { value: "login", label: "login", hint: "browser sign-in for CLI" },
+      { value: "logout", label: "logout", hint: "sign out and clear session" },
       { value: "whoami", label: "who am i", hint: "check current session" },
       { value: "skills-list", label: "list skills", hint: "browse skills" },
       { value: "skills-install", label: "install skill", hint: "install from list" },
@@ -213,6 +228,9 @@ async function runInteractiveMenu() {
       break;
     case "login":
       await loginCommand();
+      break;
+    case "logout":
+      await logoutCommand();
       break;
     case "whoami":
       await whoamiCommand();
@@ -241,7 +259,11 @@ async function main() {
     await runInteractiveMenu();
   } catch (error) {
     p.log.error(error instanceof Error ? error.message : String(error));
-    printUsage();
+
+    if (error instanceof UsageError) {
+      printUsage();
+    }
+
     process.exit(1);
   }
 }

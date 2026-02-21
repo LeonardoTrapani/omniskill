@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -37,9 +38,19 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+function getSafeCallbackURL(next: string | null): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/dashboard";
+  }
+  return next;
+}
+
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const { isPending } = authClient.useSession();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
+
+  const callbackURL = getSafeCallbackURL(searchParams.get("next"));
 
   if (isPending) {
     return <Loader />;
@@ -49,7 +60,7 @@ export default function LoginPage() {
     setLoadingProvider(provider);
     authClient.signIn.social({
       provider,
-      callbackURL: "/dashboard",
+      callbackURL: `${window.location.origin}${callbackURL}`,
     });
   };
 
