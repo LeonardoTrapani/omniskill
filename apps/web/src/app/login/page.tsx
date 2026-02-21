@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 
 export default function LoginPage() {
-  const [showSignIn, setShowSignIn] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = useMemo(() => {
+    const next = searchParams.get("next");
+    if (next?.startsWith("/")) {
+      return next;
+    }
+    return "/dashboard";
+  }, [searchParams]);
+
+  const [showSignIn, setShowSignIn] = useState(Boolean(searchParams.get("next")));
 
   return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} redirectTo={redirectTo} />
   ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} redirectTo={redirectTo} />
   );
 }

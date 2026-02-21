@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,7 +11,13 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+export default function SignUpForm({
+  onSwitchToSignIn,
+  redirectTo,
+}: {
+  onSwitchToSignIn: () => void;
+  redirectTo: string;
+}) {
   const router = useRouter();
   const { isPending } = authClient.useSession();
 
@@ -29,7 +36,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            router.push("/dashboard");
+            router.push(redirectTo as Route);
             toast.success("Sign up successful");
           },
           onError: (error) => {

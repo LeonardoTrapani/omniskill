@@ -2,6 +2,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { healthCommand } from "./commands/health";
+import { loginCommand } from "./commands/login";
 import { skillsListCommand } from "./commands/skills";
 import { whoamiCommand } from "./commands/whoami";
 
@@ -12,6 +13,7 @@ async function main() {
     message: "what would you like to do?",
     options: [
       { value: "health", label: "health check", hint: "ping the API server" },
+      { value: "login", label: "login", hint: "browser sign-in for CLI" },
       { value: "whoami", label: "who am i", hint: "check current session" },
       { value: "skills", label: "list skills", hint: "browse public skills" },
     ],
@@ -25,6 +27,9 @@ async function main() {
   switch (action) {
     case "health":
       await healthCommand();
+      break;
+    case "login":
+      await loginCommand();
       break;
     case "whoami":
       await whoamiCommand();

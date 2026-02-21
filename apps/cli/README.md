@@ -29,5 +29,6 @@ bun run dev:cli
 ## Available commands
 
 - **health check** — ping the API server
-- **who am i** — check current session (requires auth)
+- **login** — open browser and complete device-code login
+- **who am i** — check current session (requires login)
 - **list skills** — browse public skills from the registry
