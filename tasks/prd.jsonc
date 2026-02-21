@@ -14,7 +14,7 @@
         "Invalid inputs return typed tRPC validation errors.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "implement public list and get skill queries",
