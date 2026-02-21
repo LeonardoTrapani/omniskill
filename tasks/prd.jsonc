@@ -102,7 +102,7 @@
         "Manual links remain after auto-sync refresh.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "return original and rendered markdown on get",

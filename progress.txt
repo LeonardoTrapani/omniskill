@@ -71,3 +71,13 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - case-insensitive matching (e.g. `[[Skill:...]]` works)
 - 15 unit tests covering: valid extraction, mixed text, multi-line, dedup, malformed tokens, edge cases
 - typecheck + tests pass clean
+
+### task 7: auto-sync skill_link edges on create and update - DONE
+- created `packages/api/src/lib/link-sync.ts` with `syncAutoLinks(sourceSkillId, markdown, userId)`
+- delete-then-insert pattern: removes all auto links (metadata.origin = "markdown-auto") for source skill, then inserts fresh set from parsed mentions
+- skill mentions → `targetSkillId`, resource mentions → `targetResourceId` (null for the other)
+- manual links (without origin tag) are untouched by the delete filter
+- wired into `skills.create` (always) and `skills.update` (when skillMarkdown changes)
+- neon-http compatible: sequential queries, no transactions needed
+- 5 unit tests with mocked db verify delete/insert logic, target field routing, metadata tagging
+- typecheck + tests pass clean

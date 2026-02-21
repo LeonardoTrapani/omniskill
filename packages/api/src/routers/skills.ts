@@ -6,6 +6,7 @@ import { db } from "@omniscient/db";
 import { skill, skillResource } from "@omniscient/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../index";
+import { syncAutoLinks } from "../lib/link-sync";
 
 // -- shared enums --
 
@@ -307,6 +308,9 @@ export const skillsRouter = router({
           .returning();
       }
 
+      // sync auto-generated links from [[...]] mentions in markdown
+      await syncAutoLinks(created.id, input.skillMarkdown, userId);
+
       return toSkillOutput(created, resources);
     }),
 
@@ -402,6 +406,11 @@ export const skillsRouter = router({
             })),
           );
         }
+      }
+
+      // sync auto-generated links when markdown changed
+      if (input.skillMarkdown !== undefined) {
+        await syncAutoLinks(input.id, input.skillMarkdown, userId);
       }
 
       // fetch final resources state
