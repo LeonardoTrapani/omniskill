@@ -58,7 +58,7 @@
         "Create without visibility persists as private.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "add owner-authenticated update and delete mutations",

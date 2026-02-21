@@ -267,8 +267,49 @@ export const skillsRouter = router({
       }),
     )
     .output(skillOutput)
-    .mutation(async () => {
-      throw new Error("not implemented");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      return await db.transaction(async (tx) => {
+        const [created] = await tx
+          .insert(skill)
+          .values({
+            ownerUserId: userId,
+            slug: input.slug,
+            name: input.name,
+            description: input.description,
+            skillMarkdown: input.skillMarkdown,
+            visibility: input.visibility,
+            frontmatter: input.frontmatter,
+            metadata: input.metadata,
+            sourceUrl: input.sourceUrl ?? null,
+            sourceIdentifier: input.sourceIdentifier ?? null,
+          })
+          .returning();
+
+        if (!created) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create skill" });
+        }
+
+        let resources: (typeof skillResource.$inferSelect)[] = [];
+
+        if (input.resources.length > 0) {
+          resources = await tx
+            .insert(skillResource)
+            .values(
+              input.resources.map((r) => ({
+                skillId: created.id,
+                path: r.path,
+                kind: r.kind,
+                content: r.content,
+                metadata: r.metadata,
+              })),
+            )
+            .returning();
+        }
+
+        return toSkillOutput(created, resources);
+      });
     }),
 
   update: protectedProcedure

@@ -40,3 +40,12 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - private skill resources return NOT_FOUND without leaking existence
 - returns resource fields + parent skill identity (skillId, skillSlug, skillName)
 - typecheck + check pass clean
+
+### task 4: add owner-authenticated create skill mutation - DONE
+- implemented `skills.create` mutation body replacing "not implemented" stub
+- uses `db.transaction()` to atomically insert skill + resource rows
+- `ownerUserId` set from `ctx.session.user.id` (protectedProcedure guarantees session)
+- visibility defaults to `"private"` via zod `.default("private")` on input schema
+- nested resources inserted in same transaction with `skillId` from created skill
+- unauthenticated calls rejected by protectedProcedure middleware (UNAUTHORIZED)
+- typecheck + check pass clean
