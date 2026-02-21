@@ -302,11 +302,8 @@ export default function HeroSection() {
                   <span>50+ skills indexed</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-                    Get code
-                  </button>
                   <button className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors">
-                    Search
+                    Submit
                     <ArrowUp className="w-2.5 h-2.5" />
                   </button>
                 </div>
@@ -328,10 +325,12 @@ export default function HeroSection() {
               </Link>
               <button
                 className="flex items-center gap-2 px-5 py-2.5 bg-background/95 backdrop-blur-md border border-border text-foreground text-sm hover:border-primary/50 transition-colors duration-150"
-                onClick={() => navigator.clipboard.writeText("npm install -g @omniscient/cli")}
+                onClick={() =>
+                  navigator.clipboard.writeText("curl -fsSL https://omniscient.sh/install | bash")
+                }
               >
                 <Copy className="w-3.5 h-3.5" />
-                npm install -g @omniscient/cli
+                curl -fsSL https://omniscient.sh/install | bash
               </button>
             </motion.div>
           </div>

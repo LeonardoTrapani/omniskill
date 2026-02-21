@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LayoutDashboard, LogOut, User } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -20,27 +21,39 @@ export default function UserMenu() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <Skeleton className="h-9 w-24" />;
+    return <Skeleton className="h-8 w-8" />;
   }
 
   if (!session) {
     return (
       <Link href="/login">
-        <Button variant="outline">Sign In</Button>
+        <Button variant="outline" size="icon" aria-label="Sign in">
+          <User />
+        </Button>
       </Link>
     );
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
-        {session.user.name}
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline" size="icon" aria-label="Open user menu">
+            <User />
+          </Button>
+        }
+      >
+        <span className="sr-only">Open user menu</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-card">
+      <DropdownMenuContent className="bg-card w-auto min-w-64">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <DropdownMenuItem className="break-all">{session.user.email}</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+            <LayoutDashboard />
+            Dashboard
+          </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {
@@ -53,6 +66,7 @@ export default function UserMenu() {
               });
             }}
           >
+            <LogOut />
             Sign Out
           </DropdownMenuItem>
         </DropdownMenuGroup>
