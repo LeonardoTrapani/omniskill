@@ -1,20 +1,23 @@
 {
-  "name": "tui",
+  "name": "native",
   "private": true,
   "type": "module",
-  "module": "src/index.tsx",
+  "module": "src/index.ts",
   "scripts": {
-    "dev": "bun run --watch src/index.tsx"
+    "dev": "bun run --watch src/index.ts",
+    "check-types": "tsc -b"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.79",
-    "@opentui/react": "^0.1.79",
-    "react": "^19.2.4"
+    "@clack/prompts": "^1.0.1",
+    "@omniscient/api": "workspace:*",
+    "@omniscient/env": "workspace:*",
+    "@trpc/client": "catalog:",
+    "dotenv": "catalog:",
+    "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "@omniscient/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
   }
 }

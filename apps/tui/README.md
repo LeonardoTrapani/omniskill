@@ -1,15 +1,27 @@
-# react
+# native (CLI)
 
-To install dependencies:
+Omniscient command-line interface built with `@clack/prompts` and connected to the API via tRPC.
+
+## Setup
 
 ```bash
 bun install
 ```
 
-To run:
+Create `apps/tui/.env` (optional — defaults to local dev server):
 
-```bash
-bun dev
+```
+SERVER_URL=http://localhost:3000
 ```
 
-This project was created using `bun create tui`. [create-tui](https://git.new/create-tui) is the easiest way to get started with OpenTUI.
+## Run
+
+```bash
+bun run dev:native
+```
+
+## Available commands
+
+- **health check** — ping the API server
+- **who am i** — check current session (requires auth)
+- **list skills** — browse public skills from the registry

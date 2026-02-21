@@ -12,13 +12,13 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 
 ## Workspace map
 
-- `apps/tui`: terminal client, evolving into a command-first authenticated CLI.
+- `apps/tui`: command-line interface built with `@clack/prompts`, connected to the server via tRPC.
 - `apps/web`: Next.js web console for managing skills, graph links, and account state.
 - `apps/server`: Hono host for Better Auth and tRPC endpoints.
 - `packages/api`: shared tRPC router and context.
 - `packages/auth`: Better Auth configuration and adapter wiring.
 - `packages/db`: Drizzle schema and migration workflows for Neon Postgres.
-- `packages/env`: typed runtime env contracts for server and web.
+- `packages/env`: typed runtime env contracts for server, web, and native CLI.
 - `packages/config`: shared TypeScript config.
 
 ## Canonical commands
@@ -31,6 +31,7 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 
 - Server env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGIN`.
 - Web env: `NEXT_PUBLIC_SERVER_URL`.
+- Native CLI env: `SERVER_URL` (defaults to `http://localhost:3000`).
 
 ## Progressive disclosure
 
@@ -43,5 +44,4 @@ Omniscient is an agent second brain: authenticated users manage a graph of reusa
 - `.agents/skills/hono/SKILL.md`
 - `.agents/skills/next-best-practices/SKILL.md`
 - `.agents/skills/better-auth-best-practices/SKILL.md`
-- `.agents/skills/opentui/SKILL.md`
 - `.agents/skills/neon-postgres/SKILL.md`
