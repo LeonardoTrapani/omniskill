@@ -1,12 +1,10 @@
 import * as p from "@clack/prompts";
-import pc from "picocolors";
 
 import { healthCommand } from "./commands/health";
 import { loginCommand } from "./commands/login";
 import { logoutCommand } from "./commands/logout";
-import { skillsInstallCommand, skillsListCommand, skillsSyncCommand } from "./commands/skills";
+import { syncCommand } from "./commands/sync";
 import { whoamiCommand } from "./commands/whoami";
-import { supportedAgents } from "./lib/agents";
 
 class UsageError extends Error {
   constructor(message: string) {
@@ -15,248 +13,45 @@ class UsageError extends Error {
   }
 }
 
-function parseNumberFlag(value: string, flagName: string): number {
-  const parsed = Number(value);
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new UsageError(`${flagName} must be a positive integer`);
-  }
-
-  return parsed;
-}
-
-function parseVisibilityFlag(value: string): "public" | "private" {
-  if (value === "public" || value === "private") {
-    return value;
-  }
-
-  throw new UsageError("--visibility must be one of: public, private");
-}
-
 function printUsage() {
   p.log.info("usage:");
   p.log.info("  omniscient health");
   p.log.info("  omniscient login");
   p.log.info("  omniscient logout");
   p.log.info("  omniscient whoami");
-  p.log.info(
-    "  omniscient skills list [--search <query>] [--limit <n>] [--visibility public|private]",
-  );
-  p.log.info("  omniscient skills install <slug>");
-  p.log.info("  omniscient skills install");
-  p.log.info("  omniscient skills sync");
-  p.log.info("  (always installs to all supported agents)");
-  p.log.info(`supported agents: ${supportedAgents.join(", ")}`);
+  p.log.info("  omniscient sync");
 }
 
-function parseSkillsListArgs(args: string[]) {
-  const output: {
-    limit?: number;
-    search?: string;
-    visibility?: "public" | "private";
-  } = {};
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg) {
-      continue;
-    }
-
-    if (arg === "--search") {
-      const value = args[index + 1];
-      if (!value) {
-        throw new UsageError("missing value for --search");
-      }
-      output.search = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg.startsWith("--search=")) {
-      output.search = arg.slice("--search=".length);
-      continue;
-    }
-
-    if (arg === "--limit") {
-      const value = args[index + 1];
-      if (!value) {
-        throw new UsageError("missing value for --limit");
-      }
-      output.limit = parseNumberFlag(value, "--limit");
-      index += 1;
-      continue;
-    }
-
-    if (arg.startsWith("--limit=")) {
-      output.limit = parseNumberFlag(arg.slice("--limit=".length), "--limit");
-      continue;
-    }
-
-    if (arg === "--visibility") {
-      const value = args[index + 1];
-      if (!value) {
-        throw new UsageError("missing value for --visibility");
-      }
-      output.visibility = parseVisibilityFlag(value);
-      index += 1;
-      continue;
-    }
-
-    if (arg.startsWith("--visibility=")) {
-      output.visibility = parseVisibilityFlag(arg.slice("--visibility=".length));
-      continue;
-    }
-
-    throw new UsageError(`unknown flag for skills list: ${arg}`);
-  }
-
-  return output;
-}
-
-function parseSkillsInstallArgs(args: string[]) {
-  let slug: string | undefined;
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg) {
-      continue;
-    }
-
-    if (arg.startsWith("-")) {
-      throw new UsageError(`unknown flag for skills install: ${arg}`);
-    }
-
-    if (!slug) {
-      slug = arg;
-      continue;
-    }
-
-    throw new UsageError(`unexpected argument: ${arg}`);
-  }
-
-  return { slug };
-}
-
-async function runSkillsCommand(args: string[]) {
-  if (args.length === 0 || args[0] === "list") {
-    const parsed = parseSkillsListArgs(args[0] === "list" ? args.slice(1) : args);
-    await skillsListCommand(parsed);
-    return;
-  }
-
-  if (args[0] === "install") {
-    const parsed = parseSkillsInstallArgs(args.slice(1));
-    await skillsInstallCommand({
-      slug: parsed.slug,
-    });
-    return;
-  }
-
-  if (args[0] === "sync") {
-    if (args.length > 1) {
-      throw new UsageError(`unexpected argument for skills sync: ${args[1]}`);
-    }
-
-    await skillsSyncCommand();
-    return;
-  }
-
-  throw new UsageError(`unknown skills subcommand: ${args[0]}`);
-}
-
-async function runFromArgs(args: string[]): Promise<boolean> {
+async function run(args: string[]) {
   if (args.length === 0) {
-    return false;
+    printUsage();
+    return;
   }
 
-  if (args[0] === "health") {
-    await healthCommand();
-    return true;
-  }
-
-  if (args[0] === "login") {
-    await loginCommand();
-    return true;
-  }
-
-  if (args[0] === "logout") {
-    await logoutCommand();
-    return true;
-  }
-
-  if (args[0] === "whoami") {
-    await whoamiCommand();
-    return true;
-  }
-
-  if (args[0] === "skills") {
-    await runSkillsCommand(args.slice(1));
-    return true;
-  }
-
-  throw new UsageError(`unknown command: ${args[0]}`);
-}
-
-async function runInteractiveMenu() {
-  p.intro(pc.bgCyan(pc.black(" omniscient ")));
-
-  const action = await p.select({
-    message: "what would you like to do?",
-    options: [
-      { value: "health", label: "health check", hint: "ping the API server" },
-      { value: "login", label: "login", hint: "browser sign-in for CLI" },
-      { value: "logout", label: "logout", hint: "sign out and clear session" },
-      { value: "whoami", label: "who am i", hint: "check current session" },
-      { value: "skills-list", label: "list skills", hint: "browse skills" },
-      { value: "skills-install", label: "install skill", hint: "install from list" },
-      {
-        value: "skills-sync",
-        label: "sync private skills",
-        hint: "install all your private skills",
-      },
-    ],
-  });
-
-  if (p.isCancel(action)) {
-    p.cancel("cancelled");
-    process.exit(0);
-  }
-
-  switch (action) {
+  switch (args[0]) {
     case "health":
       await healthCommand();
-      break;
+      return;
     case "login":
       await loginCommand();
-      break;
+      return;
     case "logout":
       await logoutCommand();
-      break;
+      return;
     case "whoami":
       await whoamiCommand();
-      break;
-    case "skills-list":
-      await skillsListCommand();
-      break;
-    case "skills-install":
-      await skillsInstallCommand();
-      break;
-    case "skills-sync":
-      await skillsSyncCommand();
-      break;
+      return;
+    case "sync":
+      await syncCommand();
+      return;
+    default:
+      throw new UsageError(`unknown command: ${args[0]}`);
   }
-
-  p.outro(pc.dim("done"));
 }
 
 async function main() {
   try {
-    const handled = await runFromArgs(process.argv.slice(2));
-    if (handled) {
-      return;
-    }
-
-    await runInteractiveMenu();
+    await run(process.argv.slice(2));
   } catch (error) {
     p.log.error(error instanceof Error ? error.message : String(error));
 
