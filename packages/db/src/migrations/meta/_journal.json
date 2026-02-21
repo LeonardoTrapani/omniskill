@@ -15,6 +15,13 @@
       "when": 1771677696168,
       "tag": "0001_flaky_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771689589422,
+      "tag": "0002_complex_master_mold",
+      "breakpoints": true
     }
   ]
 }
