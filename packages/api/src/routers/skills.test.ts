@@ -52,6 +52,7 @@ let links: LinkRow[] = [];
 type Condition =
   | { op: "eq"; field: string; value: unknown }
   | { op: "gt"; field: string; value: unknown }
+  | { op: "lt"; field: string; value: unknown }
   | { op: "ilike"; field: string; value: string }
   | { op: "inArray"; field: string; values: unknown[] }
   | { op: "and"; conditions: (Condition | undefined)[] }
@@ -64,7 +65,9 @@ function evalCondition(row: Record<string, unknown>, cond: Condition | undefined
     case "eq":
       return row[cond.field] === cond.value;
     case "gt":
-      return (row[cond.field] as string) > (cond.value as string);
+      return (row[cond.field] as string | number | Date) > (cond.value as string | number | Date);
+    case "lt":
+      return (row[cond.field] as string | number | Date) < (cond.value as string | number | Date);
     case "ilike": {
       const val = String(row[cond.field] ?? "").toLowerCase();
       const pat = cond.value.toLowerCase().replace(/%/g, ".*");
@@ -129,6 +132,32 @@ function getStore(tableName: string): Record<string, unknown>[] {
 function filterRows(store: Record<string, unknown>[], where?: Condition) {
   if (!where) return [...store];
   return store.filter((row) => evalCondition(row, where));
+}
+
+function compareValues(a: unknown, b: unknown): number {
+  if (a === b) return 0;
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() - b.getTime();
+  }
+  return (a as string | number) > (b as string | number) ? 1 : -1;
+}
+
+function applyOrder(rows: Record<string, unknown>[], orderBy: unknown[]) {
+  if (orderBy.length === 0) return [...rows];
+
+  return [...rows].sort((left, right) => {
+    for (const order of orderBy) {
+      if (!order || typeof order !== "object") continue;
+      if (!("direction" in order) || !("col" in order)) continue;
+
+      const direction = (order as { direction: "asc" | "desc" }).direction;
+      const field = getPropertyKey((order as { col: unknown }).col);
+      const cmp = compareValues(left[field], right[field]);
+      if (cmp === 0) continue;
+      return direction === "desc" ? -cmp : cmp;
+    }
+    return 0;
+  });
 }
 
 function projectFields(rows: Record<string, unknown>[], fieldMap?: Record<string, unknown>) {
@@ -209,6 +238,9 @@ function buildEq(col: unknown, value: unknown): Condition {
 function buildGt(col: unknown, value: unknown): Condition {
   return { op: "gt", field: getPropertyKey(col), value };
 }
+function buildLt(col: unknown, value: unknown): Condition {
+  return { op: "lt", field: getPropertyKey(col), value };
+}
 function buildIlike(col: unknown, value: string): Condition {
   return { op: "ilike", field: getPropertyKey(col), value };
 }
@@ -240,6 +272,7 @@ const fakeRelations = () => ({});
 mock.module("drizzle-orm", () => ({
   eq: buildEq,
   gt: buildGt,
+  lt: buildLt,
   ilike: buildIlike,
   inArray: buildInArray,
   and: buildAnd,
@@ -353,18 +386,25 @@ function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
     from: (table: unknown) => {
       const tableName = getTableName(table);
       let whereCondition: Condition | undefined;
+      let orderBy: unknown[] = [];
 
       const mkResult = () => {
         const store = getStore(tableName);
         const filtered = filterRows(store as Record<string, unknown>[], whereCondition);
-        return projectFields(filtered, fieldMap);
+        const ordered = applyOrder(filtered, orderBy);
+        return projectFields(ordered, fieldMap);
+      };
+
+      const orderByResult = (...clauses: unknown[]) => {
+        orderBy = clauses;
+        return {
+          limit: (n: number) => Promise.resolve(mkResult().slice(0, n)),
+          then: (resolve: (v: unknown) => void) => resolve(mkResult()),
+        };
       };
 
       const afterWhere = {
-        orderBy: (..._o: unknown[]) => ({
-          limit: (n: number) => Promise.resolve(mkResult().slice(0, n)),
-          then: (resolve: (v: unknown) => void) => resolve(mkResult()),
-        }),
+        orderBy: orderByResult,
         then: (resolve: (v: unknown) => void) => resolve(mkResult()),
       };
 
@@ -373,10 +413,7 @@ function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
           whereCondition = condition;
           return afterWhere;
         },
-        orderBy: (..._o: unknown[]) => ({
-          limit: (n: number) => Promise.resolve(mkResult().slice(0, n)),
-          then: (resolve: (v: unknown) => void) => resolve(mkResult()),
-        }),
+        orderBy: orderByResult,
         then: (resolve: (v: unknown) => void) => resolve(mkResult()),
       };
     },
@@ -591,6 +628,33 @@ describe("skills.list", () => {
     const result = await anonCaller().skills.list({ search: "TypeScript" });
     expect(result.items).toHaveLength(1);
     expect(result.items[0]!.name).toBe("TypeScript Basics");
+  });
+
+  test("cursor pagination follows createdAt desc order", async () => {
+    const oldest = new Date("2026-01-01T00:00:01.000Z");
+    const middle = new Date("2026-01-01T00:00:02.000Z");
+    const newest = new Date("2026-01-01T00:00:03.000Z");
+
+    seedSkill({ visibility: "public", name: "Oldest", createdAt: oldest, updatedAt: oldest });
+    seedSkill({ visibility: "public", name: "Middle", createdAt: middle, updatedAt: middle });
+    seedSkill({ visibility: "public", name: "Newest", createdAt: newest, updatedAt: newest });
+
+    const pageOne = await anonCaller().skills.list({ limit: 2 });
+    expect(pageOne.items.map((item) => item.name)).toEqual(["Newest", "Middle"]);
+    expect(pageOne.nextCursor).toBe(pageOne.items[1]!.id);
+
+    const pageTwo = await anonCaller().skills.list({ limit: 2, cursor: pageOne.nextCursor! });
+    expect(pageTwo.items.map((item) => item.name)).toEqual(["Oldest"]);
+    expect(pageTwo.nextCursor).toBeNull();
+  });
+
+  test("invalid cursor returns BAD_REQUEST", async () => {
+    try {
+      await anonCaller().skills.list({ cursor: randomUUID() });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("BAD_REQUEST");
+    }
   });
 
   test("list items exclude markdown and resources", async () => {

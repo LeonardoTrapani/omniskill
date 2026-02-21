@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, ilike, inArray, or } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, lt, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
@@ -128,13 +128,28 @@ export const skillsRouter = router({
 
       const conditions = [visibilityFilter(ctx.session)];
 
-      if (cursor) {
-        conditions.push(gt(skill.id, cursor));
-      }
-
       if (search) {
         const pattern = `%${search}%`;
         conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
+      }
+
+      if (cursor) {
+        const cursorRows = await db
+          .select({ id: skill.id, createdAt: skill.createdAt })
+          .from(skill)
+          .where(and(eq(skill.id, cursor), ...conditions));
+
+        const cursorRow = cursorRows[0];
+        if (!cursorRow) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cursor" });
+        }
+
+        conditions.push(
+          or(
+            lt(skill.createdAt, cursorRow.createdAt),
+            and(eq(skill.createdAt, cursorRow.createdAt), gt(skill.id, cursorRow.id)),
+          )!,
+        );
       }
 
       const rows = await db
@@ -311,7 +326,6 @@ export const skillsRouter = router({
           .returning();
       }
 
-      // sync auto-generated links from [[...]] mentions in markdown
       await syncAutoLinks(created.id, input.skillMarkdown, userId);
 
       return await toSkillOutput(created, resources);

@@ -3,6 +3,17 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 // track calls to db operations
 let deleteCalls: { where: string }[] = [];
 let insertCalls: { values: unknown[] }[] = [];
+let existingSkillIds = new Set<string>();
+let existingResourceIds = new Set<string>();
+
+const drizzleNameSym = Symbol.for("drizzle:Name");
+
+function getTableName(table: unknown): string {
+  if (table && typeof table === "object" && drizzleNameSym in table) {
+    return (table as Record<symbol, string>)[drizzleNameSym]!;
+  }
+  return "unknown";
+}
 
 // mock the db module before importing link-sync
 mock.module("@omniscient/db", () => {
@@ -26,6 +37,20 @@ mock.module("@omniscient/db", () => {
         },
       };
     };
+    chain.select = (_fields?: unknown) => ({
+      from: (table: unknown) => ({
+        where: async (_condition?: unknown) => {
+          const tableName = getTableName(table);
+          if (tableName === "skill") {
+            return [...existingSkillIds].map((id) => ({ id }));
+          }
+          if (tableName === "skill_resource") {
+            return [...existingResourceIds].map((id) => ({ id }));
+          }
+          return [];
+        },
+      }),
+    });
     return chain;
   };
 
@@ -44,6 +69,8 @@ describe("syncAutoLinks", () => {
   beforeEach(() => {
     deleteCalls = [];
     insertCalls = [];
+    existingSkillIds = new Set([TARGET_SKILL]);
+    existingResourceIds = new Set([TARGET_RESOURCE]);
   });
 
   test("deletes existing auto links and inserts new ones", async () => {
@@ -85,6 +112,18 @@ describe("syncAutoLinks", () => {
 
     expect(deleteCalls).toHaveLength(1);
     expect(insertCalls).toHaveLength(0);
+  });
+
+  test("ignores mentions that point to missing targets", async () => {
+    const unknownSkill = "d4e5f6a7-b8c9-0123-def1-234567890123";
+    const unknownResource = "e5f6a7b8-c9d0-1234-ef12-345678901234";
+    const md = `[[skill:${TARGET_SKILL}]] [[skill:${unknownSkill}]] [[resource:${unknownResource}]]`;
+
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+
+    expect(deleteCalls).toHaveLength(1);
+    expect(insertCalls).toHaveLength(1);
+    expect(insertCalls[0]!.values).toHaveLength(1);
   });
 
   test("tags all links with origin markdown-auto", async () => {

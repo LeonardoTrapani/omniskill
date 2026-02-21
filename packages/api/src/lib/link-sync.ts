@@ -1,8 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 import { db } from "@omniscient/db";
-import { skillLink } from "@omniscient/db/schema/skills";
+import { skill, skillLink, skillResource } from "@omniscient/db/schema/skills";
 
 import { parseMentions } from "./mentions";
 
@@ -18,6 +18,33 @@ export async function syncAutoLinks(
 ): Promise<void> {
   const mentions = parseMentions(markdown);
 
+  const skillMentionIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
+  const resourceMentionIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
+
+  const existingSkillIds = new Set<string>();
+  if (skillMentionIds.length > 0) {
+    const rows = await db
+      .select({ id: skill.id })
+      .from(skill)
+      .where(inArray(skill.id, skillMentionIds));
+
+    for (const row of rows) {
+      existingSkillIds.add(row.id);
+    }
+  }
+
+  const existingResourceIds = new Set<string>();
+  if (resourceMentionIds.length > 0) {
+    const rows = await db
+      .select({ id: skillResource.id })
+      .from(skillResource)
+      .where(inArray(skillResource.id, resourceMentionIds));
+
+    for (const row of rows) {
+      existingResourceIds.add(row.id);
+    }
+  }
+
   // delete existing auto-generated links for this source skill
   await db
     .delete(skillLink)
@@ -30,8 +57,17 @@ export async function syncAutoLinks(
 
   if (mentions.length === 0) return;
 
+  const validMentions = mentions.filter((mention) => {
+    if (mention.type === "skill") {
+      return existingSkillIds.has(mention.targetId);
+    }
+    return existingResourceIds.has(mention.targetId);
+  });
+
+  if (validMentions.length === 0) return;
+
   // build insert values for each mention
-  const values = mentions.map((m) => ({
+  const values = validMentions.map((m) => ({
     sourceSkillId,
     sourceResourceId: null,
     targetSkillId: m.type === "skill" ? m.targetId : null,
