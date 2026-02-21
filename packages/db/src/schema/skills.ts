@@ -59,6 +59,10 @@ export const skill = pgTable(
       "skill_visibility_owner_check",
       sql`${table.visibility} = 'public' or ${table.ownerUserId} is not null`,
     ),
+    // pg_trgm GIN indexes for fuzzy search
+    index("skill_name_trgm_idx").using("gin", sql`${table.name} gin_trgm_ops`),
+    index("skill_description_trgm_idx").using("gin", sql`${table.description} gin_trgm_ops`),
+    index("skill_slug_trgm_idx").using("gin", sql`${table.slug} gin_trgm_ops`),
   ],
 );
 

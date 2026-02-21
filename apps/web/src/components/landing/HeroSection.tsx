@@ -13,6 +13,10 @@ const mainNav = [
   { label: "Github", href: "#github", hasDropdown: false },
 ];
 
+function isInternalPath(href: string): href is `/${string}` {
+  return href.startsWith("/");
+}
+
 // Each line is exactly 79 characters wide (padded with trailing spaces)
 const asciiLogo = `    ██████╗ ███╗   ███╗███╗   ██╗██╗███████╗ ██████╗███████╗███╗   ██╗████████╗
    ██╔═══██╗████╗ ████║████╗  ██║██║██╔════╝██╔════╝██╔════╝████╗  ██║╚══██╔══╝
@@ -77,13 +81,54 @@ const brainAscii = `
                                                                                ......
 `;
 
+const BRAIN_FRAME_COUNT = 12;
+const BRAIN_FRAME_INTERVAL_MS = 95;
+const BRAIN_NOISE_CHARS = [".", ":", "-", "=", "+", "*", "#", "%", "@"];
+
+function buildBrainFrames(ascii: string, frameCount: number) {
+  const nonWhitespaceIndexes = Array.from(ascii).reduce<number[]>((acc, char, index) => {
+    if (char !== " " && char !== "\n") {
+      acc.push(index);
+    }
+    return acc;
+  }, []);
+
+  if (!nonWhitespaceIndexes.length) {
+    return [ascii];
+  }
+
+  return Array.from({ length: frameCount }, (_, frameIndex) => {
+    const progress = frameCount === 1 ? 1 : frameIndex / (frameCount - 1);
+    const stableThreshold = Math.max(0, progress - 0.08);
+    const chars = Array.from(ascii);
+
+    for (let i = 0; i < nonWhitespaceIndexes.length; i += 1) {
+      const charIndex = nonWhitespaceIndexes[i]!;
+      const revealPoint = i / nonWhitespaceIndexes.length;
+
+      if (revealPoint <= stableThreshold) {
+        continue;
+      }
+
+      if (revealPoint <= progress) {
+        chars[charIndex] = BRAIN_NOISE_CHARS[(frameIndex + i) % BRAIN_NOISE_CHARS.length] ?? ".";
+        continue;
+      }
+
+      chars[charIndex] = " ";
+    }
+
+    return chars.join("");
+  });
+}
+
+const brainFrames = buildBrainFrames(brainAscii, BRAIN_FRAME_COUNT);
+
 export default function HeroSection() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [visibleLines, setVisibleLines] = useState(0);
+  const [brainFrameIndex, setBrainFrameIndex] = useState(0);
   const { data: session, isPending } = authClient.useSession();
-
-  const brainLines = brainAscii.split("\n");
 
   const ctaLabel = isPending ? "" : session ? "Dashboard" : "Sign In";
   const ctaHref = session ? "/dashboard" : "/login";
@@ -107,20 +152,26 @@ export default function HeroSection() {
     };
   }, [mobileOpen]);
 
-  // Animate brain ASCII line by line
   useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reducedMotion) {
+      setBrainFrameIndex(brainFrames.length - 1);
+      return;
+    }
+
     const interval = setInterval(() => {
-      setVisibleLines((prev) => {
-        if (prev < brainLines.length) {
+      setBrainFrameIndex((prev) => {
+        if (prev < brainFrames.length - 1) {
           return prev + 1;
         }
         clearInterval(interval);
         return prev;
       });
-    }, 30); // 30ms per line
+    }, BRAIN_FRAME_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [brainLines.length]);
+  }, []);
 
   const navContent = (
     <>
@@ -129,16 +180,26 @@ export default function HeroSection() {
       </Link>
 
       <div className="hidden lg:flex items-center gap-7">
-        {mainNav.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
-          >
-            {item.label}
-            {item.hasDropdown && <ChevronDown className="w-3 h-3" />}
-          </Link>
-        ))}
+        {mainNav.map((item) => {
+          const linkClass =
+            "flex items-center gap-1 text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150";
+
+          if (isInternalPath(item.href)) {
+            return (
+              <Link key={item.label} href={item.href as "/skills"} className={linkClass}>
+                {item.label}
+                {item.hasDropdown && <ChevronDown className="w-3 h-3" />}
+              </Link>
+            );
+          }
+
+          return (
+            <a key={item.label} href={item.href} className={linkClass}>
+              {item.label}
+              {item.hasDropdown && <ChevronDown className="w-3 h-3" />}
+            </a>
+          );
+        })}
       </div>
 
       <div className="hidden lg:flex items-center gap-4">
@@ -168,7 +229,7 @@ export default function HeroSection() {
         {/* Brain ASCII Background */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
           <pre className="text-[13px] leading-[1.15] text-primary/[0.4] whitespace-pre">
-            {brainLines.slice(0, visibleLines).join("\n")}
+            {brainFrames[brainFrameIndex]}
           </pre>
         </div>
 
@@ -217,21 +278,41 @@ export default function HeroSection() {
                 </div>
 
                 <div className="border border-border mb-4">
-                  {mainNav.map((item, i) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
-                        i < mainNav.length - 1 ? "border-b border-border" : ""
-                      }`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <span>{item.label}</span>
-                      {item.hasDropdown && (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </Link>
-                  ))}
+                  {mainNav.map((item, i) => {
+                    const linkClass = `flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
+                      i < mainNav.length - 1 ? "border-b border-border" : ""
+                    }`;
+
+                    if (isInternalPath(item.href)) {
+                      return (
+                        <Link
+                          key={item.label}
+                          href={item.href as "/skills"}
+                          className={linkClass}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          <span>{item.label}</span>
+                          {item.hasDropdown && (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </Link>
+                      );
+                    }
+
+                    return (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        className={linkClass}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <span>{item.label}</span>
+                        {item.hasDropdown && (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </a>
+                    );
+                  })}
                 </div>
 
                 <div className="flex flex-col gap-2">
