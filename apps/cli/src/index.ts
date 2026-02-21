@@ -1,5 +1,6 @@
 import * as p from "@clack/prompts";
 
+import { configCommand } from "./commands/config";
 import { healthCommand } from "./commands/health";
 import { loginCommand } from "./commands/login";
 import { logoutCommand } from "./commands/logout";
@@ -20,6 +21,7 @@ function printUsage() {
   p.log.info("  omniscient logout");
   p.log.info("  omniscient whoami");
   p.log.info("  omniscient sync");
+  p.log.info("  omniscient config");
 }
 
 async function run(args: string[]) {
@@ -43,6 +45,9 @@ async function run(args: string[]) {
       return;
     case "sync":
       await syncCommand();
+      return;
+    case "config":
+      await configCommand();
       return;
     default:
       throw new UsageError(`unknown command: ${args[0]}`);
