@@ -2,7 +2,12 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { getAgentDisplayName, resolveInstallAgents } from "../lib/agents";
-import { installSkill, type InstallableSkill } from "../lib/skills-installer";
+import {
+  installSkill,
+  readInstallLock,
+  uninstallSkill,
+  type InstallableSkill,
+} from "../lib/skills-installer";
 import { trpc } from "../lib/trpc";
 
 const SYNC_PAGE_LIMIT = 100;
@@ -92,6 +97,9 @@ export async function syncCommand() {
 
   fetchSpinner.stop(pc.green(`syncing ${privateSkills.length} private skill(s)`));
 
+  const lock = await readInstallLock();
+  const serverSkillIds = new Set(privateSkills.map((s) => s.id));
+
   let synced = 0;
 
   for (const [index, item] of privateSkills.entries()) {
@@ -106,6 +114,27 @@ export async function syncCommand() {
     } catch (error) {
       spinner.stop(pc.red(`failed ${item.slug}: ${errorMessage(error)}`));
     }
+  }
+
+  // prune skills that no longer exist on the server
+  const staleEntries = Object.entries(lock.skills).filter(
+    ([, entry]) => !serverSkillIds.has(entry.skillId),
+  );
+
+  if (staleEntries.length > 0) {
+    for (const [folder, entry] of staleEntries) {
+      const spinner = p.spinner();
+      spinner.start(`removing ${entry.slug}`);
+
+      try {
+        await uninstallSkill(folder);
+        spinner.stop(pc.green(`removed ${entry.slug}`));
+      } catch (error) {
+        spinner.stop(pc.red(`failed to remove ${entry.slug}: ${errorMessage(error)}`));
+      }
+    }
+
+    p.log.info(pc.dim(`removed ${staleEntries.length} skill(s) no longer on server`));
   }
 
   p.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
