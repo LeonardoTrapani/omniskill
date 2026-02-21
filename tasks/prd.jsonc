@@ -117,7 +117,7 @@
         "Unknown mention targets resolve to a stable fallback text instead of failing the request.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "cover skills router with package-local tests",

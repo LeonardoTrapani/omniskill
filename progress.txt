@@ -81,3 +81,14 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - neon-http compatible: sequential queries, no transactions needed
 - 5 unit tests with mocked db verify delete/insert logic, target field routing, metadata tagging
 - typecheck + tests pass clean
+
+### task 8: return original and rendered markdown on get - DONE
+- created `packages/api/src/lib/render-mentions.ts` with `renderMentions(markdown)` async utility
+- batch-fetches skill names and resource paths+parent skill names from DB using `inArray` queries
+- skill mentions → `Fetch the skill "<name>" to get details.`
+- resource mentions → `Fetch the skill "<skillName>" and get reference "<resourcePath>".`
+- unknown targets → stable fallback text with "(unknown skill)" / "(unknown resource)"
+- no-op fast path: returns original markdown immediately when no mentions parsed
+- made `toSkillOutput()` async to call `renderMentions` — all 4 call sites (getById, getBySlug, create, update) now await it
+- 9 unit tests with mocked DB (uses `Symbol.for("drizzle:Name")` to detect table in mock) covering: resolved skills, resolved resources, multiple mentions, unknown targets, case insensitive, no-query-for-plain-text
+- all 29 lib tests pass, typecheck + check pass clean

@@ -7,6 +7,7 @@ import { skill, skillResource } from "@omniscient/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { syncAutoLinks } from "../lib/link-sync";
+import { renderMentions } from "../lib/render-mentions";
 
 // -- shared enums --
 
@@ -86,11 +87,13 @@ function visibilityFilter(session: Session | null) {
   return eq(skill.visibility, "public");
 }
 
-/** map a skill row + resources array to the output shape */
-function toSkillOutput(
+/** map a skill row + resources array to the output shape, rendering mentions */
+async function toSkillOutput(
   row: typeof skill.$inferSelect,
   resources: (typeof skillResource.$inferSelect)[],
 ) {
+  const renderedMarkdown = await renderMentions(row.skillMarkdown);
+
   return {
     id: row.id,
     ownerUserId: row.ownerUserId,
@@ -99,7 +102,7 @@ function toSkillOutput(
     name: row.name,
     description: row.description,
     originalMarkdown: row.skillMarkdown,
-    renderedMarkdown: row.skillMarkdown, // task 7 adds actual rendering
+    renderedMarkdown,
     frontmatter: row.frontmatter,
     metadata: row.metadata,
     sourceUrl: row.sourceUrl,
@@ -182,7 +185,7 @@ export const skillsRouter = router({
         .from(skillResource)
         .where(eq(skillResource.skillId, row.id));
 
-      return toSkillOutput(row, resources);
+      return await toSkillOutput(row, resources);
     }),
 
   getBySlug: publicProcedure
@@ -204,7 +207,7 @@ export const skillsRouter = router({
         .from(skillResource)
         .where(eq(skillResource.skillId, row.id));
 
-      return toSkillOutput(row, resources);
+      return await toSkillOutput(row, resources);
     }),
 
   getResourceByPath: publicProcedure
@@ -311,7 +314,7 @@ export const skillsRouter = router({
       // sync auto-generated links from [[...]] mentions in markdown
       await syncAutoLinks(created.id, input.skillMarkdown, userId);
 
-      return toSkillOutput(created, resources);
+      return await toSkillOutput(created, resources);
     }),
 
   update: protectedProcedure
@@ -419,7 +422,7 @@ export const skillsRouter = router({
         .from(skillResource)
         .where(eq(skillResource.skillId, input.id));
 
-      return toSkillOutput(updatedSkill, resources);
+      return await toSkillOutput(updatedSkill, resources);
     }),
 
   delete: protectedProcedure
