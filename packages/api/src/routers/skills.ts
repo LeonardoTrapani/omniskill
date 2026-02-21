@@ -120,17 +120,22 @@ export const skillsRouter = router({
     .input(
       cursorPaginationInput.extend({
         search: z.string().optional(),
+        visibility: visibilityEnum.optional(),
       }),
     )
     .output(paginatedSkillList)
     .query(async ({ ctx, input }) => {
-      const { cursor, limit, search } = input;
+      const { cursor, limit, search, visibility } = input;
 
       const conditions = [visibilityFilter(ctx.session)];
 
       if (search) {
         const pattern = `%${search}%`;
         conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
+      }
+
+      if (visibility) {
+        conditions.push(eq(skill.visibility, visibility));
       }
 
       if (cursor) {
