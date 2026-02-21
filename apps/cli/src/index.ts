@@ -30,6 +30,7 @@ function printUsage() {
   p.log.info("  omniscient get <slug-or-uuid>");
   p.log.info("  omniscient config");
   p.log.info("  omniscient create --from <dir> [--slug <s>] [--public]");
+  p.log.info("  omniscient delete <uuid>");
   p.log.info("  omniscient import <slug-or-uuid> [--slug <new-slug>]");
 }
 
@@ -66,6 +67,9 @@ async function run(args: string[]) {
       return;
     case "create":
       await createCommand();
+      return;
+    case "delete":
+      await deleteCommand();
       return;
     case "import":
       await importCommand();

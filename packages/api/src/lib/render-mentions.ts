@@ -5,17 +5,9 @@ import { skill, skillResource } from "@omniscient/db/schema/skills";
 
 import { parseMentions } from "./mentions";
 
-const SKILL_FALLBACK = `Fetch the skill "(unknown skill)" to get details.`;
-const RESOURCE_FALLBACK = `Fetch the skill "(unknown skill)" and get reference "(unknown resource)".`;
+const SKILL_FALLBACK = "`(unknown skill)`";
+const RESOURCE_FALLBACK = "`(unknown resource)` in skill `(unknown skill)`";
 
-/**
- * Render [[skill:<uuid>]] and [[resource:<uuid>]] mentions in markdown
- * into human-readable instruction text by resolving names from the DB.
- *
- * skill mention   → Fetch the skill "<skillName>" to get details.
- * resource mention → Fetch the skill "<skillName>" and get reference "<referenceName>".
- * unknown targets  → stable fallback text (never errors)
- */
 export async function renderMentions(markdown: string, currentSkillId?: string): Promise<string> {
   const mentions = parseMentions(markdown);
   if (mentions.length === 0) return markdown;
@@ -23,22 +15,22 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
   const skillIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
   const resourceIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
 
-  // batch-fetch skill names
-  const skillNameMap = new Map<string, string>();
+  // batch-fetch skill slugs
+  const skillSlugMap = new Map<string, string>();
   if (skillIds.length > 0) {
     const rows = await db
-      .select({ id: skill.id, name: skill.name })
+      .select({ id: skill.id, slug: skill.slug })
       .from(skill)
       .where(inArray(skill.id, skillIds));
     for (const row of rows) {
-      skillNameMap.set(row.id, row.name);
+      skillSlugMap.set(row.id, row.slug);
     }
   }
 
-  // batch-fetch resource names + parent skill names
+  // batch-fetch resource paths + parent skill slugs
   const resourceInfoMap = new Map<
     string,
-    { resourcePath: string; skillName: string; skillId: string }
+    { resourcePath: string; skillSlug: string; skillId: string }
   >();
   if (resourceIds.length > 0) {
     const rows = await db
@@ -50,30 +42,27 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
       .from(skillResource)
       .where(inArray(skillResource.id, resourceIds));
 
-    // resolve parent skill names for found resources
     const parentSkillIds = [...new Set(rows.map((r) => r.skillId))];
-    const parentSkillMap = new Map<string, string>();
+    const parentSkillSlugMap = new Map<string, string>();
     if (parentSkillIds.length > 0) {
       const parentRows = await db
-        .select({ id: skill.id, name: skill.name })
+        .select({ id: skill.id, slug: skill.slug })
         .from(skill)
         .where(inArray(skill.id, parentSkillIds));
       for (const row of parentRows) {
-        parentSkillMap.set(row.id, row.name);
+        parentSkillSlugMap.set(row.id, row.slug);
       }
     }
 
     for (const row of rows) {
       resourceInfoMap.set(row.id, {
         resourcePath: row.path,
-        skillName: parentSkillMap.get(row.skillId) ?? "(unknown skill)",
+        skillSlug: parentSkillSlugMap.get(row.skillId) ?? "(unknown skill)",
         skillId: row.skillId,
       });
     }
   }
 
-  // replace tokens in the markdown
-  // reuse the same regex pattern as parseMentions
   const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
   const MENTION_RE = new RegExp(`\\[\\[(skill|resource):(${UUID_RE})\\]\\]`, "gi");
 
@@ -82,17 +71,16 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     const normalizedId = targetId.toLowerCase();
 
     if (normalizedType === "skill") {
-      const name = skillNameMap.get(normalizedId);
-      if (name) return `Fetch the skill "${name}" to get details.`;
+      const slug = skillSlugMap.get(normalizedId);
+      if (slug) return `\`${slug}\``;
       return SKILL_FALLBACK;
     }
 
     if (normalizedType === "resource") {
       const info = resourceInfoMap.get(normalizedId);
       if (info) {
-        if (currentSkillId && info.skillId === currentSkillId)
-          return `See reference "${info.resourcePath}".`;
-        return `Fetch the skill "${info.skillName}" and get reference "${info.resourcePath}".`;
+        if (currentSkillId && info.skillId === currentSkillId) return `\`${info.resourcePath}\``;
+        return `\`${info.resourcePath}\` in skill \`${info.skillSlug}\``;
       }
       return RESOURCE_FALLBACK;
     }
