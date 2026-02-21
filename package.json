@@ -35,6 +35,7 @@
   "dependencies": {
     "@omniscient/env": "workspace:*",
     "dotenv": "catalog:",
+    "pg": "^8.18.0",
     "zod": "catalog:"
   },
   "devDependencies": {
