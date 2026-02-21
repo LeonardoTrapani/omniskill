@@ -1,0 +1,24 @@
+{
+  "name": "@omniscient/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@omniscient/db": "workspace:*",
+    "@omniscient/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@omniscient/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
