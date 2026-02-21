@@ -1,0 +1,295 @@
+import { cp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { homedir, platform } from "node:os";
+import { dirname, join, relative, resolve, sep } from "node:path";
+
+import { env } from "@omniscient/env/cli";
+
+import type { SupportedAgent } from "./agents";
+import { getAgentSkillDir } from "./agents";
+
+const OMNISCIENT_SKILLS_DIR = join(homedir(), ".omniscient", "skills");
+const LOCK_FILE_PATH = join(OMNISCIENT_SKILLS_DIR, "lock.json");
+const INSTALL_METADATA_FILE = ".omniscient-install.json";
+
+type SkillResourceInput = {
+  path: string;
+  content: string;
+};
+
+export type InstallableSkill = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  visibility: "public" | "private";
+  originalMarkdown: string;
+  resources: SkillResourceInput[];
+  sourceUrl: string | null;
+  sourceIdentifier: string | null;
+};
+
+export type AgentInstallResult = {
+  agent: SupportedAgent;
+  path: string;
+  mode: "symlink" | "copy";
+  symlinkFailed: boolean;
+};
+
+export type InstallSkillResult = {
+  slug: string;
+  canonicalPath: string;
+  skippedResources: string[];
+  targets: AgentInstallResult[];
+};
+
+type InstallLock = {
+  version: 1;
+  updatedAt: string;
+  skills: Record<string, InstallLockSkillEntry>;
+};
+
+type InstallLockSkillEntry = {
+  skillId: string;
+  slug: string;
+  name: string;
+  description: string;
+  visibility: "public" | "private";
+  canonicalPath: string;
+  source: {
+    type: "omniscient-api";
+    serverUrl: string;
+    sourceUrl: string | null;
+    sourceIdentifier: string | null;
+  };
+  updatedAt: string;
+  targets: Record<string, InstallLockSkillTarget>;
+};
+
+type InstallLockSkillTarget = {
+  path: string;
+  mode: "symlink" | "copy";
+  symlinkFailed: boolean;
+  installedAt: string;
+};
+
+function sanitizeName(name: string): string {
+  const sanitized = name
+    .toLowerCase()
+    .replace(/[^a-z0-9._]+/g, "-")
+    .replace(/^[.-]+|[.-]+$/g, "");
+
+  return sanitized.slice(0, 255) || "unnamed-skill";
+}
+
+function isPathSafe(basePath: string, targetPath: string): boolean {
+  const normalizedBase = resolve(basePath);
+  const normalizedTarget = resolve(targetPath);
+  return (
+    normalizedTarget === normalizedBase || normalizedTarget.startsWith(`${normalizedBase}${sep}`)
+  );
+}
+
+async function cleanDirectory(path: string): Promise<void> {
+  await rm(path, { recursive: true, force: true });
+  await mkdir(path, { recursive: true });
+}
+
+async function writeCanonicalSkill(
+  skill: InstallableSkill,
+  canonicalPath: string,
+): Promise<{ skippedResources: string[] }> {
+  const skillMdPath = join(canonicalPath, "SKILL.md");
+  await writeFile(skillMdPath, skill.originalMarkdown, "utf8");
+
+  const skippedResources: string[] = [];
+
+  for (const resource of skill.resources) {
+    const resourcePath = resolve(canonicalPath, resource.path);
+
+    if (!isPathSafe(canonicalPath, resourcePath)) {
+      skippedResources.push(resource.path);
+      continue;
+    }
+
+    await mkdir(dirname(resourcePath), { recursive: true });
+    await writeFile(resourcePath, resource.content, "utf8");
+  }
+
+  const metadataPath = join(canonicalPath, INSTALL_METADATA_FILE);
+  await writeFile(
+    metadataPath,
+    `${JSON.stringify(
+      {
+        skillId: skill.id,
+        slug: skill.slug,
+        name: skill.name,
+        visibility: skill.visibility,
+        installedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  return { skippedResources };
+}
+
+async function createSymlink(targetPath: string, linkPath: string): Promise<boolean> {
+  try {
+    const resolvedTarget = resolve(targetPath);
+    const resolvedLinkPath = resolve(linkPath);
+
+    if (resolvedTarget === resolvedLinkPath) {
+      return true;
+    }
+
+    await rm(linkPath, { recursive: true, force: true });
+    await mkdir(dirname(linkPath), { recursive: true });
+
+    const realLinkParent = await realpath(dirname(linkPath)).catch(() => dirname(linkPath));
+    const relativeTarget = relative(realLinkParent, targetPath);
+
+    await symlink(relativeTarget, linkPath, platform() === "win32" ? "junction" : undefined);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function linkSkillToAgent(
+  canonicalPath: string,
+  agent: SupportedAgent,
+  skillFolder: string,
+): Promise<AgentInstallResult> {
+  const agentBase = getAgentSkillDir(agent);
+  const agentSkillPath = join(agentBase, skillFolder);
+
+  if (!isPathSafe(agentBase, agentSkillPath)) {
+    throw new Error(`invalid skill path for agent ${agent}`);
+  }
+
+  const linked = await createSymlink(canonicalPath, agentSkillPath);
+  if (linked) {
+    return {
+      agent,
+      path: agentSkillPath,
+      mode: "symlink",
+      symlinkFailed: false,
+    };
+  }
+
+  await rm(agentSkillPath, { recursive: true, force: true });
+  await mkdir(dirname(agentSkillPath), { recursive: true });
+  await cp(canonicalPath, agentSkillPath, { recursive: true, dereference: true });
+
+  return {
+    agent,
+    path: agentSkillPath,
+    mode: "copy",
+    symlinkFailed: true,
+  };
+}
+
+async function readInstallLock(): Promise<InstallLock> {
+  try {
+    const raw = await readFile(LOCK_FILE_PATH, "utf8");
+    const parsed = JSON.parse(raw) as Partial<InstallLock>;
+
+    if (parsed.version !== 1 || typeof parsed.skills !== "object" || parsed.skills === null) {
+      return {
+        version: 1,
+        updatedAt: new Date(0).toISOString(),
+        skills: {},
+      };
+    }
+
+    return {
+      version: 1,
+      updatedAt:
+        typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date(0).toISOString(),
+      skills: parsed.skills as InstallLock["skills"],
+    };
+  } catch {
+    return {
+      version: 1,
+      updatedAt: new Date(0).toISOString(),
+      skills: {},
+    };
+  }
+}
+
+async function writeInstallLock(
+  skillFolder: string,
+  skill: InstallableSkill,
+  result: InstallSkillResult,
+) {
+  const lock = await readInstallLock();
+  const now = new Date().toISOString();
+  const targets = Object.fromEntries(
+    result.targets.map((target) => [
+      target.agent,
+      {
+        path: target.path,
+        mode: target.mode,
+        symlinkFailed: target.symlinkFailed,
+        installedAt: now,
+      } satisfies InstallLockSkillTarget,
+    ]),
+  );
+
+  lock.updatedAt = now;
+  lock.skills[skillFolder] = {
+    skillId: skill.id,
+    slug: skill.slug,
+    name: skill.name,
+    description: skill.description,
+    visibility: skill.visibility,
+    canonicalPath: result.canonicalPath,
+    source: {
+      type: "omniscient-api",
+      serverUrl: env.SERVER_URL,
+      sourceUrl: skill.sourceUrl,
+      sourceIdentifier: skill.sourceIdentifier,
+    },
+    updatedAt: now,
+    targets,
+  };
+
+  await mkdir(OMNISCIENT_SKILLS_DIR, { recursive: true });
+  await writeFile(LOCK_FILE_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
+}
+
+export async function installSkill(
+  skill: InstallableSkill,
+  agents: SupportedAgent[],
+): Promise<InstallSkillResult> {
+  const skillFolder = sanitizeName(skill.slug);
+  const canonicalPath = join(OMNISCIENT_SKILLS_DIR, skillFolder);
+
+  if (!isPathSafe(OMNISCIENT_SKILLS_DIR, canonicalPath)) {
+    throw new Error("invalid skill slug");
+  }
+
+  await mkdir(OMNISCIENT_SKILLS_DIR, { recursive: true });
+  await cleanDirectory(canonicalPath);
+  const canonicalWrite = await writeCanonicalSkill(skill, canonicalPath);
+
+  const targets: AgentInstallResult[] = [];
+
+  for (const agent of new Set(agents)) {
+    const target = await linkSkillToAgent(canonicalPath, agent, skillFolder);
+    targets.push(target);
+  }
+
+  const result: InstallSkillResult = {
+    slug: skill.slug,
+    canonicalPath,
+    skippedResources: canonicalWrite.skippedResources,
+    targets,
+  };
+
+  await writeInstallLock(skillFolder, skill, result);
+
+  return result;
+}
