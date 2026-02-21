@@ -2,6 +2,7 @@ import * as p from "@clack/prompts";
 
 import { configCommand } from "./commands/config";
 import { createCommand } from "./commands/create";
+import { deleteCommand } from "./commands/delete";
 import { getCommand } from "./commands/get";
 import { importCommand } from "./commands/import";
 import { healthCommand } from "./commands/health";

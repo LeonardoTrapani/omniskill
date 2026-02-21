@@ -45,8 +45,9 @@ export async function searchCommand() {
     for (let i = 0; i < result.items.length; i++) {
       const item = result.items[i]!;
       const updated = String(item.updatedAt).split("T")[0];
+      const pct = Math.round(item.score * 100);
 
-      console.log(`[${i + 1}] ${item.name} (match: ${item.matchType})`);
+      console.log(`[${i + 1}] ${item.name} (${item.matchType} ${pct}%)`);
       console.log(`    ${item.description}`);
       console.log(
         `    id: ${item.id} | slug: ${item.slug} | visibility: ${item.visibility} | updated: ${updated}`,

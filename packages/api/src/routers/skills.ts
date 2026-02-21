@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gt, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
@@ -115,15 +115,9 @@ async function toSkillOutput(
 
 // -- search helpers --
 
-function getMatchType(
-  row: typeof skill.$inferSelect,
-  query: string,
-): "title" | "description" | "content" {
-  const q = query.toLowerCase();
-  if (row.name.toLowerCase().includes(q)) return "title";
-  if (row.description.toLowerCase().includes(q)) return "description";
-  return "content";
-}
+// strict_word_similarity normalizes by max(|trgm(query)|, |trgm(best_substr)|),
+// producing tighter scores than word_similarity which only uses |trgm(query)|.
+const FUZZY_THRESHOLD = 0.15;
 
 function extractSnippet(text: string, query: string, contextChars = 80): string {
   const lower = text.toLowerCase();
@@ -138,6 +132,30 @@ function extractSnippet(text: string, query: string, contextChars = 80): string 
   return snippet;
 }
 
+/**
+ * Build the WHERE condition for fuzzy search.
+ * Uses strict_word_similarity for >= 3 char queries (typo tolerance),
+ * falls back to ILIKE for shorter queries where trigrams don't work well.
+ */
+function searchCondition(query: string) {
+  const pattern = `%${query}%`;
+
+  if (query.length >= 3) {
+    return or(
+      sql`strict_word_similarity(${query}, ${skill.name}) > ${FUZZY_THRESHOLD}`,
+      sql`strict_word_similarity(${query}, ${skill.description}) > ${FUZZY_THRESHOLD}`,
+      sql`strict_word_similarity(${query}, ${skill.slug}) > ${FUZZY_THRESHOLD}`,
+      ilike(skill.skillMarkdown, pattern),
+    );
+  }
+
+  return or(
+    ilike(skill.name, pattern),
+    ilike(skill.description, pattern),
+    ilike(skill.skillMarkdown, pattern),
+  );
+}
+
 // -- search output --
 
 const searchResultItem = z.object({
@@ -147,6 +165,7 @@ const searchResultItem = z.object({
   description: z.string(),
   visibility: visibilityEnum,
   matchType: z.enum(["title", "description", "content"]),
+  score: z.number(),
   snippet: z.string().nullable(),
   updatedAt: z.date(),
 });
@@ -174,38 +193,75 @@ export const skillsRouter = router({
       }
 
       const pattern = `%${query}%`;
+      const useFuzzy = query.length >= 3;
 
       const scopeCondition =
         scope === "own"
           ? eq(skill.ownerUserId, ctx.session!.user.id)
           : visibilityFilter(ctx.session);
 
-      const rows = await db
-        .select()
-        .from(skill)
-        .where(
-          and(
-            or(
-              ilike(skill.name, pattern),
-              ilike(skill.description, pattern),
-              ilike(skill.skillMarkdown, pattern),
-            ),
-            scopeCondition,
-          ),
-        )
-        .orderBy(
-          sql`CASE
-            WHEN ${skill.name} ILIKE ${pattern} THEN 1
-            WHEN ${skill.description} ILIKE ${pattern} THEN 2
-            WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 3
-          END`,
-          skill.name,
-        )
-        .limit(limit);
+      const matchCondition = searchCondition(query);
+      const whereClause = and(matchCondition, scopeCondition);
+
+      // additive score: trigram similarity base + exact substring bonuses.
+      // the ILIKE bonuses ensure "docker" in a description outranks "doc" trigram overlaps.
+      const scoreExpr = useFuzzy
+        ? sql<number>`LEAST(
+            GREATEST(strict_word_similarity(${query}, ${skill.name}), strict_word_similarity(${query}, ${skill.slug}))
+            + strict_word_similarity(${query}, ${skill.description}) * 0.3
+            + CASE WHEN ${skill.name} ILIKE ${pattern} OR ${skill.slug} ILIKE ${pattern} THEN 0.5
+                   WHEN ${skill.description} ILIKE ${pattern} THEN 0.2
+                   WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 0.05
+                   ELSE 0 END,
+            1.0)`
+        : sql<number>`CASE
+            WHEN ${skill.name} ILIKE ${pattern} THEN 1.0
+            WHEN ${skill.description} ILIKE ${pattern} THEN 0.8
+            WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 0.5
+            ELSE 0
+          END`;
+
+      const [rows, countResult] = await Promise.all([
+        db
+          .select({
+            ...getTableColumns(skill),
+            score: scoreExpr.as("score"),
+            nameScore: useFuzzy
+              ? sql<number>`strict_word_similarity(${query}, ${skill.name})`.as("name_score")
+              : sql<number>`CASE WHEN ${skill.name} ILIKE ${pattern} THEN 1.0 ELSE 0 END`.as(
+                  "name_score",
+                ),
+            descScore: useFuzzy
+              ? sql<number>`strict_word_similarity(${query}, ${skill.description})`.as("desc_score")
+              : sql<number>`CASE WHEN ${skill.description} ILIKE ${pattern} THEN 1.0 ELSE 0 END`.as(
+                  "desc_score",
+                ),
+            contentMatch: sql<boolean>`${skill.skillMarkdown} ILIKE ${pattern}`.as("content_match"),
+          })
+          .from(skill)
+          .where(whereClause)
+          .orderBy(sql`score DESC`, skill.name)
+          .limit(limit),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(skill)
+          .where(whereClause),
+      ]);
+
+      const total = countResult[0]?.count ?? 0;
 
       const items = rows.map((row) => {
-        const matchType = getMatchType(row, query);
-        const snippet = matchType === "content" ? extractSnippet(row.skillMarkdown, query) : null;
+        const matchType: "title" | "description" | "content" =
+          row.nameScore >= row.descScore && row.nameScore > 0.1
+            ? "title"
+            : row.descScore > 0.1
+              ? "description"
+              : "content";
+
+        const snippet =
+          matchType === "content" && row.contentMatch
+            ? extractSnippet(row.skillMarkdown, query)
+            : null;
 
         return {
           id: row.id,
@@ -214,12 +270,13 @@ export const skillsRouter = router({
           description: row.description,
           visibility: row.visibility,
           matchType,
+          score: Math.round(row.score * 100) / 100,
           snippet,
           updatedAt: row.updatedAt,
         };
       });
 
-      return { items, total: items.length };
+      return { items, total };
     }),
 
   list: publicProcedure

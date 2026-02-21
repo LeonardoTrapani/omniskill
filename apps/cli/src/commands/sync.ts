@@ -23,7 +23,8 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     name: skill.name,
     description: skill.description,
     visibility: skill.visibility,
-    originalMarkdown: skill.originalMarkdown,
+    renderedMarkdown: skill.renderedMarkdown,
+    frontmatter: skill.frontmatter,
     resources: skill.resources.map((resource) => ({
       path: resource.path,
       content: resource.content,

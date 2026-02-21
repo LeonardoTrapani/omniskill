@@ -2,6 +2,8 @@ import { cp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/p
 import { homedir, platform } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
+import matter from "gray-matter";
+
 import { env } from "@omniscient/env/cli";
 
 import type { SupportedAgent } from "./agents";
@@ -22,7 +24,8 @@ export type InstallableSkill = {
   name: string;
   description: string;
   visibility: "public" | "private";
-  originalMarkdown: string;
+  renderedMarkdown: string;
+  frontmatter: Record<string, unknown>;
   resources: SkillResourceInput[];
   sourceUrl: string | null;
   sourceIdentifier: string | null;
@@ -99,7 +102,8 @@ async function writeCanonicalSkill(
   canonicalPath: string,
 ): Promise<{ skippedResources: string[] }> {
   const skillMdPath = join(canonicalPath, "SKILL.md");
-  await writeFile(skillMdPath, skill.originalMarkdown, "utf8");
+  const fullMarkdown = matter.stringify(skill.renderedMarkdown, skill.frontmatter);
+  await writeFile(skillMdPath, fullMarkdown, "utf8");
 
   const skippedResources: string[] = [];
 
