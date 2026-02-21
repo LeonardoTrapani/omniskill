@@ -132,7 +132,7 @@
         "Rendering tests assert transformed text and original markdown coexist in responses.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
   ],
 }
