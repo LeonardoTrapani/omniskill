@@ -42,7 +42,7 @@ export type InstallSkillResult = {
   targets: AgentInstallResult[];
 };
 
-type InstallLock = {
+export type InstallLock = {
   version: 1;
   updatedAt: string;
   skills: Record<string, InstallLockSkillEntry>;
@@ -191,7 +191,7 @@ async function linkSkillToAgent(
   };
 }
 
-async function readInstallLock(): Promise<InstallLock> {
+export async function readInstallLock(): Promise<InstallLock> {
   try {
     const raw = await readFile(LOCK_FILE_PATH, "utf8");
     const parsed = JSON.parse(raw) as Partial<InstallLock>;
@@ -256,6 +256,30 @@ async function writeInstallLock(
     targets,
   };
 
+  await mkdir(OMNISCIENT_SKILLS_DIR, { recursive: true });
+  await writeFile(LOCK_FILE_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
+}
+
+export async function uninstallSkill(skillFolder: string): Promise<void> {
+  const lock = await readInstallLock();
+  const entry = lock.skills[skillFolder];
+
+  // remove canonical dir
+  const canonicalPath = entry?.canonicalPath ?? join(OMNISCIENT_SKILLS_DIR, skillFolder);
+  await rm(canonicalPath, { recursive: true, force: true });
+
+  // remove agent symlinks / copies
+  if (entry?.targets) {
+    await Promise.all(
+      Object.values(entry.targets).map((target) =>
+        rm(target.path, { recursive: true, force: true }),
+      ),
+    );
+  }
+
+  // remove from lock file
+  delete lock.skills[skillFolder];
+  lock.updatedAt = new Date().toISOString();
   await mkdir(OMNISCIENT_SKILLS_DIR, { recursive: true });
   await writeFile(LOCK_FILE_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
 }

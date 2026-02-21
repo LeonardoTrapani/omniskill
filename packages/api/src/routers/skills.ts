@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, ilike, inArray, lt, or } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
@@ -113,9 +113,115 @@ async function toSkillOutput(
   };
 }
 
+// -- search helpers --
+
+function getMatchType(
+  row: typeof skill.$inferSelect,
+  query: string,
+): "title" | "description" | "content" {
+  const q = query.toLowerCase();
+  if (row.name.toLowerCase().includes(q)) return "title";
+  if (row.description.toLowerCase().includes(q)) return "description";
+  return "content";
+}
+
+function extractSnippet(text: string, query: string, contextChars = 80): string {
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return text.slice(0, contextChars).replace(/\n/g, " ").trim() + "...";
+
+  const start = Math.max(0, idx - Math.floor(contextChars / 2));
+  const end = Math.min(text.length, idx + query.length + Math.floor(contextChars / 2));
+  let snippet = text.slice(start, end).replace(/\n/g, " ").trim();
+  if (start > 0) snippet = "..." + snippet;
+  if (end < text.length) snippet += "...";
+  return snippet;
+}
+
+// -- search output --
+
+const searchResultItem = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string(),
+  visibility: visibilityEnum,
+  matchType: z.enum(["title", "description", "content"]),
+  snippet: z.string().nullable(),
+  updatedAt: z.date(),
+});
+
 // -- router --
 
 export const skillsRouter = router({
+  search: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1),
+        scope: z.enum(["own", "all"]).default("own"),
+        limit: z.number().int().min(1).max(50).default(5),
+      }),
+    )
+    .output(z.object({ items: z.array(searchResultItem), total: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const { query, scope, limit } = input;
+
+      if (scope === "own" && !ctx.session) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Authentication required to search own skills",
+        });
+      }
+
+      const pattern = `%${query}%`;
+
+      const scopeCondition =
+        scope === "own"
+          ? eq(skill.ownerUserId, ctx.session!.user.id)
+          : visibilityFilter(ctx.session);
+
+      const rows = await db
+        .select()
+        .from(skill)
+        .where(
+          and(
+            or(
+              ilike(skill.name, pattern),
+              ilike(skill.description, pattern),
+              ilike(skill.skillMarkdown, pattern),
+            ),
+            scopeCondition,
+          ),
+        )
+        .orderBy(
+          sql`CASE
+            WHEN ${skill.name} ILIKE ${pattern} THEN 1
+            WHEN ${skill.description} ILIKE ${pattern} THEN 2
+            WHEN ${skill.skillMarkdown} ILIKE ${pattern} THEN 3
+          END`,
+          skill.name,
+        )
+        .limit(limit);
+
+      const items = rows.map((row) => {
+        const matchType = getMatchType(row, query);
+        const snippet = matchType === "content" ? extractSnippet(row.skillMarkdown, query) : null;
+
+        return {
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          description: row.description,
+          visibility: row.visibility,
+          matchType,
+          snippet,
+          updatedAt: row.updatedAt,
+        };
+      });
+
+      return { items, total: items.length };
+    }),
+
   list: publicProcedure
     .input(
       cursorPaginationInput.extend({

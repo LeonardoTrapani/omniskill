@@ -1,0 +1,47 @@
+import * as p from "@clack/prompts";
+import pc from "picocolors";
+
+import { trpc } from "../lib/trpc";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function getCommand() {
+  const identifier = process.argv[3];
+
+  if (!identifier) {
+    p.log.error("usage: omniscient get <slug-or-uuid>");
+    process.exit(1);
+  }
+
+  const s = p.spinner();
+  s.start("fetching skill");
+
+  try {
+    const skill = UUID_RE.test(identifier)
+      ? await trpc.skills.getById.query({ id: identifier })
+      : await trpc.skills.getBySlug.query({ slug: identifier });
+
+    s.stop(pc.dim(`fetched ${skill.name}`));
+
+    const updated = String(skill.updatedAt).split("T")[0];
+
+    console.log(`\n# ${skill.name}\n`);
+    console.log(`id: ${skill.id}`);
+    console.log(`slug: ${skill.slug}`);
+    console.log(`visibility: ${skill.visibility}`);
+    console.log(`updated: ${updated}`);
+    console.log(`description: ${skill.description}`);
+
+    if (skill.resources.length > 0) {
+      console.log(`resources: ${skill.resources.map((r) => r.path).join(", ")}`);
+    }
+
+    console.log(`\n---\n`);
+    console.log(skill.originalMarkdown);
+  } catch (error) {
+    s.stop(pc.red("fetch failed"));
+    const message = error instanceof Error ? error.message : String(error);
+    p.log.error(message);
+    process.exit(1);
+  }
+}

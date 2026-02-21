@@ -1,9 +1,11 @@
 import * as p from "@clack/prompts";
 
 import { configCommand } from "./commands/config";
+import { getCommand } from "./commands/get";
 import { healthCommand } from "./commands/health";
 import { loginCommand } from "./commands/login";
 import { logoutCommand } from "./commands/logout";
+import { searchCommand } from "./commands/search";
 import { syncCommand } from "./commands/sync";
 import { whoamiCommand } from "./commands/whoami";
 
@@ -21,6 +23,8 @@ function printUsage() {
   p.log.info("  omniscient logout");
   p.log.info("  omniscient whoami");
   p.log.info("  omniscient sync");
+  p.log.info("  omniscient search <query> [--public] [--limit N]");
+  p.log.info("  omniscient get <slug-or-uuid>");
   p.log.info("  omniscient config");
 }
 
@@ -45,6 +49,12 @@ async function run(args: string[]) {
       return;
     case "sync":
       await syncCommand();
+      return;
+    case "search":
+      await searchCommand();
+      return;
+    case "get":
+      await getCommand();
       return;
     case "config":
       await configCommand();
