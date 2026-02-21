@@ -92,7 +92,7 @@ async function toSkillOutput(
   row: typeof skill.$inferSelect,
   resources: (typeof skillResource.$inferSelect)[],
 ) {
-  const renderedMarkdown = await renderMentions(row.skillMarkdown);
+  const renderedMarkdown = await renderMentions(row.skillMarkdown, row.id);
 
   return {
     id: row.id,
@@ -548,6 +548,79 @@ export const skillsRouter = router({
         .where(eq(skillResource.skillId, input.id));
 
       return await toSkillOutput(updatedSkill, resources);
+    }),
+
+  duplicate: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        slug: z.string().min(1).optional(),
+      }),
+    )
+    .output(skillOutput)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // fetch source skill + resources (respects visibility)
+      const [source] = await db
+        .select()
+        .from(skill)
+        .where(and(eq(skill.id, input.id), visibilityFilter(ctx.session)));
+
+      if (!source) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+
+      const sourceResources = await db
+        .select()
+        .from(skillResource)
+        .where(eq(skillResource.skillId, source.id));
+
+      const slug = input.slug || source.slug;
+
+      const [created] = await db
+        .insert(skill)
+        .values({
+          ownerUserId: userId,
+          slug,
+          name: source.name,
+          description: source.description,
+          skillMarkdown: source.skillMarkdown,
+          visibility: "private",
+          frontmatter: source.frontmatter,
+          metadata: { importedFrom: { skillId: source.id, slug: source.slug } },
+          sourceUrl: source.sourceUrl,
+          sourceIdentifier: source.sourceIdentifier,
+        })
+        .returning();
+
+      if (!created) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to duplicate skill",
+        });
+      }
+
+      let resources: (typeof skillResource.$inferSelect)[] = [];
+
+      if (sourceResources.length > 0) {
+        resources = await db
+          .insert(skillResource)
+          .values(
+            sourceResources.map((r) => ({
+              skillId: created.id,
+              path: r.path,
+              kind: r.kind,
+              content: r.content,
+              metadata: r.metadata,
+            })),
+          )
+          .returning();
+      }
+
+      await syncAutoLinks(created.id, source.skillMarkdown, userId);
+
+      return await toSkillOutput(created, resources);
     }),
 
   delete: protectedProcedure

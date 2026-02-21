@@ -16,7 +16,7 @@ const RESOURCE_FALLBACK = `Fetch the skill "(unknown skill)" and get reference "
  * resource mention → Fetch the skill "<skillName>" and get reference "<referenceName>".
  * unknown targets  → stable fallback text (never errors)
  */
-export async function renderMentions(markdown: string): Promise<string> {
+export async function renderMentions(markdown: string, currentSkillId?: string): Promise<string> {
   const mentions = parseMentions(markdown);
   if (mentions.length === 0) return markdown;
 
@@ -36,7 +36,10 @@ export async function renderMentions(markdown: string): Promise<string> {
   }
 
   // batch-fetch resource names + parent skill names
-  const resourceInfoMap = new Map<string, { resourcePath: string; skillName: string }>();
+  const resourceInfoMap = new Map<
+    string,
+    { resourcePath: string; skillName: string; skillId: string }
+  >();
   if (resourceIds.length > 0) {
     const rows = await db
       .select({
@@ -64,6 +67,7 @@ export async function renderMentions(markdown: string): Promise<string> {
       resourceInfoMap.set(row.id, {
         resourcePath: row.path,
         skillName: parentSkillMap.get(row.skillId) ?? "(unknown skill)",
+        skillId: row.skillId,
       });
     }
   }
@@ -85,8 +89,11 @@ export async function renderMentions(markdown: string): Promise<string> {
 
     if (normalizedType === "resource") {
       const info = resourceInfoMap.get(normalizedId);
-      if (info)
+      if (info) {
+        if (currentSkillId && info.skillId === currentSkillId)
+          return `See reference "${info.resourcePath}".`;
         return `Fetch the skill "${info.skillName}" and get reference "${info.resourcePath}".`;
+      }
       return RESOURCE_FALLBACK;
     }
 

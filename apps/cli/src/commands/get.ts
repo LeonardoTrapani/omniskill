@@ -37,7 +37,7 @@ export async function getCommand() {
     }
 
     console.log(`\n---\n`);
-    console.log(skill.originalMarkdown);
+    console.log(skill.renderedMarkdown);
   } catch (error) {
     s.stop(pc.red("fetch failed"));
     const message = error instanceof Error ? error.message : String(error);

@@ -91,6 +91,12 @@ describe("renderMentions", () => {
     );
   });
 
+  test("self-reference resource renders just the path", async () => {
+    const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
+    const result = await renderMentions(md, SKILL_A_ID);
+    expect(result).toBe(`See See reference "examples/hooks.ts". for examples.`);
+  });
+
   test("handles mixed known and unknown mentions", async () => {
     const md = `[[skill:${SKILL_A_ID}]] and [[skill:${UNKNOWN_SKILL_ID}]]`;
     const result = await renderMentions(md);
