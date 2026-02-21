@@ -73,7 +73,7 @@
         "Delete cascades related resources and links through FK rules.",
         "Typecheck passes",
       ],
-      "passes": false,
+      "passes": true,
     },
     {
       "title": "parse obsidian mentions from markdown",

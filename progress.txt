@@ -13,6 +13,8 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - `toSkillOutput()` maps DB row to API shape (skillMarkdown -> originalMarkdown/renderedMarkdown)
 - typecheck: only `apps/server` has `check-types` script; it compiles through workspace imports
 - sub-routers mount directly on appRouter object (e.g. `skills: skillsRouter`)
+- neon-http driver does NOT support `db.transaction()` — use sequential queries or `db.batch()` instead
+- tRPC callerFactory: `t.createCallerFactory(appRouter)` for direct procedure calls in tests
 
 ---
 
@@ -48,4 +50,13 @@ Started: Sat Feb 21 02:16:06 PM CET 2026
 - visibility defaults to `"private"` via zod `.default("private")` on input schema
 - nested resources inserted in same transaction with `skillId` from created skill
 - unauthenticated calls rejected by protectedProcedure middleware (UNAUTHORIZED)
+- typecheck + check pass clean
+
+### task 5: add owner-authenticated update and delete mutations - DONE
+- implemented `skills.update` with partial field updates and resource upsert/delete/insert
+- implemented `skills.delete` as hard delete; FK cascades handle resources and links
+- ownership check: fetch skill, compare `ownerUserId` vs session user → FORBIDDEN if mismatch
+- resource mutations: `id` + `delete: true` removes, `id` without delete upserts, no `id` inserts new
+- fixed neon-http transaction bug: replaced `db.transaction()` with sequential queries in both `create` and `update` (neon-http doesn't support transactions)
+- verified with 14 direct tRPC caller tests: auth/ownership guards, field persistence, resource CRUD, cascade deletion
 - typecheck + check pass clean

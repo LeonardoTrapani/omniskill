@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, ilike, or } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@omniscient/db";
@@ -270,46 +270,44 @@ export const skillsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      return await db.transaction(async (tx) => {
-        const [created] = await tx
-          .insert(skill)
-          .values({
-            ownerUserId: userId,
-            slug: input.slug,
-            name: input.name,
-            description: input.description,
-            skillMarkdown: input.skillMarkdown,
-            visibility: input.visibility,
-            frontmatter: input.frontmatter,
-            metadata: input.metadata,
-            sourceUrl: input.sourceUrl ?? null,
-            sourceIdentifier: input.sourceIdentifier ?? null,
-          })
+      const [created] = await db
+        .insert(skill)
+        .values({
+          ownerUserId: userId,
+          slug: input.slug,
+          name: input.name,
+          description: input.description,
+          skillMarkdown: input.skillMarkdown,
+          visibility: input.visibility,
+          frontmatter: input.frontmatter,
+          metadata: input.metadata,
+          sourceUrl: input.sourceUrl ?? null,
+          sourceIdentifier: input.sourceIdentifier ?? null,
+        })
+        .returning();
+
+      if (!created) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create skill" });
+      }
+
+      let resources: (typeof skillResource.$inferSelect)[] = [];
+
+      if (input.resources.length > 0) {
+        resources = await db
+          .insert(skillResource)
+          .values(
+            input.resources.map((r) => ({
+              skillId: created.id,
+              path: r.path,
+              kind: r.kind,
+              content: r.content,
+              metadata: r.metadata,
+            })),
+          )
           .returning();
+      }
 
-        if (!created) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create skill" });
-        }
-
-        let resources: (typeof skillResource.$inferSelect)[] = [];
-
-        if (input.resources.length > 0) {
-          resources = await tx
-            .insert(skillResource)
-            .values(
-              input.resources.map((r) => ({
-                skillId: created.id,
-                path: r.path,
-                kind: r.kind,
-                content: r.content,
-                metadata: r.metadata,
-              })),
-            )
-            .returning();
-        }
-
-        return toSkillOutput(created, resources);
-      });
+      return toSkillOutput(created, resources);
     }),
 
   update: protectedProcedure
@@ -337,14 +335,105 @@ export const skillsRouter = router({
       }),
     )
     .output(skillOutput)
-    .mutation(async () => {
-      throw new Error("not implemented");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // fetch and verify ownership
+      const [existing] = await db.select().from(skill).where(eq(skill.id, input.id));
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+      if (existing.ownerUserId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not the skill owner" });
+      }
+
+      // build partial update set
+      const updates: Partial<typeof skill.$inferInsert> = {};
+      if (input.slug !== undefined) updates.slug = input.slug;
+      if (input.name !== undefined) updates.name = input.name;
+      if (input.description !== undefined) updates.description = input.description;
+      if (input.skillMarkdown !== undefined) updates.skillMarkdown = input.skillMarkdown;
+      if (input.visibility !== undefined) updates.visibility = input.visibility;
+      if (input.frontmatter !== undefined) updates.frontmatter = input.frontmatter;
+      if (input.metadata !== undefined) updates.metadata = input.metadata;
+      if (input.sourceUrl !== undefined) updates.sourceUrl = input.sourceUrl ?? null;
+      if (input.sourceIdentifier !== undefined)
+        updates.sourceIdentifier = input.sourceIdentifier ?? null;
+
+      let updatedSkill = existing;
+
+      if (Object.keys(updates).length > 0) {
+        const [row] = await db.update(skill).set(updates).where(eq(skill.id, input.id)).returning();
+        if (row) updatedSkill = row;
+      }
+
+      // handle resource mutations when provided
+      if (input.resources) {
+        const toDelete = input.resources.filter((r) => r.delete && r.id).map((r) => r.id!);
+
+        if (toDelete.length > 0) {
+          await db
+            .delete(skillResource)
+            .where(and(eq(skillResource.skillId, input.id), inArray(skillResource.id, toDelete)));
+        }
+
+        for (const r of input.resources.filter((r) => r.id && !r.delete)) {
+          await db
+            .update(skillResource)
+            .set({
+              path: r.path,
+              kind: r.kind,
+              content: r.content,
+              metadata: r.metadata,
+            })
+            .where(and(eq(skillResource.id, r.id!), eq(skillResource.skillId, input.id)));
+        }
+
+        const toInsert = input.resources.filter((r) => !r.id && !r.delete);
+        if (toInsert.length > 0) {
+          await db.insert(skillResource).values(
+            toInsert.map((r) => ({
+              skillId: input.id,
+              path: r.path,
+              kind: r.kind,
+              content: r.content,
+              metadata: r.metadata,
+            })),
+          );
+        }
+      }
+
+      // fetch final resources state
+      const resources = await db
+        .select()
+        .from(skillResource)
+        .where(eq(skillResource.skillId, input.id));
+
+      return toSkillOutput(updatedSkill, resources);
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .output(z.object({ success: z.literal(true) }))
-    .mutation(async () => {
-      throw new Error("not implemented");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const [existing] = await db
+        .select({ id: skill.id, ownerUserId: skill.ownerUserId })
+        .from(skill)
+        .where(eq(skill.id, input.id));
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+      }
+      if (existing.ownerUserId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not the skill owner" });
+      }
+
+      // hard delete — FK cascades handle resources and links
+      await db.delete(skill).where(eq(skill.id, input.id));
+
+      return { success: true as const };
     }),
 });
