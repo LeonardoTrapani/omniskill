@@ -987,7 +987,7 @@ describe("rendering", () => {
     expect(result.renderedMarkdown).toBe("# Hello World");
   });
 
-  test("get response renders skill mentions to instruction text", async () => {
+  test("get response renders skill mentions to backticked slug", async () => {
     const target = seedSkill({ visibility: "public", name: "Target Skill" });
     const source = seedSkill({
       visibility: "public",
@@ -996,7 +996,7 @@ describe("rendering", () => {
 
     const result = await anonCaller().skills.getById({ id: source.id });
     expect(result.originalMarkdown).toContain(`[[skill:${target.id}]]`);
-    expect(result.renderedMarkdown).toContain(`Fetch the skill "Target Skill" to get details.`);
+    expect(result.renderedMarkdown).toContain(`\`${target.slug}\``);
   });
 
   test("get response renders resource mentions", async () => {
@@ -1009,7 +1009,7 @@ describe("rendering", () => {
 
     const result = await anonCaller().skills.getById({ id: source.id });
     expect(result.renderedMarkdown).toContain(
-      `Fetch the skill "Parent Skill" and get reference [helpers/util.ts](resource://${res.id}).`,
+      `[\`helpers/util.ts\`](resource://${res.id}) in skill \`${parent.slug}\``,
     );
   });
 
@@ -1021,7 +1021,7 @@ describe("rendering", () => {
     });
 
     const result = await anonCaller().skills.getById({ id: s.id });
-    expect(result.renderedMarkdown).toContain(`Fetch the skill "(unknown skill)" to get details.`);
+    expect(result.renderedMarkdown).toContain("`(unknown skill)`");
   });
 });
 
