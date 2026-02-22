@@ -11,12 +11,14 @@ interface SkillsTableProps {
   limit?: number;
   showSearch?: boolean;
   showViewAll?: boolean;
+  className?: string;
 }
 
 export default function SkillsTable({
   limit,
   showSearch = true,
   showViewAll = true,
+  className,
 }: SkillsTableProps) {
   const [search, setSearch] = useState("");
   const [addedSkills, setAddedSkills] = useState<Set<string>>(new Set());
@@ -43,7 +45,7 @@ export default function SkillsTable({
   };
 
   return (
-    <section id="skills" className="py-24 px-6 md:px-16">
+    <section id="skills" className={className ?? "py-24 px-6 md:px-16"}>
       <div className="max-w-[1280px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

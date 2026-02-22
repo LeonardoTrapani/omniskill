@@ -5,8 +5,7 @@ export type ModalView =
   | "browse-existing"
   | "add-options"
   | "chat-customize"
-  | "chat-create"
-  | "success";
+  | "chat-create";
 
 export interface SelectedSkill {
   id: string;
@@ -25,9 +24,7 @@ type ModalAction =
   | { type: "CHOOSE_EXISTING" }
   | { type: "CHOOSE_CREATE_NEW" }
   | { type: "SELECT_SKILL"; skill: SelectedSkill }
-  | { type: "ADD_RAW" }
   | { type: "CUSTOMIZE_SKILL" }
-  | { type: "SKILL_CREATED" }
   | { type: "GO_BACK" }
   | { type: "RESET" };
 
@@ -58,19 +55,10 @@ function reducer(state: ModalState, action: ModalAction): ModalState {
         selectedSkill: action.skill,
         history: [...state.history, state.view],
       };
-    case "ADD_RAW":
-      // Handled externally — the parent triggers the mutation then dispatches SKILL_CREATED
-      return state;
     case "CUSTOMIZE_SKILL":
       return {
         ...state,
         view: "chat-customize",
-        history: [...state.history, state.view],
-      };
-    case "SKILL_CREATED":
-      return {
-        ...state,
-        view: "success",
         history: [...state.history, state.view],
       };
     case "GO_BACK": {

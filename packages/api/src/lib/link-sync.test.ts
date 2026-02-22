@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 // track calls to db operations
 let deleteCalls: { where: string }[] = [];
 let insertCalls: { values: unknown[] }[] = [];
-let existingSkillIds = new Set<string>();
-let existingResourceIds = new Set<string>();
+let skillOwners = new Map<string, string | null>();
+let resourceOwners = new Map<string, string | null>();
 
 const drizzleNameSym = Symbol.for("drizzle:Name");
 
@@ -38,19 +38,43 @@ mock.module("@omniscient/db", () => {
       };
     };
     chain.select = (_fields?: unknown) => ({
-      from: (table: unknown) => ({
-        where: async (_condition?: unknown) => {
-          const tableName = getTableName(table);
-          if (tableName === "skill") {
-            return [...existingSkillIds].map((id) => ({ id }));
-          }
-          if (tableName === "skill_resource") {
-            return [...existingResourceIds].map((id) => ({ id }));
-          }
-          return [];
-        },
-      }),
+      from: (table: unknown) => {
+        const tableName = getTableName(table);
+        const queryChain = {
+          where: async (_condition?: unknown) => {
+            if (tableName === "skill") {
+              // first call is the source skill lookup (returns ownerUserId)
+              // subsequent calls are target skill lookups
+              return [...skillOwners.entries()].map(([id, ownerUserId]) => ({
+                id,
+                ownerUserId,
+              }));
+            }
+            if (tableName === "skill_resource") {
+              return [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
+                id,
+                ownerUserId,
+              }));
+            }
+            return [];
+          },
+          innerJoin: (_joinTable: unknown, _condition: unknown) => ({
+            where: async (_condition?: unknown) => {
+              // resource join query — returns resources with parent skill owner
+              return [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
+                id,
+                ownerUserId,
+              }));
+            },
+          }),
+        };
+        return queryChain;
+      },
     });
+    // transaction: just run the callback with the same chain (good enough for unit tests)
+    chain.transaction = async (fn: (tx: Record<string, unknown>) => Promise<void>) => {
+      await fn(chain as Record<string, unknown>);
+    };
     return chain;
   };
 
@@ -65,12 +89,18 @@ describe("syncAutoLinks", () => {
   const TARGET_SKILL = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
   const TARGET_RESOURCE = "c3d4e5f6-a7b8-9012-cdef-123456789012";
   const USER_ID = "user-123";
+  const OWNER = "owner-1";
 
   beforeEach(() => {
     deleteCalls = [];
     insertCalls = [];
-    existingSkillIds = new Set([TARGET_SKILL]);
-    existingResourceIds = new Set([TARGET_RESOURCE]);
+    // source skill + target skill both owned by OWNER
+    skillOwners = new Map([
+      [SKILL_UUID, OWNER],
+      [TARGET_SKILL, OWNER],
+    ]);
+    // target resource owned by OWNER
+    resourceOwners = new Map([[TARGET_RESOURCE, OWNER]]);
   });
 
   test("deletes existing auto links and inserts new ones", async () => {
@@ -123,6 +153,7 @@ describe("syncAutoLinks", () => {
 
     expect(deleteCalls).toHaveLength(1);
     expect(insertCalls).toHaveLength(1);
+    // only the known TARGET_SKILL gets a link; unknownSkill and unknownResource are skipped
     expect(insertCalls[0]!.values).toHaveLength(1);
   });
 
@@ -146,5 +177,37 @@ describe("syncAutoLinks", () => {
     for (const v of values) {
       expect(v.createdByUserId).toBe(USER_ID);
     }
+  });
+
+  test("silently skips cross-owner skill mentions instead of throwing", async () => {
+    const foreignSkill = "f6a7b8c9-d0e1-2345-6789-abcdef012345";
+    // add a skill owned by someone else
+    skillOwners.set(foreignSkill, "other-owner");
+
+    const md = `[[skill:${TARGET_SKILL}]] [[skill:${foreignSkill}]]`;
+
+    // should not throw — just skips the foreign mention
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+
+    expect(deleteCalls).toHaveLength(1);
+    expect(insertCalls).toHaveLength(1);
+    // only the same-owner TARGET_SKILL gets a link
+    expect(insertCalls[0]!.values).toHaveLength(1);
+    const values = insertCalls[0]!.values as Array<{ targetSkillId: string | null }>;
+    expect(values[0]!.targetSkillId).toBe(TARGET_SKILL);
+  });
+
+  test("silently skips cross-owner resource mentions", async () => {
+    const foreignResource = "a7b8c9d0-e1f2-3456-789a-bcdef0123456";
+    resourceOwners.set(foreignResource, "other-owner");
+
+    const md = `[[resource:${TARGET_RESOURCE}]] [[resource:${foreignResource}]]`;
+
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+
+    expect(insertCalls).toHaveLength(1);
+    expect(insertCalls[0]!.values).toHaveLength(1);
+    const values = insertCalls[0]!.values as Array<{ targetResourceId: string | null }>;
+    expect(values[0]!.targetResourceId).toBe(TARGET_RESOURCE);
   });
 });

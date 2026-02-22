@@ -1,35 +1,35 @@
 "use client";
 
-import { useState, type Dispatch } from "react";
+import { type Dispatch } from "react";
 import { Copy, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 
+import { trpc, queryClient } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
-type ModalAction = { type: "CUSTOMIZE_SKILL" } | { type: "SKILL_CREATED" };
+type ModalAction = { type: "CUSTOMIZE_SKILL" };
 
 interface AddOptionsViewProps {
   skill: SelectedSkill;
   dispatch: Dispatch<ModalAction>;
+  onClose: () => void;
 }
 
-export default function AddOptionsView({ skill, dispatch }: AddOptionsViewProps) {
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAddRaw = async () => {
-    setIsAdding(true);
-
-    // TODO: Connect backend — fetch full skill via trpc.skills.getById({ id: skill.id })
-    // then create a copy via trpc.skills.create({ ...fullSkill, slug: `${slug}-copy-${Date.now()}`, visibility: "private" })
-    // On success: invalidate trpc.skills.listByOwner queries, then dispatch({ type: "SKILL_CREATED" })
-
-    // Simulated delay to show the loading UX
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    toast.success(`"${skill.name}" added to your collection`);
-    dispatch({ type: "SKILL_CREATED" });
-    setIsAdding(false);
-  };
+export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsViewProps) {
+  const duplicateMutation = useMutation(
+    trpc.skills.duplicate.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+        toast.success(`"${skill.name}" added to your collection`);
+        onClose();
+      },
+      onError: (error) => {
+        toast.error(`Failed to add skill: ${error.message}`);
+      },
+    }),
+  );
 
   return (
     <div className="py-4">
@@ -40,11 +40,11 @@ export default function AddOptionsView({ skill, dispatch }: AddOptionsViewProps)
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
-          onClick={handleAddRaw}
-          disabled={isAdding}
+          onClick={() => duplicateMutation.mutate({ id: skill.id })}
+          disabled={duplicateMutation.isPending}
           className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isAdding ? (
+          {duplicateMutation.isPending ? (
             <Loader2 className="w-5 h-5 text-muted-foreground animate-spin mb-3" />
           ) : (
             <Copy className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />

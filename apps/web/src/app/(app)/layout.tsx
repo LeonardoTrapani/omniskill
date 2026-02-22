@@ -1,9 +1,9 @@
-import Header from "@/components/header";
+import Navbar from "@/components/navbar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Header />
+      <Navbar />
       {children}
     </>
   );

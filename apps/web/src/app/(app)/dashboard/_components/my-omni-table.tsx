@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { Search, MoreHorizontal, Eye, Pencil, Trash2, Loader2, Plus } from "lucide-react";
+import { Search, MoreHorizontal, Eye, Pencil, Trash2, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -17,10 +17,9 @@ import { trpc } from "@/utils/trpc";
 
 interface MyOmniTableProps {
   onDelete: (skillId: string, skillName: string) => void;
-  onAddSkill: () => void;
 }
 
-export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) {
+export default function MyOmniTable({ onDelete }: MyOmniTableProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
@@ -35,15 +34,11 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
 
   return (
     <div className="border border-border">
-      {/* Title + Add button */}
-      <div className="px-6 md:px-8 pt-8 pb-6 flex items-center justify-between">
+      {/* Title */}
+      <div className="px-6 md:px-8 pt-8 pb-6">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
           MY OMNI
         </h2>
-        <Button size="lg" className="px-5" onClick={onAddSkill}>
-          <Plus />
-          Add New Skill
-        </Button>
       </div>
 
       {/* Search */}
@@ -90,7 +85,16 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
         skills.map((skill, index) => (
           <div
             key={skill.id}
-            className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group"
+            role="link"
+            tabIndex={0}
+            onClick={() => router.push(`/dashboard/skills/${skill.id}` as Route)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push(`/dashboard/skills/${skill.id}` as Route);
+              }
+            }}
+            className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
           >
             {/* Rank */}
             <span className="text-sm text-muted-foreground tabular-nums">{index + 1}</span>
@@ -114,7 +118,8 @@ export default function MyOmniTable({ onDelete, onAddSkill }: MyOmniTableProps) 
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end">
+            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={

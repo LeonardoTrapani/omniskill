@@ -1,9 +1,7 @@
 "use client";
 
-import { Search, Sparkles } from "lucide-react";
+import { Plus, Search, Sparkles } from "lucide-react";
 import type { Dispatch } from "react";
-
-import type { ModalView } from "../../_hooks/use-modal-machine";
 
 type ModalAction = { type: "CHOOSE_EXISTING" } | { type: "CHOOSE_CREATE_NEW" };
 
@@ -29,10 +27,10 @@ export default function ChoiceView({ dispatch }: ChoiceViewProps) {
         onClick={() => dispatch({ type: "CHOOSE_CREATE_NEW" })}
         className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group"
       >
-        <Sparkles className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
+        <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
         <h3 className="text-sm font-semibold text-foreground mb-1">Create a New Skill</h3>
         <p className="text-xs text-muted-foreground">
-          Describe what you need and create a custom skill with AI
+          Describe what you need and create a custom skill
         </p>
       </button>
     </div>

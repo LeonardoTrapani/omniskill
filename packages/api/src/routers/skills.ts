@@ -87,6 +87,85 @@ function visibilityFilter(session: Session | null) {
   return eq(skill.visibility, "public");
 }
 
+// -- graph helpers --
+
+const graphOutput = z.object({
+  nodes: z.array(
+    z.object({
+      id: z.string(),
+      type: z.enum(["skill", "resource"]),
+      label: z.string(),
+      description: z.string().nullable(),
+      slug: z.string().nullable(),
+      parentSkillId: z.string().nullable(),
+      kind: z.string().nullable(),
+      contentSnippet: z.string().nullable(),
+      updatedAt: z.string().nullable(),
+    }),
+  ),
+  edges: z.array(
+    z.object({
+      id: z.string(),
+      source: z.string(),
+      target: z.string(),
+      kind: z.string(),
+    }),
+  ),
+});
+
+type GraphEdge = { id: string; source: string; target: string; kind: string };
+
+function buildGraphPayload(
+  skills: (typeof skill.$inferSelect)[],
+  resources: (typeof skillResource.$inferSelect)[],
+  explicitLinks?: (typeof skillLink.$inferSelect)[],
+) {
+  const nodeIds = new Set([...skills.map((s) => s.id), ...resources.map((r) => r.id)]);
+
+  const nodes = [
+    ...skills.map((s) => ({
+      id: s.id,
+      type: "skill" as const,
+      label: s.name,
+      description: s.description,
+      slug: s.slug,
+      parentSkillId: null,
+      kind: null,
+      contentSnippet: s.skillMarkdown ? s.skillMarkdown.slice(0, 200) : null,
+      updatedAt: s.updatedAt.toISOString(),
+    })),
+    ...resources.map((r) => ({
+      id: r.id,
+      type: "resource" as const,
+      label: r.path,
+      description: null,
+      slug: null,
+      parentSkillId: r.skillId,
+      kind: r.kind,
+      contentSnippet: r.content ? r.content.slice(0, 200) : null,
+      updatedAt: r.updatedAt.toISOString(),
+    })),
+  ];
+
+  const edges: GraphEdge[] = [];
+
+  if (explicitLinks) {
+    for (const link of explicitLinks) {
+      const sourceId = link.sourceSkillId ?? link.sourceResourceId;
+      const targetId = link.targetSkillId ?? link.targetResourceId;
+      if (sourceId && targetId && nodeIds.has(sourceId) && nodeIds.has(targetId)) {
+        edges.push({ id: link.id, source: sourceId, target: targetId, kind: link.kind });
+      }
+    }
+  }
+
+  for (const r of resources) {
+    edges.push({ id: `parent-${r.id}`, source: r.skillId, target: r.id, kind: "parent" });
+  }
+
+  return { nodes, edges };
+}
+
 /** map a skill row + resources array to the output shape, rendering mentions */
 async function toSkillOutput(
   row: typeof skill.$inferSelect,
@@ -718,126 +797,134 @@ export const skillsRouter = router({
       return await toSkillOutput(updatedSkill, resources);
     }),
 
-  graph: protectedProcedure
-    .output(
-      z.object({
-        nodes: z.array(
-          z.object({
-            id: z.string(),
-            type: z.enum(["skill", "resource"]),
-            label: z.string(),
-            description: z.string().nullable(),
-            slug: z.string().nullable(),
-            parentSkillId: z.string().nullable(),
-            kind: z.string().nullable(),
-          }),
-        ),
-        edges: z.array(
-          z.object({
-            id: z.string(),
-            source: z.string(),
-            target: z.string(),
-            kind: z.string(),
-          }),
-        ),
-      }),
-    )
-    .query(async ({ ctx }) => {
-      const userId = ctx.session.user.id;
+  graph: protectedProcedure.output(graphOutput).query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const skills = await db.select().from(skill).where(eq(skill.ownerUserId, userId));
 
-      // Fetch all user's skills
-      const skills = await db.select().from(skill).where(eq(skill.ownerUserId, userId));
+    if (skills.length === 0) return { nodes: [], edges: [] };
 
-      if (skills.length === 0) {
-        return { nodes: [], edges: [] };
-      }
+    const skillIds = skills.map((s) => s.id);
 
-      const skillIds = skills.map((s) => s.id);
+    const resources = await db
+      .select()
+      .from(skillResource)
+      .where(inArray(skillResource.skillId, skillIds));
 
-      // Fetch all resources for those skills
-      const resources = await db
-        .select()
-        .from(skillResource)
-        .where(inArray(skillResource.skillId, skillIds));
+    const resourceIds = resources.map((r) => r.id);
 
-      const resourceIds = resources.map((r) => r.id);
+    const links =
+      skillIds.length > 0 || resourceIds.length > 0
+        ? await db
+            .select()
+            .from(skillLink)
+            .where(
+              or(
+                ...(skillIds.length > 0
+                  ? [
+                      inArray(skillLink.sourceSkillId, skillIds),
+                      inArray(skillLink.targetSkillId, skillIds),
+                    ]
+                  : []),
+                ...(resourceIds.length > 0
+                  ? [
+                      inArray(skillLink.sourceResourceId, resourceIds),
+                      inArray(skillLink.targetResourceId, resourceIds),
+                    ]
+                  : []),
+              ),
+            )
+        : [];
 
-      // Build node maps for quick lookup
-      const ownedNodeIds = new Set([...skillIds, ...resourceIds]);
+    return buildGraphPayload(skills, resources, links);
+  }),
 
-      // Fetch all skill_links referencing any owned skill/resource
-      const links =
-        skillIds.length > 0 || resourceIds.length > 0
-          ? await db
-              .select()
-              .from(skillLink)
-              .where(
-                or(
-                  ...(skillIds.length > 0
-                    ? [
-                        inArray(skillLink.sourceSkillId, skillIds),
-                        inArray(skillLink.targetSkillId, skillIds),
-                      ]
-                    : []),
-                  ...(resourceIds.length > 0
-                    ? [
-                        inArray(skillLink.sourceResourceId, resourceIds),
-                        inArray(skillLink.targetResourceId, resourceIds),
-                      ]
-                    : []),
-                ),
-              )
-          : [];
+  // connected component around a single skill (works for public skills too)
+  graphForSkill: publicProcedure
+    .input(z.object({ skillId: z.string().uuid() }))
+    .output(graphOutput)
+    .query(async ({ ctx, input }) => {
+      const visitedSkillIds = new Set<string>();
+      const queue = [input.skillId];
+      const allSkills: (typeof skill.$inferSelect)[] = [];
+      const allResources: (typeof skillResource.$inferSelect)[] = [];
+      const allLinks: (typeof skillLink.$inferSelect)[] = [];
+      const seenLinkIds = new Set<string>();
 
-      // Build nodes
-      const nodes = [
-        ...skills.map((s) => ({
-          id: s.id,
-          type: "skill" as const,
-          label: s.name,
-          description: s.description,
-          slug: s.slug,
-          parentSkillId: null,
-          kind: null,
-        })),
-        ...resources.map((r) => ({
-          id: r.id,
-          type: "resource" as const,
-          label: r.path,
-          description: null,
-          slug: null,
-          parentSkillId: r.skillId,
-          kind: r.kind,
-        })),
-      ];
+      const MAX_ITERATIONS = 10;
+      let iteration = 0;
 
-      // Build edges from skill_links — only include where both endpoints are owned
-      const edges: { id: string; source: string; target: string; kind: string }[] = [];
+      while (queue.length > 0 && iteration < MAX_ITERATIONS) {
+        iteration++;
+        const batch = queue.splice(0, queue.length).filter((id) => !visitedSkillIds.has(id));
+        if (batch.length === 0) break;
 
-      for (const link of links) {
-        const sourceId = link.sourceSkillId ?? link.sourceResourceId;
-        const targetId = link.targetSkillId ?? link.targetResourceId;
-        if (sourceId && targetId && ownedNodeIds.has(sourceId) && ownedNodeIds.has(targetId)) {
-          edges.push({
-            id: link.id,
-            source: sourceId,
-            target: targetId,
-            kind: link.kind,
-          });
+        for (const id of batch) visitedSkillIds.add(id);
+
+        const skills = await db
+          .select()
+          .from(skill)
+          .where(and(inArray(skill.id, batch), visibilityFilter(ctx.session)));
+
+        const foundIds = skills.map((s) => s.id);
+        if (foundIds.length === 0) break;
+
+        allSkills.push(...skills);
+
+        const resources = await db
+          .select()
+          .from(skillResource)
+          .where(inArray(skillResource.skillId, foundIds));
+
+        allResources.push(...resources);
+
+        const resourceIds = resources.map((r) => r.id);
+        const linkConditions = [
+          inArray(skillLink.sourceSkillId, foundIds),
+          inArray(skillLink.targetSkillId, foundIds),
+          ...(resourceIds.length > 0
+            ? [
+                inArray(skillLink.sourceResourceId, resourceIds),
+                inArray(skillLink.targetResourceId, resourceIds),
+              ]
+            : []),
+        ];
+
+        const links = await db
+          .select()
+          .from(skillLink)
+          .where(or(...linkConditions));
+
+        for (const l of links) {
+          if (!seenLinkIds.has(l.id)) {
+            seenLinkIds.add(l.id);
+            allLinks.push(l);
+          }
+        }
+
+        // queue newly discovered skill IDs from direct skill references
+        for (const l of links) {
+          if (l.sourceSkillId && !visitedSkillIds.has(l.sourceSkillId)) queue.push(l.sourceSkillId);
+          if (l.targetSkillId && !visitedSkillIds.has(l.targetSkillId)) queue.push(l.targetSkillId);
+        }
+
+        // for resource references, look up parent skills we haven't visited yet
+        const unknownResourceIds = links
+          .flatMap((l) => [l.sourceResourceId, l.targetResourceId])
+          .filter((id): id is string => !!id && !allResources.some((r) => r.id === id));
+
+        if (unknownResourceIds.length > 0) {
+          const extra = await db
+            .select({ skillId: skillResource.skillId })
+            .from(skillResource)
+            .where(inArray(skillResource.id, unknownResourceIds));
+
+          for (const row of extra) {
+            if (!visitedSkillIds.has(row.skillId)) queue.push(row.skillId);
+          }
         }
       }
 
-      // Add implicit parent edges: each resource → its parent skill
-      for (const r of resources) {
-        edges.push({
-          id: `parent-${r.id}`,
-          source: r.skillId,
-          target: r.id,
-          kind: "parent",
-        });
-      }
-
-      return { nodes, edges };
+      return buildGraphPayload(allSkills, allResources, allLinks);
     }),
 
   duplicate: protectedProcedure

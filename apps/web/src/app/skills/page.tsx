@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import SkillsTable from "@/components/landing/SkillsTable";
-import Navbar from "@/components/landing/Navbar";
+import Navbar from "@/components/navbar";
 import Footer from "@/components/landing/Footer";
 import { brainAscii } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
@@ -41,7 +41,7 @@ export default function SkillsPage() {
         <Navbar />
 
         {/* Header */}
-        <div className="pt-12 pb-4 px-6 md:px-16">
+        <div className="pt-12 pb-0 px-6 md:px-16">
           <div className="max-w-[1280px] mx-auto">
             <Link
               href="/"
@@ -66,7 +66,7 @@ export default function SkillsPage() {
           </div>
         </div>
 
-        <SkillsTable showViewAll={false} />
+        <SkillsTable showViewAll={false} className="pt-8 pb-24 px-6 md:px-16" />
 
         <Footer />
       </div>

@@ -1,6 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
 
 import { db } from "@omniscient/db";
 import { skill, skillLink, skillResource } from "@omniscient/db/schema/skills";
@@ -12,8 +11,13 @@ import { parseMentions } from "./mentions";
  * with the current set of [[...]] mentions found in the markdown.
  * Manual links (without origin: "markdown-auto") are left untouched.
  *
- * Enforces same-owner constraint: all mentioned targets must belong
- * to the same owner as the source skill. Cross-owner links are rejected.
+ * Same-owner constraint: only mentions whose target belongs to the
+ * same owner as the source skill produce link edges. Cross-owner
+ * mentions are silently skipped (consistent with non-existent targets).
+ *
+ * The delete + insert runs sequentially (neon-http doesn't support
+ * transactions). If the insert fails the auto-links are re-synced on
+ * the next edit, so the atomicity trade-off is acceptable.
  */
 export async function syncAutoLinks(
   sourceSkillId: string,
@@ -65,28 +69,17 @@ export async function syncAutoLinks(
     }
   }
 
-  // enforce same-owner constraint on all mentions
-  for (const mention of mentions) {
+  // keep only mentions that exist AND belong to the same owner
+  const validMentions = mentions.filter((mention) => {
     if (mention.type === "skill") {
       const targetOwner = existingSkills.get(mention.targetId);
-      if (targetOwner !== undefined && targetOwner !== sourceOwner) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Links can only reference skills owned by the same user",
-        });
-      }
-    } else {
-      const targetOwner = existingResources.get(mention.targetId);
-      if (targetOwner !== undefined && targetOwner !== sourceOwner) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Links can only reference resources owned by the same user",
-        });
-      }
+      return targetOwner !== undefined && targetOwner === sourceOwner;
     }
-  }
+    const targetOwner = existingResources.get(mention.targetId);
+    return targetOwner !== undefined && targetOwner === sourceOwner;
+  });
 
-  // delete existing auto-generated links for this source skill
+  // delete existing auto-links, then insert current ones
   await db
     .delete(skillLink)
     .where(
@@ -96,18 +89,8 @@ export async function syncAutoLinks(
       ),
     );
 
-  if (mentions.length === 0) return;
-
-  const validMentions = mentions.filter((mention) => {
-    if (mention.type === "skill") {
-      return existingSkills.has(mention.targetId);
-    }
-    return existingResources.has(mention.targetId);
-  });
-
   if (validMentions.length === 0) return;
 
-  // build insert values for each mention
   const values = validMentions.map((m) => ({
     sourceSkillId,
     sourceResourceId: null,

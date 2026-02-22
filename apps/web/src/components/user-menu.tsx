@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -50,10 +50,6 @@ export default function UserMenu() {
           <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="break-all">{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/dashboard")}>
-            <LayoutDashboard />
-            Dashboard
-          </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {

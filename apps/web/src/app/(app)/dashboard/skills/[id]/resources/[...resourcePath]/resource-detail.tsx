@@ -4,10 +4,11 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowUpRight, FileText, FolderTree, Network } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, FileText, FolderTree, Loader2, Network } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ForceGraph } from "@/components/graph/force-graph";
 import { createMarkdownComponents } from "@/components/skills/markdown-components";
 import { DownloadContentButton } from "@/components/skills/download-content-button";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
@@ -44,6 +45,7 @@ export default function ResourceDetail({
   );
   const skillQuery = useQuery(trpc.skills.getById.queryOptions({ id: skillId }));
   const [mobileContentTab, setMobileContentTab] = useState<"markdown" | "graph">("markdown");
+  const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId }));
 
   const resources = skillQuery.data?.resources ?? [];
   const resourcesById = useMemo(
@@ -360,14 +362,27 @@ export default function ResourceDetail({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Network className="size-4" aria-hidden="true" />
-                  Your Graph
+                  Skill Graph
                 </CardTitle>
-                <CardDescription>Graph visualization placeholder.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex min-h-[280px] h-[50vh] items-center justify-center border border-dashed border-primary/30 bg-primary/5 p-4 text-center text-sm text-primary/80 lg:h-[calc(100vh-8.5rem)] lg:min-h-[480px]">
-                  Graph canvas coming soon
-                </div>
+                {graphQuery.isLoading && (
+                  <div className="flex items-center justify-center h-[480px]">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {graphQuery.isError && (
+                  <div className="flex items-center justify-center h-[480px]">
+                    <p className="text-sm text-muted-foreground">Failed to load graph</p>
+                  </div>
+                )}
+                {graphQuery.data && (
+                  <ForceGraph
+                    data={graphQuery.data}
+                    focusNodeId={resourceQuery.data?.id ?? skillId}
+                    height={600}
+                  />
+                )}
               </CardContent>
             </Card>
           </aside>

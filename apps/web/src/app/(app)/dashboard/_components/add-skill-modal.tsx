@@ -23,7 +23,6 @@ const viewTitles: Record<ModalView, string> = {
   "add-options": "Add Skill",
   "chat-customize": "Customize Skill",
   "chat-create": "Create New Skill",
-  success: "Success",
 };
 
 export default function AddSkillModal({ open, onClose }: AddSkillModalProps) {
@@ -34,7 +33,7 @@ export default function AddSkillModal({ open, onClose }: AddSkillModalProps) {
     onClose();
   };
 
-  const canGoBack = state.view !== "initial-choice" && state.view !== "success";
+  const canGoBack = state.view !== "initial-choice";
 
   return (
     <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -66,24 +65,13 @@ export default function AddSkillModal({ open, onClose }: AddSkillModalProps) {
           {state.view === "initial-choice" && <ChoiceView dispatch={dispatch} />}
           {state.view === "browse-existing" && <BrowseSkillsView dispatch={dispatch} />}
           {state.view === "add-options" && state.selectedSkill && (
-            <AddOptionsView skill={state.selectedSkill} dispatch={dispatch} />
+            <AddOptionsView skill={state.selectedSkill} dispatch={dispatch} onClose={handleClose} />
           )}
           {(state.view === "chat-customize" || state.view === "chat-create") && (
             <ChatView
               mode={state.view === "chat-customize" ? "customize" : "create"}
               selectedSkill={state.selectedSkill}
             />
-          )}
-          {state.view === "success" && (
-            <div className="py-12 text-center">
-              <p className="text-sm font-medium text-foreground">Skill added successfully!</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                You can find it in your My Omni collection.
-              </p>
-              <Button className="mt-4" onClick={handleClose}>
-                Done
-              </Button>
-            </div>
           )}
         </div>
       </AlertDialogContent>

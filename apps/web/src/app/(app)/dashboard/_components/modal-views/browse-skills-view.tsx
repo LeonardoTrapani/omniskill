@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, type Dispatch } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, type Dispatch } from "react";
 import { Search, Plus, Loader2 } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
+import { trpc } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
 type ModalAction = { type: "SELECT_SKILL"; skill: SelectedSkill };
@@ -11,70 +13,39 @@ interface BrowseSkillsViewProps {
   dispatch: Dispatch<ModalAction>;
 }
 
-// TODO: Connect backend — replace mock data with real tRPC infinite query:
-//   useInfiniteQuery(trpc.skills.list.infiniteQueryOptions(
-//     { limit: 10, search },
-//     { getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined }
-//   ))
-// The backend already supports cursor pagination via `nextCursor`.
-
-interface MockSkill {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-}
-
-const MOCK_SKILLS: MockSkill[] = Array.from({ length: 42 }, (_, i) => ({
-  id: `skill-${i + 1}`,
-  name: `Skill ${i + 1}`,
-  slug: `skill-${i + 1}`,
-  description: `This is the description for skill number ${i + 1}. Connect backend to show real data.`,
-}));
-
 const PAGE_SIZE = 10;
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const debouncedSearch = useDebounce(search, 300);
 
-  // Simulate initial load
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoadingInitial(false), 400);
-    return () => clearTimeout(timer);
-  }, []);
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useInfiniteQuery(
+    trpc.skills.list.infiniteQueryOptions(
+      { limit: PAGE_SIZE, search: debouncedSearch || undefined },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      },
+    ),
+  );
 
-  // Reset pagination on search change
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+  const skills = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
 
-  // TODO: Replace this filtering with the real tRPC search query
-  const filtered = search.trim()
-    ? MOCK_SKILLS.filter(
-        (s) =>
-          s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.slug.toLowerCase().includes(search.toLowerCase()),
-      )
-    : MOCK_SKILLS;
-
-  const skills = filtered.slice(0, page * PAGE_SIZE);
-  const hasNextPage = skills.length < filtered.length;
-
-  // Infinite scroll sentinel
+  // infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(() => {
-    if (!hasNextPage || isLoadingMore) return;
-    setIsLoadingMore(true);
-    // TODO: Replace with fetchNextPage() from useInfiniteQuery
-    setTimeout(() => {
-      setPage((p) => p + 1);
-      setIsLoadingMore(false);
-    }, 300);
-  }, [hasNextPage, isLoadingMore]);
+    if (!hasNextPage || isFetchingNextPage) return;
+    fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -106,14 +77,14 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
 
       {/* List */}
       <div className="border border-border max-h-[50vh] overflow-y-auto">
-        {isLoadingInitial && (
+        {isLoading && (
           <div className="py-12 text-center">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">Loading skills...</p>
           </div>
         )}
 
-        {!isLoadingInitial && skills.length === 0 && (
+        {!isLoading && skills.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-sm text-muted-foreground">
               {search.trim() ? (
@@ -125,7 +96,7 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
           </div>
         )}
 
-        {!isLoadingInitial &&
+        {!isLoading &&
           skills.map((skill) => (
             <div
               key={skill.id}
@@ -161,7 +132,7 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
         {/* Sentinel for infinite scroll */}
         <div ref={sentinelRef} className="h-1" />
 
-        {isLoadingMore && (
+        {isFetchingNextPage && (
           <div className="py-4 text-center">
             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
           </div>

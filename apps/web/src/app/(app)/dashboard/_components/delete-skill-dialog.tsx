@@ -33,6 +33,8 @@ export default function DeleteSkillDialog({
     trpc.skills.delete.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graphForSkill.queryKey() });
         toast.success(`"${skillName}" has been deleted`);
         onClose();
       },
