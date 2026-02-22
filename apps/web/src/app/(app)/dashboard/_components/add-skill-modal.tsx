@@ -15,7 +15,9 @@ import ChatView from "./modal-views/chat-view";
 interface AddSkillModalProps {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
   initialSkill?: SelectedSkill | null;
+  initialView?: ModalView;
 }
 
 const viewTitles: Record<ModalView, string> = {
@@ -26,8 +28,14 @@ const viewTitles: Record<ModalView, string> = {
   "chat-create": "Create New Skill",
 };
 
-export default function AddSkillModal({ open, onClose, initialSkill }: AddSkillModalProps) {
-  const { state, dispatch } = useModalMachine(initialSkill);
+export default function AddSkillModal({
+  open,
+  onClose,
+  onBack,
+  initialSkill,
+  initialView,
+}: AddSkillModalProps) {
+  const { state, dispatch } = useModalMachine({ initialSkill, initialView });
 
   const handleClose = () => {
     dispatch({ type: "RESET" });
@@ -37,6 +45,9 @@ export default function AddSkillModal({ open, onClose, initialSkill }: AddSkillM
   const handleBack = () => {
     if (state.history.length > 0) {
       dispatch({ type: "GO_BACK" });
+    } else if (onBack) {
+      dispatch({ type: "RESET" });
+      onBack();
     } else {
       handleClose();
     }

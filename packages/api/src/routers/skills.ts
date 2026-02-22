@@ -252,6 +252,14 @@ const searchResultItem = z.object({
 // -- router --
 
 export const skillsRouter = router({
+  count: publicProcedure.output(z.object({ count: z.number() })).query(async () => {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(skill)
+      .where(eq(skill.visibility, "public"));
+    return { count: result?.count ?? 0 };
+  }),
+
   search: publicProcedure
     .input(
       z.object({

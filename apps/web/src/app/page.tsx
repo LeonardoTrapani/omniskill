@@ -5,12 +5,15 @@ import Features from "@/components/landing/Features";
 import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
+import { getSkillCount } from "@/lib/get-skill-count";
 
-export default function Home() {
+export default async function Home() {
+  const skillCount = await getSkillCount();
+
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
-      <HeroSection />
+      <Navbar skillCount={skillCount} />
+      <HeroSection skillCount={skillCount} />
       <SkillsTable limit={5} showSearch={false} />
       <Features />
       <Pricing />

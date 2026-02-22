@@ -1,9 +1,12 @@
 import Navbar from "@/components/navbar";
+import { getSkillCount } from "@/lib/get-skill-count";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const skillCount = await getSkillCount();
+
   return (
     <>
-      <Navbar />
+      <Navbar skillCount={skillCount} />
       {children}
     </>
   );

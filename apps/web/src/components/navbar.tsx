@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { X, Menu, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import UserMenu from "@/components/user-menu";
+import { SkillCommandTrigger, SkillCommandPalette } from "@/components/skill-command-palette";
 
 const publicNav = [
   { label: "Skills", href: "/skills" },
@@ -19,10 +20,14 @@ const appNav = [
   { label: "Explore", href: "/skills" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [cmdInitialSearch, setCmdInitialSearch] = useState("");
   const { data: session, isPending } = authClient.useSession();
 
   const navItems = session ? appNav : publicNav;
@@ -40,6 +45,34 @@ export default function Navbar() {
     };
   }, [mobileOpen]);
 
+  // read ?q= param to auto-open palette
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && session) {
+      setCmdInitialSearch(q);
+      setCmdOpen(true);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("q");
+      const cleaned = params.toString() ? `${pathname}?${params}` : pathname;
+      window.history.replaceState(null, "", cleaned);
+    }
+  }, [searchParams, pathname, session]);
+
+  // global cmd+k listener
+  useEffect(() => {
+    if (!session) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [session]);
+
+  const openCmd = useCallback(() => setCmdOpen(true), []);
+
   return (
     <>
       <nav
@@ -47,12 +80,12 @@ export default function Navbar() {
           scrolled ? "bg-background/95 backdrop-blur-md" : ""
         }`}
       >
-        <div className="max-w-5xl mx-auto px-6 md:px-10 flex items-center justify-between h-[52px]">
+        <div className="relative max-w-5xl mx-auto px-6 md:px-10 flex items-center justify-between h-[52px]">
           <Link href="/" className="text-sm font-medium text-foreground tracking-tight">
             omniscient
           </Link>
 
-          <div className="hidden lg:flex items-center gap-7">
+          <div className="hidden lg:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
             {navItems.map((item) => (
               <Link
                 key={item.label}
@@ -67,7 +100,10 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-4">
             {!isPending &&
               (session ? (
-                <UserMenu />
+                <>
+                  <SkillCommandTrigger onOpen={openCmd} />
+                  <UserMenu />
+                </>
               ) : (
                 <Link
                   href="/login"
@@ -78,13 +114,16 @@ export default function Navbar() {
               ))}
           </div>
 
-          <button
-            className="lg:hidden text-foreground"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex lg:hidden items-center gap-3">
+            {!isPending && session && <SkillCommandTrigger onOpen={openCmd} />}
+            <button
+              className="text-foreground"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -152,6 +191,19 @@ export default function Navbar() {
             </div>
           </div>
         </>
+      )}
+
+      {/* single palette instance — dialog + modals only */}
+      {!isPending && session && (
+        <SkillCommandPalette
+          open={cmdOpen}
+          onOpenChange={(next) => {
+            setCmdOpen(next);
+            if (!next) setCmdInitialSearch("");
+          }}
+          initialSearch={cmdInitialSearch}
+          skillCount={skillCount}
+        />
       )}
     </>
   );

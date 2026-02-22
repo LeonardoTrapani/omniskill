@@ -228,7 +228,7 @@ const normalizedSolid = normalizeAsciiArt(asciiLogoSolid);
 const normalizedBrainAscii = normalizeAsciiArt(brainAscii);
 const brainFrames = buildBrainFrames(normalizedBrainAscii, BRAIN_FRAME_COUNT);
 
-export default function HeroSection() {
+export default function HeroSection({ skillCount }: { skillCount: number }) {
   const router = useRouter();
   const [brainFrameIndex, setBrainFrameIndex] = useState(0);
   const [heroPrompt, setHeroPrompt] = useState("");
@@ -264,12 +264,15 @@ export default function HeroSection() {
       return;
     }
 
+    const q = heroPrompt.trim();
+    const dashboardPath = q ? `/dashboard?q=${encodeURIComponent(q)}` : "/dashboard";
+
     if (!session) {
-      router.push("/login?next=/dashboard");
+      router.push(`/login?next=${encodeURIComponent(dashboardPath)}` as "/login");
       return;
     }
 
-    router.push("/dashboard");
+    router.push(dashboardPath as "/dashboard");
   };
 
   return (
@@ -347,18 +350,16 @@ export default function HeroSection() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <Copy className="w-3 h-3" />
-                    <span>50+ skills indexed</span>
+                    {skillCount > 0 && <span>{skillCount} skills in the registry</span>}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="submit"
-                      className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors disabled:opacity-60"
-                      disabled={isPending}
-                    >
-                      Submit
-                      <ArrowUp className="w-2.5 h-2.5" />
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors disabled:opacity-60"
+                    disabled={isPending}
+                  >
+                    Submit
+                    <ArrowUp className="w-2.5 h-2.5" />
+                  </button>
                 </div>
               </form>
             </motion.div>
