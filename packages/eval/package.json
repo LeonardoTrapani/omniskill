@@ -1,0 +1,30 @@
+{
+  "name": "@omniscient/eval",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "test": "bun test",
+    "check-types": "tsc -b"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^1.0.0",
+    "@omniscient/db": "workspace:*",
+    "ai": "^4.0.0",
+    "yaml": "^2.7.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@omniscient/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

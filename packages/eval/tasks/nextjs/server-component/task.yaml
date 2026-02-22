@@ -1,0 +1,64 @@
+id: "nextjs-server-component-001"
+name: "Create Next.js Server Component with data fetching"
+targetSkillSlugs:
+  - next-best-practices
+  - vercel-react-best-practices
+domain: "nextjs"
+difficulty: "medium"
+prompt: |
+  Create a Next.js App Router page at app/products/page.tsx that:
+  1. Is a Server Component (no "use client" directive)
+  2. Defines an async function that fetches products from https://fakestoreapi.com/products
+  3. Renders a list of products showing name (title) and price
+  4. Includes proper TypeScript types for the product data
+  5. Uses Suspense for loading state with a loading.tsx file
+  6. Includes an error.tsx file for error handling
+
+  Also create the app/products/loading.tsx and app/products/error.tsx files.
+scaffold:
+  "app/layout.tsx": |
+    export default function RootLayout({ children }: { children: React.ReactNode }) {
+      return <html><body>{children}</body></html>;
+    }
+verifier:
+  type: composite
+  deterministicWeight: 0.6
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Page file exists"
+        kind: file-exists
+        config: { path: "app/products/page.tsx" }
+      - name: "Loading file exists"
+        kind: file-exists
+        config: { path: "app/products/loading.tsx" }
+      - name: "Error file exists"
+        kind: file-exists
+        config: { path: "app/products/error.tsx" }
+      - name: "No use client in page"
+        kind: file-contains
+        config:
+          path: "app/products/page.tsx"
+          pattern: "use client"
+          shouldMatch: false
+      - name: "Uses async function"
+        kind: file-contains
+        config:
+          path: "app/products/page.tsx"
+          pattern: "async"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Next.js Server Component:
+      - Is it a proper Server Component (no client-side hooks)?
+      - Does it use async/await for data fetching correctly?
+      - Does it have proper TypeScript types?
+      - Does the loading.tsx provide a good loading state?
+      - Does the error.tsx properly handle errors (must be a client component)?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["server-component", "data-fetching", "app-router"]
+timeoutMs: 60000

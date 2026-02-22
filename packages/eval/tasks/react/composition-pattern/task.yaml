@@ -1,0 +1,71 @@
+id: "react-composition-001"
+name: "Create compound component pattern"
+targetSkillSlugs:
+  - vercel-composition-patterns
+  - vercel-react-best-practices
+domain: "react"
+difficulty: "hard"
+prompt: |
+  Create a compound component pattern for a Tabs component at components/Tabs.tsx:
+
+  1. TabsRoot - the container that manages active tab state via React context
+  2. TabsList - renders the tab triggers
+  3. TabsTrigger - individual tab button, highlights when active
+  4. TabsContent - renders content for the active tab
+
+  Usage should look like:
+  ```tsx
+  <Tabs defaultValue="tab1">
+    <TabsList>
+      <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+      <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+    </TabsList>
+    <TabsContent value="tab1">Content 1</TabsContent>
+    <TabsContent value="tab2">Content 2</TabsContent>
+  </Tabs>
+  ```
+
+  Export all components as named exports. Use TypeScript and React.createContext for state sharing.
+verifier:
+  type: composite
+  deterministicWeight: 0.5
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Tabs component exists"
+        kind: file-exists
+        config: { path: "components/Tabs.tsx" }
+      - name: "Uses createContext"
+        kind: file-contains
+        config:
+          path: "components/Tabs.tsx"
+          pattern: "createContext"
+          shouldMatch: true
+      - name: "Has TabsTrigger"
+        kind: file-contains
+        config:
+          path: "components/Tabs.tsx"
+          pattern: "TabsTrigger"
+          shouldMatch: true
+      - name: "Has TabsContent"
+        kind: file-contains
+        config:
+          path: "components/Tabs.tsx"
+          pattern: "TabsContent"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the compound component pattern:
+      - Does it correctly use React Context for state sharing?
+      - Is the API clean and composable?
+      - Does TabsTrigger highlight when active?
+      - Does TabsContent only render when its value matches?
+      - Are types properly defined?
+      - Does it follow the compound component pattern correctly?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["react", "compound-component", "composition"]
+timeoutMs: 60000

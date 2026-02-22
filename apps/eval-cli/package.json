@@ -1,0 +1,19 @@
+{
+  "name": "eval-cli",
+  "private": true,
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "check-types": "tsc -b"
+  },
+  "dependencies": {
+    "@omniscient/eval": "workspace:*",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@omniscient/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

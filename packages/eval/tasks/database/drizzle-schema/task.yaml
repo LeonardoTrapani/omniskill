@@ -1,0 +1,70 @@
+id: "database-drizzle-schema-001"
+name: "Create Drizzle ORM schema for blog"
+targetSkillSlugs:
+  - neon-postgres
+domain: "database"
+difficulty: "medium"
+prompt: |
+  Create a Drizzle ORM schema at db/schema.ts for a blog application with:
+  1. A "post" table with: id (UUID, PK), title (text, not null), content (text, not null), slug (text, unique), published (boolean, default false), createdAt (timestamp, default now), updatedAt (timestamp)
+  2. A "comment" table with: id (UUID, PK), postId (FK to post, cascade delete), authorName (text, not null), body (text, not null), createdAt (timestamp, default now)
+  3. Proper relations between post and comment using drizzle-orm relations()
+  4. Indexes on post.slug and comment.postId
+
+  Also create db/index.ts that:
+  1. Creates a Neon connection using @neondatabase/serverless
+  2. Exports a drizzle instance with the schema
+scaffold:
+  "package.json": |
+    { "name": "db-eval", "type": "module", "dependencies": { "drizzle-orm": "^0.45.0", "@neondatabase/serverless": "^1.0.0" } }
+verifier:
+  type: composite
+  deterministicWeight: 0.6
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Schema file exists"
+        kind: file-exists
+        config: { path: "db/schema.ts" }
+      - name: "DB index exists"
+        kind: file-exists
+        config: { path: "db/index.ts" }
+      - name: "Has post table"
+        kind: file-contains
+        config:
+          path: "db/schema.ts"
+          pattern: "post"
+          shouldMatch: true
+      - name: "Has comment table"
+        kind: file-contains
+        config:
+          path: "db/schema.ts"
+          pattern: "comment"
+          shouldMatch: true
+      - name: "Uses relations"
+        kind: file-contains
+        config:
+          path: "db/schema.ts"
+          pattern: "relations"
+          shouldMatch: true
+      - name: "Uses neon"
+        kind: file-contains
+        config:
+          path: "db/index.ts"
+          pattern: "neon"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Drizzle schema:
+      - Are all required columns defined with correct types?
+      - Are foreign keys and cascade deletes properly configured?
+      - Are relations correctly defined?
+      - Are indexes properly set up?
+      - Does the db index correctly initialize Neon + Drizzle?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["drizzle", "schema", "neon", "database"]
+timeoutMs: 60000

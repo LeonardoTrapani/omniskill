@@ -1,0 +1,54 @@
+id: "nextjs-api-route-001"
+name: "Create Next.js Route Handler with validation"
+targetSkillSlugs:
+  - next-best-practices
+domain: "nextjs"
+difficulty: "easy"
+prompt: |
+  Create a Next.js App Router route handler at app/api/users/route.ts that:
+  1. Exports GET and POST handlers
+  2. GET returns a list of users from an in-memory array
+  3. POST creates a new user with validation (name and email required)
+  4. Returns proper HTTP status codes (200, 201, 400)
+  5. Returns JSON responses using NextResponse.json()
+  6. Uses TypeScript interfaces for the User type
+verifier:
+  type: composite
+  deterministicWeight: 0.7
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Route handler exists"
+        kind: file-exists
+        config: { path: "app/api/users/route.ts" }
+      - name: "Exports GET"
+        kind: file-contains
+        config:
+          path: "app/api/users/route.ts"
+          pattern: "GET"
+          shouldMatch: true
+      - name: "Exports POST"
+        kind: file-contains
+        config:
+          path: "app/api/users/route.ts"
+          pattern: "POST"
+          shouldMatch: true
+      - name: "Uses NextResponse"
+        kind: file-contains
+        config:
+          path: "app/api/users/route.ts"
+          pattern: "NextResponse"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Next.js Route Handler:
+      - Are GET and POST properly exported as named exports?
+      - Does POST validate required fields?
+      - Are proper status codes used?
+      - Is the code well-typed with TypeScript?
+    dimensions:
+      - correctness
+      - best-practices
+tags: ["route-handler", "api", "validation"]
+timeoutMs: 60000

@@ -1,0 +1,510 @@
+{
+  "runId": "0aa5237f-1b67-467b-9a99-ad7575b1f779",
+  "timestamp": "2026-02-22T01:25:07.096Z",
+  "skills": [
+    {
+      "skillSlug": "better-auth-best-practices",
+      "tasks": [
+        {
+          "taskId": "auth-better-auth-setup-001",
+          "taskName": "Setup Better Auth configuration",
+          "domain": "auth",
+          "control": {
+            "completionRate": 0.75,
+            "checkPassRate": 0.75,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 1
+            },
+            "qualityComposite": 0.9166666666666666,
+            "efficiency": {
+              "totalTokens": 1069,
+              "messageCount": 1,
+              "wallTimeMs": 2818,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0013195
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 0.5,
+              "best-practices": 0.5,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.5833333333333334,
+            "efficiency": {
+              "totalTokens": 3051,
+              "messageCount": 1,
+              "wallTimeMs": 4236,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0026565
+          },
+          "impactScore": -0.012499999999999956
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0.25,
+        "qualityCompositeDelta": -0.33333333333333326,
+        "tokenReductionPct": -1.854069223573433,
+        "impactScore": -0.012499999999999956
+      }
+    },
+    {
+      "skillSlug": "neon-postgres",
+      "tasks": [
+        {
+          "taskId": "database-drizzle-schema-001",
+          "taskName": "Create Drizzle ORM schema for blog",
+          "domain": "database",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 1,
+              "code-quality": 1
+            },
+            "qualityComposite": 1,
+            "efficiency": {
+              "totalTokens": 1400,
+              "messageCount": 1,
+              "wallTimeMs": 3543,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0017300000000000002
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 1
+            },
+            "qualityComposite": 0.9166666666666666,
+            "efficiency": {
+              "totalTokens": 3021,
+              "messageCount": 1,
+              "wallTimeMs": 4163,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0026865
+          },
+          "impactScore": -0.03750000000000002
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": -0.08333333333333337,
+        "tokenReductionPct": -1.157857142857143,
+        "impactScore": -0.03750000000000002
+      }
+    },
+    {
+      "skillSlug": "hono",
+      "tasks": [
+        {
+          "taskId": "hono-create-middleware-001",
+          "taskName": "Create Hono auth middleware",
+          "domain": "hono",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 1
+            },
+            "qualityComposite": 0.9166666666666666,
+            "efficiency": {
+              "totalTokens": 1195,
+              "messageCount": 1,
+              "wallTimeMs": 3000,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0014705
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 1
+            },
+            "qualityComposite": 0.9166666666666666,
+            "efficiency": {
+              "totalTokens": 1778,
+              "messageCount": 1,
+              "wallTimeMs": 3180,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0018119999999999998
+          },
+          "impactScore": 0
+        },
+        {
+          "taskId": "hono-route-handler-001",
+          "taskName": "Create Hono CRUD route handler",
+          "domain": "hono",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 1059,
+              "messageCount": 1,
+              "wallTimeMs": 2652,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0012735000000000001
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 1664,
+              "messageCount": 1,
+              "wallTimeMs": 2798,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0016480000000000002
+          },
+          "impactScore": 0
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": 0,
+        "tokenReductionPct": -0.5270629991126885,
+        "impactScore": 0
+      }
+    },
+    {
+      "skillSlug": "next-best-practices",
+      "tasks": [
+        {
+          "taskId": "nextjs-api-route-001",
+          "taskName": "Create Next.js Route Handler with validation",
+          "domain": "nextjs",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75
+            },
+            "qualityComposite": 0.875,
+            "efficiency": {
+              "totalTokens": 707,
+              "messageCount": 1,
+              "wallTimeMs": 1715,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0008355
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75
+            },
+            "qualityComposite": 0.875,
+            "efficiency": {
+              "totalTokens": 1751,
+              "messageCount": 1,
+              "wallTimeMs": 1739,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0013685
+          },
+          "impactScore": 0
+        },
+        {
+          "taskId": "nextjs-server-component-001",
+          "taskName": "Create Next.js Server Component with data fetching",
+          "domain": "nextjs",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 1372,
+              "messageCount": 1,
+              "wallTimeMs": 3669,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.001761
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 2382,
+              "messageCount": 1,
+              "wallTimeMs": 3593,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.002243
+          },
+          "impactScore": 0
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": 0,
+        "tokenReductionPct": -0.987974987974988,
+        "impactScore": 0
+      }
+    },
+    {
+      "skillSlug": "vercel-react-best-practices",
+      "tasks": [
+        {
+          "taskId": "nextjs-server-component-001",
+          "taskName": "Create Next.js Server Component with data fetching",
+          "domain": "nextjs",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 1372,
+              "messageCount": 1,
+              "wallTimeMs": 3677,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.001761
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 2607,
+              "messageCount": 1,
+              "wallTimeMs": 2977,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0020645
+          },
+          "impactScore": 0
+        },
+        {
+          "taskId": "react-composition-001",
+          "taskName": "Create compound component pattern",
+          "domain": "react",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 0.75,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.75,
+            "efficiency": {
+              "totalTokens": 1384,
+              "messageCount": 1,
+              "wallTimeMs": 3675,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0017629999999999998
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.8333333333333334,
+            "efficiency": {
+              "totalTokens": 3487,
+              "messageCount": 1,
+              "wallTimeMs": 6016,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0033685
+          },
+          "impactScore": 0.03750000000000002
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": 0.041666666666666685,
+        "tokenReductionPct": -1.2111756168359942,
+        "impactScore": 0.01875000000000001
+      }
+    },
+    {
+      "skillSlug": "vercel-composition-patterns",
+      "tasks": [
+        {
+          "taskId": "react-composition-001",
+          "taskName": "Create compound component pattern",
+          "domain": "react",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 0.75,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.75,
+            "efficiency": {
+              "totalTokens": 1384,
+              "messageCount": 1,
+              "wallTimeMs": 3672,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0017629999999999998
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 0.5,
+              "best-practices": 0.75,
+              "code-quality": 0.75
+            },
+            "qualityComposite": 0.6666666666666666,
+            "efficiency": {
+              "totalTokens": 2106,
+              "messageCount": 1,
+              "wallTimeMs": 4006,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.002206
+          },
+          "impactScore": -0.03750000000000002
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": -0.08333333333333337,
+        "tokenReductionPct": -0.5216763005780347,
+        "impactScore": -0.03750000000000002
+      }
+    },
+    {
+      "skillSlug": "turborepo",
+      "tasks": [
+        {
+          "taskId": "turborepo-config-001",
+          "taskName": "Configure Turborepo for monorepo",
+          "domain": "turborepo",
+          "control": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 1
+            },
+            "qualityComposite": 1,
+            "efficiency": {
+              "totalTokens": 960,
+              "messageCount": 1,
+              "wallTimeMs": 2370,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.001167
+          },
+          "treatment": {
+            "completionRate": 1,
+            "checkPassRate": 1,
+            "qualityScores": {
+              "correctness": 1,
+              "best-practices": 0.75
+            },
+            "qualityComposite": 0.875,
+            "efficiency": {
+              "totalTokens": 7261,
+              "messageCount": 1,
+              "wallTimeMs": 1992,
+              "toolCallCount": 0,
+              "failedToolCallCount": 0
+            },
+            "estimatedCostUsd": 0.0041105
+          },
+          "impactScore": -0.05625
+        }
+      ],
+      "aggregate": {
+        "completionRateDelta": 0,
+        "qualityCompositeDelta": -0.125,
+        "tokenReductionPct": -6.563541666666667,
+        "impactScore": -0.05625
+      }
+    }
+  ],
+  "summary": {
+    "skillsEvaluated": 7,
+    "tasksExecuted": 8,
+    "averageImpactScore": -0.017857142857142853,
+    "bestSkill": {
+      "slug": "vercel-react-best-practices",
+      "impactScore": 0.01875000000000001
+    },
+    "totalCostUsd": 0.039008,
+    "totalTimeMs": 107699
+  }
+}

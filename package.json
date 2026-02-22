@@ -32,6 +32,8 @@
     "db:migrate": "turbo -F @omniscient/db db:migrate",
     "scrape:ingest": "turbo -F @omniscient/scraping scrape:ingest",
     "scrape:pipeline": "turbo -F @omniscient/scraping scrape:pipeline",
+    "eval": "bun run --cwd apps/eval-cli src/index.ts",
+    "eval:run": "bun run --cwd apps/eval-cli src/index.ts run",
     "check": "oxlint && oxfmt --write",
     "prepare": "husky"
   },

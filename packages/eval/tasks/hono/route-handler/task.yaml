@@ -1,0 +1,62 @@
+id: "hono-route-handler-001"
+name: "Create Hono CRUD route handler"
+targetSkillSlugs:
+  - hono
+domain: "hono"
+difficulty: "easy"
+prompt: |
+  Create a Hono route handler file at routes/todos.ts that implements a simple in-memory CRUD API for todos:
+
+  1. GET /todos - List all todos
+  2. POST /todos - Create a todo (body: { title: string })
+  3. GET /todos/:id - Get a single todo
+  4. DELETE /todos/:id - Delete a todo
+
+  Each todo should have: { id: string, title: string, completed: boolean, createdAt: string }
+
+  Use Hono's app.route() pattern and export the router. Use Hono's built-in validator for POST body validation with zod.
+scaffold:
+  "package.json": |
+    { "name": "hono-eval", "type": "module", "dependencies": { "hono": "^4.0.0", "zod": "^3.0.0" } }
+verifier:
+  type: composite
+  deterministicWeight: 0.5
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Route file exists"
+        kind: file-exists
+        config: { path: "routes/todos.ts" }
+      - name: "Has GET endpoint"
+        kind: file-contains
+        config:
+          path: "routes/todos.ts"
+          pattern: "get"
+          shouldMatch: true
+      - name: "Has POST endpoint"
+        kind: file-contains
+        config:
+          path: "routes/todos.ts"
+          pattern: "post"
+          shouldMatch: true
+      - name: "Has DELETE endpoint"
+        kind: file-contains
+        config:
+          path: "routes/todos.ts"
+          pattern: "delete"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Hono CRUD implementation:
+      - Does it correctly implement all 4 CRUD endpoints?
+      - Does it use proper HTTP status codes (200, 201, 404)?
+      - Does it use Hono's routing patterns correctly?
+      - Is the in-memory storage properly managed?
+      - Does it validate input for POST requests?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["crud", "routing", "hono"]
+timeoutMs: 60000

@@ -1,0 +1,59 @@
+id: "auth-better-auth-setup-001"
+name: "Setup Better Auth configuration"
+targetSkillSlugs:
+  - better-auth-best-practices
+domain: "auth"
+difficulty: "medium"
+prompt: |
+  Create a Better Auth configuration file at lib/auth.ts that:
+  1. Imports and configures betterAuth from the "better-auth" package
+  2. Sets up email/password authentication
+  3. Configures a PostgreSQL database adapter using the DATABASE_URL env var
+  4. Exports the auth instance
+  5. Includes proper TypeScript types
+
+  Also create a lib/auth-client.ts file that:
+  1. Creates and exports the auth client using "better-auth/client"
+  2. Sets the baseURL to process.env.BETTER_AUTH_URL
+scaffold:
+  "package.json": |
+    { "name": "auth-eval", "type": "module", "dependencies": { "better-auth": "^1.0.0" } }
+verifier:
+  type: composite
+  deterministicWeight: 0.5
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Auth config exists"
+        kind: file-exists
+        config: { path: "lib/auth.ts" }
+      - name: "Auth client exists"
+        kind: file-exists
+        config: { path: "lib/auth-client.ts" }
+      - name: "Uses betterAuth"
+        kind: file-contains
+        config:
+          path: "lib/auth.ts"
+          pattern: "betterAuth"
+          shouldMatch: true
+      - name: "Has email password"
+        kind: file-contains
+        config:
+          path: "lib/auth.ts"
+          pattern: "emailAndPassword"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Better Auth setup:
+      - Does it correctly import and configure betterAuth?
+      - Is email/password auth properly enabled?
+      - Is the database adapter correctly configured with env var?
+      - Does the client properly set baseURL?
+      - Are TypeScript types correct?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["auth", "better-auth", "setup"]
+timeoutMs: 60000

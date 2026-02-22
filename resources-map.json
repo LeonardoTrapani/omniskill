@@ -1,0 +1,3067 @@
+[
+  {
+    "slug": "ab-test-setup",
+    "path": "references/test-templates.md",
+    "resource_id": "fbb8a3d0-05fc-4f4d-b4de-471551e39229"
+  },
+  {
+    "slug": "accessibility-compliance",
+    "path": "references/aria-patterns.md",
+    "resource_id": "e4c7b2cf-1065-4b30-9c7f-e328fc3b444f"
+  },
+  {
+    "slug": "agent-browser",
+    "path": "references/profiling.md",
+    "resource_id": "942704a9-e4a4-4f87-9888-03d46b78ef3e"
+  },
+  {
+    "slug": "agent-browser",
+    "path": "templates/authenticated-session.sh",
+    "resource_id": "e1edde1e-00b8-439d-aadb-586986960a0b"
+  },
+  {
+    "slug": "agent-browser",
+    "path": "templates/capture-workflow.sh",
+    "resource_id": "faa9619f-8113-4703-909c-2195cf8e3e9d"
+  },
+  {
+    "slug": "agent-browser",
+    "path": "templates/form-automation.sh",
+    "resource_id": "c0967af2-7f26-4144-83b4-053082b255e8"
+  },
+  {
+    "slug": "algorithmic-art",
+    "path": "LICENSE.txt",
+    "resource_id": "ea565bc1-6d22-4f28-8ad4-6e3fbe464103"
+  },
+  {
+    "slug": "algorithmic-art",
+    "path": "templates/generator_template.js",
+    "resource_id": "ff550ac0-f95c-45e6-87a4-b5385e46e360"
+  },
+  {
+    "slug": "algorithmic-art",
+    "path": "templates/viewer.html",
+    "resource_id": "edf2fbfa-f0d6-4c09-9b87-c5d31837bbd1"
+  },
+  {
+    "slug": "antfu",
+    "path": "references/antfu-eslint-config.md",
+    "resource_id": "c65709c3-ab7b-4753-8e31-33834d17fb86"
+  },
+  {
+    "slug": "antfu",
+    "path": "references/setting-up.md",
+    "resource_id": "abd2eba0-f39a-4700-90fb-7b96619d74c9"
+  },
+  {
+    "slug": "backlink-analyzer",
+    "path": "references/link-quality-rubric.md",
+    "resource_id": "cea09877-2cb5-46e7-a03b-068cc6f28610"
+  },
+  {
+    "slug": "building-native-ui",
+    "path": "references/form-sheet.md",
+    "resource_id": "a2c0086e-96e8-44ec-89b0-742a1ec7764f"
+  },
+  {
+    "slug": "building-native-ui",
+    "path": "references/gradients.md",
+    "resource_id": "ad28603a-ca0f-4e5f-898b-6a20b24c9ffe"
+  },
+  {
+    "slug": "building-native-ui",
+    "path": "references/media.md",
+    "resource_id": "015b866b-a394-47df-a006-0737ec2d0a18"
+  },
+  {
+    "slug": "building-native-ui",
+    "path": "references/search.md",
+    "resource_id": "faf63e0b-a211-4829-b3d0-2501c16718b9"
+  },
+  {
+    "slug": "building-native-ui",
+    "path": "references/storage.md",
+    "resource_id": "f705e6fb-52b8-43f4-a6cb-dc7a73e83f42"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "LICENSE.txt",
+    "resource_id": "f2defb60-fc1b-48d8-a063-0da8032c1696"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/ArsenalSC-OFL.txt",
+    "resource_id": "028e8529-be9b-4824-9bc7-c3429464a8d1"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/BigShoulders-OFL.txt",
+    "resource_id": "f52d194f-ab26-43d6-8b0a-8a38ff5089e6"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/Boldonse-OFL.txt",
+    "resource_id": "0446e8db-1436-454b-8c8a-e76582a448e5"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/BricolageGrotesque-OFL.txt",
+    "resource_id": "f7718361-e9e3-403d-8884-002d712a2edd"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/DMMono-OFL.txt",
+    "resource_id": "ebc90a48-af44-4ddd-8960-add8f0942d6f"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/EricaOne-OFL.txt",
+    "resource_id": "b139ffa6-c971-4c02-9ab0-b31339c7563e"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/GeistMono-OFL.txt",
+    "resource_id": "d6a6666b-dc5b-41f5-af25-2191d483142b"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/Italiana-OFL.txt",
+    "resource_id": "d8246147-3d77-471b-a7a1-95e8f8986fef"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/JetBrainsMono-OFL.txt",
+    "resource_id": "d6a6aaa1-a072-4f86-bc6e-1f4539fee990"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/Jura-OFL.txt",
+    "resource_id": "9e1e2195-8ca9-4e4e-9885-c6ba123f9b8e"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/NationalPark-OFL.txt",
+    "resource_id": "025b1577-2b05-4092-8416-8f64caaed170"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/NothingYouCouldDo-OFL.txt",
+    "resource_id": "a0f080bb-614f-4179-abc4-73d837d34311"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/PixelifySans-OFL.txt",
+    "resource_id": "a0b42607-41de-4d4b-9f2f-da383bbfc750"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/RedHatMono-OFL.txt",
+    "resource_id": "cff7e961-acd0-4a21-b167-cf1b366fb47e"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/WorkSans-OFL.txt",
+    "resource_id": "c1487955-d253-4899-9856-02d043709c1a"
+  },
+  {
+    "slug": "canvas-design",
+    "path": "canvas-fonts/YoungSerif-OFL.txt",
+    "resource_id": "ce1e8d83-1ed6-4525-b758-2b785920e62e"
+  },
+  {
+    "slug": "competitor-alternatives",
+    "path": "references/content-architecture.md",
+    "resource_id": "b37e62d7-96fa-4d13-908f-b050df2400cf"
+  },
+  {
+    "slug": "competitor-alternatives",
+    "path": "references/templates.md",
+    "resource_id": "d558a74c-bffd-4de2-813d-8f977b407f9d"
+  },
+  {
+    "slug": "convex",
+    "path": "agents/openai.yaml",
+    "resource_id": "cca1182e-233a-4b6e-84fc-0529ce2006b0"
+  },
+  {
+    "slug": "copy-editing",
+    "path": "references/plain-english-alternatives.md",
+    "resource_id": "d5867d8c-0a77-406c-91b6-819043f4a1ed"
+  },
+  {
+    "slug": "copywriting",
+    "path": "references/natural-transitions.md",
+    "resource_id": "c8bf5f10-d5dc-47a4-82a5-a9c762ac10c9"
+  },
+  {
+    "slug": "design-system-patterns",
+    "path": "references/theming-architecture.md",
+    "resource_id": "c364683e-7f05-43bf-8c89-e7c4a47fe436"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/helpers/merge_runs.py",
+    "resource_id": "cc2b7963-c41c-41b0-9eb2-d0b9e531f65d"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/helpers/simplify_redlines.py",
+    "resource_id": "03511cb7-377b-49d0-bcfd-4a7e682135c3"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+    "resource_id": "e9b06c4b-798b-43e7-822c-a3070c73e245"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+    "resource_id": "937accb1-cf99-44f2-82dd-1f0c45c5bc7d"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+    "resource_id": "eae20607-76ff-4242-b807-8e3364376240"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+    "resource_id": "db82a179-f4af-4cf2-8820-3a9798ecb133"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+    "resource_id": "df5553f2-c978-4237-a76d-ff3948128654"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+    "resource_id": "95f5c093-dd50-4ae5-828a-df2d834a30b3"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+    "resource_id": "9f6a8258-804c-4274-840e-13679d03dd01"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+    "resource_id": "f8a606c2-5fb8-4910-bae7-03d2b246a274"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+    "resource_id": "e1a1482b-1d44-4308-a69e-5946c60519ea"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+    "resource_id": "faae3898-201e-4b66-9b88-e337c49ee3d8"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+    "resource_id": "f8b4af35-3fa6-47e1-8768-e76df29ab865"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+    "resource_id": "9ab4ce08-80e3-40fe-9b9a-862a3e1cf6fc"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+    "resource_id": "b8d56b03-5bb9-4b5d-9ece-93a2431b16b8"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+    "resource_id": "bce742e6-8b6f-49f9-b6eb-cd6f6b22884d"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/mce/mc.xsd",
+    "resource_id": "e7ed6be8-8321-4748-a035-62f74abd421c"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/microsoft/wml-2010.xsd",
+    "resource_id": "d914ca6e-ab57-401c-8052-5bad8e8f1a7e"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/microsoft/wml-2018.xsd",
+    "resource_id": "990d9413-a18e-413b-99f8-b8c9720f6ed5"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+    "resource_id": "b903cb6b-2161-4901-bbdc-73dc257af155"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+    "resource_id": "cb98f334-6065-4836-9e24-15e42367a86f"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/unpack.py",
+    "resource_id": "ced05338-5b54-4527-80f8-b418e00e1c85"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/validate.py",
+    "resource_id": "d3fc5c58-d1d6-4fa7-a340-419dead1c8bb"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/validators/base.py",
+    "resource_id": "b58515dc-6885-4a61-8edc-d70a9aac5a33"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/office/validators/docx.py",
+    "resource_id": "edd2a635-9e4e-4b9f-b25b-9ef9ccfa46db"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/templates/commentsExtensible.xml",
+    "resource_id": "fc4ba0ab-6d3e-402e-ac99-38273e5edbba"
+  },
+  {
+    "slug": "docx",
+    "path": "scripts/templates/commentsIds.xml",
+    "resource_id": "a0535816-641a-4a9e-b305-0789ac589f75"
+  },
+  {
+    "slug": "email-sequence",
+    "path": "references/copy-guidelines.md",
+    "resource_id": "c558376c-bb5f-4f81-a50b-7e5f1df4cb7b"
+  },
+  {
+    "slug": "email-sequence",
+    "path": "references/email-types.md",
+    "resource_id": "90bac7f3-0baa-4f53-a528-058b45b14898"
+  },
+  {
+    "slug": "expo-cicd-workflows",
+    "path": "scripts/fetch.js",
+    "resource_id": "f75b9c7c-8daa-49b2-b345-12f7adfe4f84"
+  },
+  {
+    "slug": "expo-cicd-workflows",
+    "path": "scripts/validate.js",
+    "resource_id": "f1ced985-1e65-451e-8c7b-a80946015d73"
+  },
+  {
+    "slug": "expo-deployment",
+    "path": "references/workflows.md",
+    "resource_id": "fc29c10e-ec7c-4dae-aff3-17c506326337"
+  },
+  {
+    "slug": "firecrawl",
+    "path": "rules/install.md",
+    "resource_id": "fcf8c816-6696-4973-a3b8-a378a49d7f30"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "assets/templates/explicit_animation.dart",
+    "resource_id": "e8c973a7-f5a6-453e-b95b-7d5d676fa419"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "assets/templates/hero_transition.dart",
+    "resource_id": "f1bbe361-9254-4b7f-931c-a01781e9abca"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "assets/templates/implicit_animation.dart",
+    "resource_id": "f3f7add9-99fd-4803-a1f4-82ef7e57c8d5"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "assets/templates/staggered_animation.dart",
+    "resource_id": "a18c8a28-cc62-499e-8197-17929f5373a6"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "references/explicit.md",
+    "resource_id": "b9832079-ff7d-49cb-a6fa-bf1e5eeb55e3"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "references/hero.md",
+    "resource_id": "af278e2a-48d6-4649-b24c-0ca11bd5e9f1"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "references/physics.md",
+    "resource_id": "b346e4d4-ecf7-49c4-84b1-49078166ec04"
+  },
+  {
+    "slug": "flutter-animations",
+    "path": "references/staggered.md",
+    "resource_id": "b6fb2832-e83b-4770-a507-8ad85e9730b2"
+  },
+  {
+    "slug": "flutter-expert",
+    "path": "references/gorouter-navigation.md",
+    "resource_id": "d6b38b7f-93cb-4510-96cd-7026fd8125b4"
+  },
+  {
+    "slug": "flutter-expert",
+    "path": "references/riverpod-state.md",
+    "resource_id": "0311c32f-9403-468f-a39f-2ccd439de37c"
+  },
+  {
+    "slug": "free-tool-strategy",
+    "path": "references/tool-types.md",
+    "resource_id": "03c9f103-e1db-44b5-8d25-9088d83d4321"
+  },
+  {
+    "slug": "golang-pro",
+    "path": "references/testing.md",
+    "resource_id": "eca3c24c-3469-488e-8fd1-211560780077"
+  },
+  {
+    "slug": "interface-design",
+    "path": "references/critique.md",
+    "resource_id": "f34d40d6-fd27-4689-b732-533a45909cc6"
+  },
+  {
+    "slug": "interface-design",
+    "path": "references/example.md",
+    "resource_id": "ee7852ad-1d57-442a-919e-94139b147b24"
+  },
+  {
+    "slug": "internal-comms",
+    "path": "LICENSE.txt",
+    "resource_id": "9b2e11d4-d17b-4fec-ae07-a204892d9aa7"
+  },
+  {
+    "slug": "internal-comms",
+    "path": "examples/3p-updates.md",
+    "resource_id": "ae305b82-31af-4c70-aabb-91176c8e320d"
+  },
+  {
+    "slug": "internal-comms",
+    "path": "examples/general-comms.md",
+    "resource_id": "c52201bd-77db-43a8-adf1-809d8b9b3369"
+  },
+  {
+    "slug": "laravel-specialist",
+    "path": "references/eloquent.md",
+    "resource_id": "01646f6e-0a57-457d-8c0b-236cd5a3431d"
+  },
+  {
+    "slug": "laravel-specialist",
+    "path": "references/queues.md",
+    "resource_id": "e04ee13a-b3a5-4b2b-b7d8-0fedf023826d"
+  },
+  {
+    "slug": "mastra",
+    "path": "references/create-mastra.md",
+    "resource_id": "c01ab803-ad0e-4f13-bf64-cf947dd13249"
+  },
+  {
+    "slug": "mastra",
+    "path": "references/embedded-docs.md",
+    "resource_id": "ffd962b6-bde4-463c-8292-2d3ad2c859f9"
+  },
+  {
+    "slug": "mastra",
+    "path": "references/remote-docs.md",
+    "resource_id": "f1fe96cd-9750-49fd-b6f1-e34d1b7018aa"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/SCRIPTS-TEMPLATE.md",
+    "resource_id": "bf6a1947-050a-43da-b4f0-dac6740a2eab"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/api-client-pattern.py",
+    "resource_id": "d406887d-440c-47d0-9344-b1c43998760a"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/basic-server.py",
+    "resource_id": "eec9e0a5-3ab3-405d-8ecb-1ac2c084055b"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/openapi-integration.py",
+    "resource_id": "92a03347-2457-4218-9e3e-3ac3a959e67d"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/prompts-examples.py",
+    "resource_id": "a65d4861-05a4-4aa7-9176-d791d33cd1a3"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/resources-examples.py",
+    "resource_id": "07c6fbf3-a936-436b-86d5-38a9377bab1d"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/script-template.ts",
+    "resource_id": "95c2202a-06fe-4421-821b-30ee151238d6"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/self-contained-server.py",
+    "resource_id": "a428ba5b-3176-40ba-95f1-63872af7284e"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "assets/tools-examples.py",
+    "resource_id": "ff6300f6-b3b7-45c2-8183-39db8a503738"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "references/common-errors.md",
+    "resource_id": "c11596f1-cc1b-4a85-b849-c5fe87f7a211"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "references/context-features.md",
+    "resource_id": "d9a90611-c146-4cae-bd96-eecb753d6258"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "references/integration-patterns.md",
+    "resource_id": "9ba78281-7d25-4359-9f81-4dcc5c0b896e"
+  },
+  {
+    "slug": "mcp-builder",
+    "path": "scripts/deploy-cloud.sh",
+    "resource_id": "d320688e-a579-4306-9a73-17e659435456"
+  },
+  {
+    "slug": "mobile-android-design",
+    "path": "references/compose-components.md",
+    "resource_id": "a522fbdc-a356-4a10-a19f-d9c07dfc5a4d"
+  },
+  {
+    "slug": "mobile-android-design",
+    "path": "references/material3-theming.md",
+    "resource_id": "bf6b2f72-b4af-44a9-b00a-a7b85eed1087"
+  },
+  {
+    "slug": "mobile-ios-design",
+    "path": "references/hig-patterns.md",
+    "resource_id": "ff80a2a4-d85e-474a-b94f-7af46243e69e"
+  },
+  {
+    "slug": "mobile-ios-design",
+    "path": "references/swiftui-components.md",
+    "resource_id": "b28caf8e-09b4-4a35-9e9c-0eee0cd1e84a"
+  },
+  {
+    "slug": "neon-postgres",
+    "path": "references/branching.md",
+    "resource_id": "d37c6de5-50d4-4972-b9dd-a0cf8c1ce461"
+  },
+  {
+    "slug": "neon-postgres",
+    "path": "references/connection-methods.md",
+    "resource_id": "eb405df5-d097-4948-969a-85f50252e89e"
+  },
+  {
+    "slug": "neon-postgres",
+    "path": "references/getting-started.md",
+    "resource_id": "e117f191-0b30-4145-ad54-037f72856a9f"
+  },
+  {
+    "slug": "neon-postgres",
+    "path": "references/neon-drizzle.md",
+    "resource_id": "e02432a0-70b8-41bc-b356-d4beced5d3b2"
+  },
+  {
+    "slug": "neon-postgres",
+    "path": "references/neon-python-sdk.md",
+    "resource_id": "01acd767-86c1-4b26-8444-a9672e60477c"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": ".github/workflows/branch-protection.yml",
+    "resource_id": "adf7dbbc-35ec-4495-8b0b-11015360cc90"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": ".github/workflows/deploy.yml",
+    "resource_id": "049f1edc-92bc-47d5-ae1a-494f5c2794f7"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": ".gitignore",
+    "resource_id": "9ccc82fa-a60a-42a6-a99d-e7bb8142b54c"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "README.md",
+    "resource_id": "ada02541-99e9-4d5e-8007-fcda804da753"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/api-use-dto-serialization.md",
+    "resource_id": "aa7ad160-44bb-4b92-8f09-492a743d713c"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/api-versioning.md",
+    "resource_id": "f619ab50-61ba-4be4-9f47-50812706df4d"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/arch-module-sharing.md",
+    "resource_id": "ef76dc61-ff77-4564-adc2-199f0b9bb81b"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/arch-single-responsibility.md",
+    "resource_id": "dc51bf6f-c439-4446-aaeb-183084483fa8"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/arch-use-repository-pattern.md",
+    "resource_id": "ba158626-bcf4-4778-938c-eae1fb61b600"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/db-use-migrations.md",
+    "resource_id": "ad15d1ab-28ee-42c1-b881-965785bca9dd"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/db-use-transactions.md",
+    "resource_id": "95aefaaf-cddc-4226-8bd3-dc4c7bc7fa8a"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/devops-graceful-shutdown.md",
+    "resource_id": "f66196c4-b39d-4f51-9575-a50a54412626"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/devops-use-config-module.md",
+    "resource_id": "cac0ee63-2d76-4a53-a183-4b6f3471f961"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/devops-use-logging.md",
+    "resource_id": "b26df4d5-31b0-4188-965c-86b4e9aeb6a7"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/di-interface-segregation.md",
+    "resource_id": "e92ce952-2e3a-4f7f-ae22-2d182e1de261"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/di-liskov-substitution.md",
+    "resource_id": "cc354b8a-283b-44e9-8683-3a45904b8d1b"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/di-prefer-constructor-injection.md",
+    "resource_id": "00587112-96ee-4a32-a1e5-7ac05541a097"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/micro-use-queues.md",
+    "resource_id": "9feeb05e-febe-414f-ab0b-130b37bed310"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/perf-lazy-loading.md",
+    "resource_id": "92eb4c74-ea71-40cf-a10d-c919bcabf66b"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/perf-use-caching.md",
+    "resource_id": "e02d1190-183f-4984-bc4f-e8c9c40b994b"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/security-rate-limiting.md",
+    "resource_id": "ca9113a3-3c1c-49fe-b8ac-de091d21bc58"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/security-use-guards.md",
+    "resource_id": "ec76cc8e-a312-42e9-a24e-2f33b489b46e"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/test-e2e-supertest.md",
+    "resource_id": "cfb3911f-cdab-4f4e-9d15-a2ef6e10fd30"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "rules/test-use-testing-module.md",
+    "resource_id": "f30ed9ba-338b-444f-b184-440cadddecee"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "scripts/build-agents.ts",
+    "resource_id": "a0162ad9-bf67-446b-aff4-c3487cd38124"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "scripts/build.sh",
+    "resource_id": "a1c77a7a-01dc-4383-876b-15d308cc5efd"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "scripts/package-lock.json",
+    "resource_id": "057db907-f3ed-472e-967c-b3e02eab6651"
+  },
+  {
+    "slug": "nestjs-best-practices",
+    "path": "scripts/package.json",
+    "resource_id": "9602efa7-ff20-451a-ba87-46e540333254"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "async-patterns.md",
+    "resource_id": "04d4f4ab-03ce-47ce-8a59-161c47d1b646"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "data-patterns.md",
+    "resource_id": "a849b6ac-4a4e-4d10-8c2c-b4f1dee11c62"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "debug-tricks.md",
+    "resource_id": "b9332058-9853-45a4-bd98-27886bd9fad9"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "error-handling.md",
+    "resource_id": "d2a22db3-b6b2-4fa5-b2e0-343fd3c50465"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "file-conventions.md",
+    "resource_id": "91c97669-002f-424f-b4ab-06b64d632649"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "font.md",
+    "resource_id": "f5944037-f586-4c2a-94e6-e3e2bbb20b34"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "functions.md",
+    "resource_id": "98e4263c-fb2e-467e-9d07-07bdafeaf35a"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "hydration-error.md",
+    "resource_id": "ca2602e2-64cb-40a2-b8ad-7585168c82a1"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "metadata.md",
+    "resource_id": "0907bd27-2126-4ffc-909b-2bfda88fffd3"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "route-handlers.md",
+    "resource_id": "08744eb4-19f9-451d-b895-5fc5a5d4743b"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "rsc-boundaries.md",
+    "resource_id": "e5130d9a-d30c-4155-9a8a-537adf8d2d14"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "runtime-selection.md",
+    "resource_id": "d9d1a87e-1a2c-4c3a-a536-f995fbb84c8c"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "scripts.md",
+    "resource_id": "b9e54cb7-d718-48ab-a624-93a6eb11acfc"
+  },
+  {
+    "slug": "next-best-practices",
+    "path": "self-hosting.md",
+    "resource_id": "cd7dcfa4-5ec0-4dd9-8189-f8ca4c9e7524"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/best-practices-ssr.md",
+    "resource_id": "bef12f4a-38d4-4fa6-b6da-afcd6b58a9ba"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/core-cli.md",
+    "resource_id": "abccfa1e-9cb2-4fea-a276-f2925ad8fbbe"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/core-deployment.md",
+    "resource_id": "bed2591d-916c-471f-8372-842669adab07"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/core-modules.md",
+    "resource_id": "bdb37ada-80f4-4310-ae9e-aafe713b9635"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/core-routing.md",
+    "resource_id": "b82171f7-21bb-46f1-bf7f-b3e9c5ce2742"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/features-composables.md",
+    "resource_id": "d9553b09-6582-422c-8153-99b9b29a6ea7"
+  },
+  {
+    "slug": "nuxt",
+    "path": "references/features-server.md",
+    "resource_id": "fe8bb50f-c564-4a2e-9aca-cd9390fe445e"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/components/code-diff.md",
+    "resource_id": "d98a897e-7317-4df5-8f28-1c5092d6a563"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/components/containers.md",
+    "resource_id": "b8cd2cd0-4164-473f-b332-99d12e70b1aa"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/core/REFERENCE.md",
+    "resource_id": "e86fd3aa-7c54-4dd3-9078-8e6476d31257"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/core/api.md",
+    "resource_id": "f17e16a0-cc6e-4683-ad3c-a1b1f1b844ea"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/core/patterns.md",
+    "resource_id": "f6f5628f-06d3-4c6f-a6ae-5ba1e41ddafb"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/keyboard/REFERENCE.md",
+    "resource_id": "ed39f659-0857-499f-b617-c48b5ca89afd"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/layout/patterns.md",
+    "resource_id": "f7ad66d0-d1e1-4a56-8a75-94dbbe48a17f"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/react/REFERENCE.md",
+    "resource_id": "a4832bc4-c1e2-4a77-8b56-2eb2dd51275a"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/react/api.md",
+    "resource_id": "cac7f3d9-c1d1-4292-8880-23b7f17dbcdf"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/react/patterns.md",
+    "resource_id": "99464c92-9adb-41d3-985b-c6fe0f422857"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/solid/api.md",
+    "resource_id": "cbcd12c7-5a9d-4a9a-aa37-a5a50c1f44ec"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/solid/configuration.md",
+    "resource_id": "c0f6e6d9-2fde-46b3-819b-e35b02ded408"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/solid/patterns.md",
+    "resource_id": "ec3d8594-a509-4636-8a90-0b69ad2e7dc8"
+  },
+  {
+    "slug": "opentui",
+    "path": "references/testing/REFERENCE.md",
+    "resource_id": "b840040d-9d58-4b4c-8531-766a36a874bb"
+  },
+  {
+    "slug": "pdf",
+    "path": "LICENSE.txt",
+    "resource_id": "aa94c778-97aa-46b8-bbdf-7f138631e531"
+  },
+  {
+    "slug": "pdf",
+    "path": "reference.md",
+    "resource_id": "ffba0834-bd45-4385-9a4d-dbf3199bb145"
+  },
+  {
+    "slug": "pdf",
+    "path": "scripts/check_fillable_fields.py",
+    "resource_id": "9eab3d5b-91ab-446b-9568-075fc5c74d79"
+  },
+  {
+    "slug": "pdf",
+    "path": "scripts/extract_form_structure.py",
+    "resource_id": "ff351eed-d396-4718-aa86-2d918fdc46a6"
+  },
+  {
+    "slug": "pinia",
+    "path": "GENERATION.md",
+    "resource_id": "ad0444de-5702-4d38-af8c-2780f910b824"
+  },
+  {
+    "slug": "pinia",
+    "path": "references/advanced-ssr.md",
+    "resource_id": "d9c28bde-3240-46e5-b932-2d01b31cf0d1"
+  },
+  {
+    "slug": "pinia",
+    "path": "references/best-practices-outside-component.md",
+    "resource_id": "a540ecd6-8ee3-4312-b746-56cf584c5acc"
+  },
+  {
+    "slug": "pinia",
+    "path": "references/best-practices-testing.md",
+    "resource_id": "e77bd540-5f62-47ad-a6cb-dc1f14f43bdb"
+  },
+  {
+    "slug": "pinia",
+    "path": "references/core-stores.md",
+    "resource_id": "b9184c81-937d-4dbb-9f06-b03c83fe2aba"
+  },
+  {
+    "slug": "pinia",
+    "path": "references/features-plugins.md",
+    "resource_id": "997c4656-30a0-4ada-9567-8edc2ee09136"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "reference.md",
+    "resource_id": "fbad79c4-f0bf-48ac-91ce-752345b91e24"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "scripts/check-complete.ps1",
+    "resource_id": "cffa5438-fd7a-4708-9132-96a773ec7ba6"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "scripts/check-complete.sh",
+    "resource_id": "ccc4c82e-db31-4fec-8071-b62ce0dec461"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "scripts/init-session.ps1",
+    "resource_id": "dd2d0fd5-c3fd-4dc8-9bb6-265d5f5e033c"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "scripts/init-session.sh",
+    "resource_id": "eed91eb2-9eac-4737-98f8-54bf1f9cbc3b"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "scripts/session-catchup.py",
+    "resource_id": "92e5e1bd-4471-4e77-9156-1f76e1c32fe1"
+  },
+  {
+    "slug": "planning-with-files",
+    "path": "templates/task_plan.md",
+    "resource_id": "b184df17-f384-41ca-9d6e-66a441480022"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/best-practices-ci.md",
+    "resource_id": "fc8a2eca-e528-4719-a8e5-f10eab3f9b3a"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/best-practices-migration.md",
+    "resource_id": "a2a3f348-5a56-4255-a8e1-292e0a486a4e"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/best-practices-performance.md",
+    "resource_id": "9a818d74-72e6-470b-a489-30f070b35a4a"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/core-cli.md",
+    "resource_id": "c90f345b-a3b2-47be-a565-81ab24032aac"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/core-config.md",
+    "resource_id": "08ea503c-1280-4d46-8e4b-531e767e732b"
+  },
+  {
+    "slug": "pnpm",
+    "path": "references/features-catalogs.md",
+    "resource_id": "07bed1ab-2832-4b4c-883e-bbf52550cf9e"
+  },
+  {
+    "slug": "pptx",
+    "path": "LICENSE.txt",
+    "resource_id": "fbdbc338-875d-4fc0-9f20-1015d45f9a12"
+  },
+  {
+    "slug": "pptx",
+    "path": "editing.md",
+    "resource_id": "e8abfbd2-7714-4125-b9bb-f60cd2624095"
+  },
+  {
+    "slug": "pptx",
+    "path": "pptxgenjs.md",
+    "resource_id": "a7095149-aa2e-443e-afbc-2680ddb8f70e"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+    "resource_id": "bccf8a5c-b08b-4dc3-b7bb-75a28de3d10d"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+    "resource_id": "a441a208-a12f-4225-a97e-5c8bff2e4fd6"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+    "resource_id": "c6321773-0806-436e-8702-74086fb956af"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+    "resource_id": "e9d52ccc-ef0f-4938-b2ec-54e37c9baf97"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+    "resource_id": "cbf71b46-1869-4b0f-ac20-4f5f7deb6aa4"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+    "resource_id": "c9bbfb50-cf52-4513-8b57-9c13e1660153"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+    "resource_id": "94351279-6123-4fdf-82e6-a98a9369946c"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+    "resource_id": "a425fa98-1309-4f87-9a57-9a4254262707"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+    "resource_id": "c692ef1a-3a39-4249-839c-780d442a24be"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+    "resource_id": "f753b51c-7fcb-4fc5-b0d6-e877b5f9538e"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/mce/mc.xsd",
+    "resource_id": "9543e590-04cc-4158-916f-1abe9deba95e"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/microsoft/wml-2010.xsd",
+    "resource_id": "c03e651a-253b-40d7-bc4c-56fcb47f34a5"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/schemas/microsoft/wml-2018.xsd",
+    "resource_id": "972b025c-b21d-4ca3-bd32-8c1049bda2f1"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/soffice.py",
+    "resource_id": "ce897250-341e-45b0-a4f4-074eb9d97f7e"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/validate.py",
+    "resource_id": "be7847ba-2c10-4e5a-9240-31cb3f9bc89c"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/validators/base.py",
+    "resource_id": "ee0b8b1e-a7bc-4082-ae2b-928752eba352"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/validators/docx.py",
+    "resource_id": "c40fed30-e89a-4630-822e-0aaefaf99068"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/office/validators/redlining.py",
+    "resource_id": "bdab5d2d-2402-4e54-acfa-43c3639b5c3a"
+  },
+  {
+    "slug": "pptx",
+    "path": "scripts/thumbnail.py",
+    "resource_id": "f7cc9a96-944f-41ce-9a51-efec4487eba2"
+  },
+  {
+    "slug": "pricing-strategy",
+    "path": "references/research-methods.md",
+    "resource_id": "f2ab3b1b-aeb1-48a5-afb8-a0819a3e5325"
+  },
+  {
+    "slug": "pricing-strategy",
+    "path": "references/tier-structure.md",
+    "resource_id": "ecf9af45-9fa0-4769-9aa1-0542b697d355"
+  },
+  {
+    "slug": "prompt-engineering-patterns",
+    "path": "assets/prompt-template-library.md",
+    "resource_id": "ded6591c-3755-4108-9c4e-283066a3e159"
+  },
+  {
+    "slug": "prompt-engineering-patterns",
+    "path": "references/few-shot-learning.md",
+    "resource_id": "93cc0778-2abb-4370-bf1c-b006e2260b47"
+  },
+  {
+    "slug": "prompt-engineering-patterns",
+    "path": "references/prompt-optimization.md",
+    "resource_id": "d9501727-dbb9-44d2-90c3-478bcc5a3f60"
+  },
+  {
+    "slug": "prompt-engineering-patterns",
+    "path": "references/system-prompts.md",
+    "resource_id": "f877cca5-639f-464d-90db-356c5d13543f"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "POWER.md",
+    "resource_id": "d4fb7b91-dfa6-446a-bb6b-74da00592eea"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/bundle-code-splitting.md",
+    "resource_id": "a86a7675-921b-4f93-9f48-3692cafb4e22"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/bundle-hermes-mmap.md",
+    "resource_id": "9736a048-bff6-4db0-9b37-a86e263205d3"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/bundle-tree-shaking.md",
+    "resource_id": "b77db49b-06c2-483b-94cf-4df8347c8c3d"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/js-animations-reanimated.md",
+    "resource_id": "e80eba51-ccf4-4b36-855c-9179239148b6"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/js-lists-flatlist-flashlist.md",
+    "resource_id": "e4e5fe2c-6285-4eff-9ec4-faf626fd690b"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/js-memory-leaks.md",
+    "resource_id": "bb0d794a-5eb2-4f49-a932-d65ee92cea22"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/js-react-compiler.md",
+    "resource_id": "b7318f21-6f24-47ba-96be-61cfcdf32cd0"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/js-uncontrolled-components.md",
+    "resource_id": "e601a3f8-1cb4-4320-ae39-8d3fac33f0d3"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/native-android-16kb-alignment.md",
+    "resource_id": "fee3e4f5-4add-4edb-b724-3468b98e3d7b"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/native-measure-tti.md",
+    "resource_id": "d910d702-2150-421f-a912-ee98ed0cb3b0"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/native-memory-leaks.md",
+    "resource_id": "e148ca32-105b-4d22-ae18-ca421f6c3aca"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/native-platform-setup.md",
+    "resource_id": "daab8559-f2a2-41ce-9149-c7212340295f"
+  },
+  {
+    "slug": "react-native-best-practices",
+    "path": "references/native-view-flattening.md",
+    "resource_id": "f8fd73f0-a129-4423-b527-9885176a7926"
+  },
+  {
+    "slug": "react-native-design",
+    "path": "references/navigation-patterns.md",
+    "resource_id": "06ad855a-df7b-4a28-94f0-3194d6d42c7c"
+  },
+  {
+    "slug": "react-native-design",
+    "path": "references/reanimated-patterns.md",
+    "resource_id": "e05579b8-bde4-423b-8955-fb880d3519d4"
+  },
+  {
+    "slug": "react-native-design",
+    "path": "references/styling-patterns.md",
+    "resource_id": "d16df1c1-07d7-4b3a-8747-60ef0c2af2ed"
+  },
+  {
+    "slug": "remembering-conversations",
+    "path": "MCP-TOOLS.md",
+    "resource_id": "d2f2f0ce-348d-46f1-a7e2-87560d7c6a09"
+  },
+  {
+    "slug": "remotion",
+    "path": "README.md",
+    "resource_id": "dfabb7a8-7446-4bc5-8388-da8b2d9a986b"
+  },
+  {
+    "slug": "remotion",
+    "path": "examples/WalkthroughComposition.tsx",
+    "resource_id": "c0f679ba-3326-42a2-9127-165d94a4f4f5"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/3d.md",
+    "resource_id": "e64ed9d2-4498-439f-aa5b-64340feaf51d"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/animations.md",
+    "resource_id": "f23d1da6-a037-4cd0-bbfd-5bc86be96d7a"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/assets.md",
+    "resource_id": "a6ef6dfd-6123-4156-aa3c-3a6810cbf5b2"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/assets/text-animations-typewriter.tsx",
+    "resource_id": "fee81863-0434-4be9-b258-82f2d27187b7"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/audio-visualization.md",
+    "resource_id": "d7c5f408-e3d0-49db-92c7-5f5b8bc6db76"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/display-captions.md",
+    "resource_id": "ec51a2f7-c781-44dc-82c4-62c22615ce31"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/extract-frames.md",
+    "resource_id": "ef00153e-f9c7-4a34-af44-b32bc12991d6"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/ffmpeg.md",
+    "resource_id": "fc14bde0-fae1-4d9d-8825-97a8dba88b69"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/gifs.md",
+    "resource_id": "b326ce75-5193-4c39-9584-bcdc9f957b30"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/lottie.md",
+    "resource_id": "bf2fd52a-f8b8-48ee-bac5-82321e120a7b"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/measuring-text.md",
+    "resource_id": "f226656c-5563-4233-88c0-99ec65079e8e"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/parameters.md",
+    "resource_id": "eedd3b6e-0f50-43e5-aa6f-5900da78546f"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/subtitles.md",
+    "resource_id": "cf46ddcf-2645-4701-9f2d-e5cef4071f81"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/tailwind.md",
+    "resource_id": "f141accb-a91f-4797-bb95-f18e7d5e4806"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/text-animations.md",
+    "resource_id": "a02b6ef6-45cf-4f5e-be26-bd482314fba6"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/transparent-videos.md",
+    "resource_id": "c6e9cd1f-e178-4e3e-abfc-2c92e4029d59"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/videos.md",
+    "resource_id": "c979d433-9649-4cd4-b682-cdfb8672dc62"
+  },
+  {
+    "slug": "remotion-best-practices",
+    "path": "rules/voiceover.md",
+    "resource_id": "a68c887f-df07-410f-ab4f-6cedcdc7227a"
+  },
+  {
+    "slug": "responsive-design",
+    "path": "references/breakpoint-strategies.md",
+    "resource_id": "007330f7-6634-4709-8bbf-86536bc428bf"
+  },
+  {
+    "slug": "responsive-design",
+    "path": "references/container-queries.md",
+    "resource_id": "e16d9db5-bcf0-455e-b270-902dafb26019"
+  },
+  {
+    "slug": "seo-audit",
+    "path": "references/ai-writing-detection.md",
+    "resource_id": "b07969d5-c178-4945-94c0-23bb3423c1c3"
+  },
+  {
+    "slug": "shadcn-ui",
+    "path": "examples/auth-layout.tsx",
+    "resource_id": "ce5b3855-f538-4460-bf1f-03aeab2642ac"
+  },
+  {
+    "slug": "shadcn-ui",
+    "path": "resources/component-catalog.md",
+    "resource_id": "ef3a760e-e587-4b02-a9b6-b108059e3a0d"
+  },
+  {
+    "slug": "shadcn-ui",
+    "path": "resources/setup-guide.md",
+    "resource_id": "0220f96e-ab5a-43d7-bf31-edf9e0c6412d"
+  },
+  {
+    "slug": "shadcn-ui",
+    "path": "scripts/verify-setup.sh",
+    "resource_id": "bb11cfcf-a3f1-4f7b-b8b9-3fb64f5672c8"
+  },
+  {
+    "slug": "skill-creator",
+    "path": "scripts/init_skill.py",
+    "resource_id": "abf3f238-f59a-4d9f-a3fe-077150d6e189"
+  },
+  {
+    "slug": "skill-creator",
+    "path": "scripts/package_all.py",
+    "resource_id": "98773ee2-3ef4-4255-aa6e-7efdc4f82ffc"
+  },
+  {
+    "slug": "skill-creator",
+    "path": "scripts/quick_validate.py",
+    "resource_id": "dbdf7cf1-bde1-403f-a378-02efc83b749f"
+  },
+  {
+    "slug": "slack-gif-creator",
+    "path": "LICENSE.txt",
+    "resource_id": "054e175f-bc34-431f-ba5e-64cb314a9235"
+  },
+  {
+    "slug": "slack-gif-creator",
+    "path": "core/easing.py",
+    "resource_id": "e8154422-abec-4a8b-beb6-633c19ffedcb"
+  },
+  {
+    "slug": "slack-gif-creator",
+    "path": "core/validators.py",
+    "resource_id": "f0a18d43-5da0-4c1a-8895-8485dae0578a"
+  },
+  {
+    "slug": "stitch-loop",
+    "path": "resources/site-template.md",
+    "resource_id": "b12c4c05-307b-4fc5-9143-f740a87c2d30"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "CLAUDE.md",
+    "resource_id": "e1ede49a-c1db-4d42-ad79-e845c59e01e7"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "README.md",
+    "resource_id": "b29b95ea-a529-42a9-a131-f5a188627a15"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/advanced-full-text-search.md",
+    "resource_id": "e746ac2f-2870-4e10-913c-6df40c15e2f3"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/conn-idle-timeout.md",
+    "resource_id": "b4824059-53f0-4da5-9020-ec5773bc809b"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/data-pagination.md",
+    "resource_id": "953fbc1e-eb71-48b0-9bed-190e52bfd87b"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/lock-deadlock-prevention.md",
+    "resource_id": "04499c92-042d-4d2c-a8b3-ae9d642e6558"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/lock-skip-locked.md",
+    "resource_id": "9b951fe8-4c0d-482c-b14e-4b058b875514"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/monitor-explain-analyze.md",
+    "resource_id": "a6649a10-3c7a-4b25-80ac-7d3a96c9614f"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/monitor-pg-stat-statements.md",
+    "resource_id": "d10e6e15-1896-4866-9bf9-cfc257129d9d"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/monitor-vacuum-analyze.md",
+    "resource_id": "e38df2ef-218f-4dc8-86bd-e7ee7c8e1f7a"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/query-composite-indexes.md",
+    "resource_id": "bc54fcc2-2b19-4844-8eea-bd9f34a4749f"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/query-covering-indexes.md",
+    "resource_id": "ec2ba18f-680e-4e4d-91d1-8143245d60c0"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/schema-constraints.md",
+    "resource_id": "a1399276-e747-4be4-84c6-1f242840be1a"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/schema-lowercase-identifiers.md",
+    "resource_id": "e128d0d0-dc91-4a65-9b44-774f4670d861"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/security-rls-basics.md",
+    "resource_id": "9558ff30-0478-4e25-891e-71eeac470d56"
+  },
+  {
+    "slug": "supabase-postgres-best-practices",
+    "path": "references/security-rls-performance.md",
+    "resource_id": "c195749e-8ebc-4be9-bd06-47dc95673cc7"
+  },
+  {
+    "slug": "swiftui-expert-skill",
+    "path": "references/animation-advanced.md",
+    "resource_id": "075a9f28-ee6b-4d1b-9d60-47c87c0e9c48"
+  },
+  {
+    "slug": "swiftui-expert-skill",
+    "path": "references/modern-apis.md",
+    "resource_id": "d0f47275-045f-4fbd-b09a-eac069c9ee82"
+  },
+  {
+    "slug": "swiftui-expert-skill",
+    "path": "references/scroll-patterns.md",
+    "resource_id": "f3bc6764-c608-424c-8615-ee457c4c92d1"
+  },
+  {
+    "slug": "systematic-debugging",
+    "path": "CREATION-LOG.md",
+    "resource_id": "bc9b5675-e927-4ba4-bfb7-6039029bac2b"
+  },
+  {
+    "slug": "systematic-debugging",
+    "path": "condition-based-waiting.md",
+    "resource_id": "f062e72e-f677-4c95-97cb-f22b7b9a82cd"
+  },
+  {
+    "slug": "systematic-debugging",
+    "path": "defense-in-depth.md",
+    "resource_id": "cd5a3600-926a-4aa8-aecb-84b4fee80a26"
+  },
+  {
+    "slug": "systematic-debugging",
+    "path": "find-polluter.sh",
+    "resource_id": "b1ce84a6-df46-492f-800a-cd2a40a18a1b"
+  },
+  {
+    "slug": "systematic-debugging",
+    "path": "root-cause-tracing.md",
+    "resource_id": "a19fa597-ee5e-4d13-868b-93801eab2c9a"
+  },
+  {
+    "slug": "theme-factory",
+    "path": "themes/arctic-frost.md",
+    "resource_id": "a258f59e-bd8f-4448-9624-bef4a7011414"
+  },
+  {
+    "slug": "theme-factory",
+    "path": "themes/forest-canopy.md",
+    "resource_id": "d6f4383b-8217-4ff0-be75-9f3b2dd886fa"
+  },
+  {
+    "slug": "theme-factory",
+    "path": "themes/midnight-galaxy.md",
+    "resource_id": "f3264163-e034-48fd-8d68-a725508ecdfb"
+  },
+  {
+    "slug": "theme-factory",
+    "path": "themes/ocean-depths.md",
+    "resource_id": "dc6d30c4-d599-4dbe-a7f9-aa95ac6780b3"
+  },
+  {
+    "slug": "theme-factory",
+    "path": "themes/tech-innovation.md",
+    "resource_id": "0620547c-8014-49cc-88c7-706a420b5bac"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/best-practices/RULE.md",
+    "resource_id": "01972ca6-02a6-425e-a8a7-3a6dc3a6f8c4"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/best-practices/structure.md",
+    "resource_id": "b3c61100-17fc-4358-9c11-006090493e95"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/boundaries/RULE.md",
+    "resource_id": "ebd49583-b1e9-488f-bbe3-d43a062cd451"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/caching/RULE.md",
+    "resource_id": "a0df8ef9-39f9-4fab-9926-5f8ae2d3bdf7"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/caching/remote-cache.md",
+    "resource_id": "e505686c-d578-4073-b140-0e0e53d175b4"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/ci/github-actions.md",
+    "resource_id": "c1292a83-a6f3-4cd4-97d5-2b87fcec159b"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/ci/patterns.md",
+    "resource_id": "e6073450-0940-41e0-b051-bdd30507f4d4"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/ci/vercel.md",
+    "resource_id": "f2c2f75c-e75e-4f60-9120-ae03aa1063ba"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/cli/commands.md",
+    "resource_id": "d630abcf-52e8-4005-ab4c-d4932f29fec4"
+  },
+  {
+    "slug": "turborepo",
+    "path": "references/environment/RULE.md",
+    "resource_id": "fc6d31e7-b9e8-482b-a68e-8f3f6fc1f6a9"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/core-rules.md",
+    "resource_id": "b8ff2dc0-e956-47a9-b801-eb7129193936"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/core-theme.md",
+    "resource_id": "fb91e8db-7dbf-474e-bcce-ca7d6d16cfe1"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/core-variants.md",
+    "resource_id": "d4beafab-df16-49e2-ad30-d42dc3225a26"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/preset-attributify.md",
+    "resource_id": "b500ad3a-fa22-4f50-a6b4-0a6527d22267"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/preset-icons.md",
+    "resource_id": "f6f6d7ce-c9ac-423e-b5a4-d44fcb8709e3"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/preset-rem-to-px.md",
+    "resource_id": "b23a35d2-1ad0-476a-bc97-3d2acfa223fc"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/preset-typography.md",
+    "resource_id": "d27b9173-d5ea-49cf-8945-0636c58e5e5d"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/preset-wind4.md",
+    "resource_id": "90ddc015-3e5b-4686-921b-03deedfb6f29"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/transformer-attributify-jsx.md",
+    "resource_id": "fa0e06cb-daf6-40e0-b6e5-c23b31f6f41f"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/transformer-compile-class.md",
+    "resource_id": "f59a28d7-e42a-4d65-9683-3970826620cf"
+  },
+  {
+    "slug": "unocss",
+    "path": "references/transformer-directives.md",
+    "resource_id": "c1738274-f704-42f9-b94b-4524f3a6032d"
+  },
+  {
+    "slug": "upgrading-expo",
+    "path": "references/expo-av-to-audio.md",
+    "resource_id": "9e88d79e-40c4-4555-822c-b9dc9bce90a4"
+  },
+  {
+    "slug": "upgrading-expo",
+    "path": "references/expo-av-to-video.md",
+    "resource_id": "a6a9a372-3348-4077-a5c0-0a269c500db6"
+  },
+  {
+    "slug": "upgrading-expo",
+    "path": "references/native-tabs.md",
+    "resource_id": "eaa6dcf1-5ca0-4fbc-81cc-8e01587b1266"
+  },
+  {
+    "slug": "upgrading-expo",
+    "path": "references/new-architecture.md",
+    "resource_id": "a533327a-1de1-44b8-ab77-6d5bbe49f59a"
+  },
+  {
+    "slug": "upgrading-expo",
+    "path": "references/react-19.md",
+    "resource_id": "932853c8-e494-4da7-9b94-3f2b590a9aa6"
+  },
+  {
+    "slug": "vercel-composition-patterns",
+    "path": "AGENTS.md",
+    "resource_id": "e76eefda-709f-43a8-bd9a-d8c2ce7d0f38"
+  },
+  {
+    "slug": "vercel-composition-patterns",
+    "path": "README.md",
+    "resource_id": "e77242bf-3f3d-4caf-b8b1-9f0351c24326"
+  },
+  {
+    "slug": "vercel-composition-patterns",
+    "path": "rules/architecture-compound-components.md",
+    "resource_id": "a3a9534e-5184-44d3-b938-9fc66b891467"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "README.md",
+    "resource_id": "adb2596a-f534-4b94-b207-3f0581caf180"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/advanced-event-handler-refs.md",
+    "resource_id": "c5a13453-471b-4ab0-86ad-bf53e3bed952"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/async-parallel.md",
+    "resource_id": "b5baf5e3-6bcc-491b-a657-ab97ba1958b6"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/bundle-barrel-imports.md",
+    "resource_id": "f525fef5-9393-4506-abc3-2efb50256f98"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/bundle-dynamic-imports.md",
+    "resource_id": "c41f9431-d914-470a-af1d-b89931ba4e8b"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/client-passive-event-listeners.md",
+    "resource_id": "a73ef5ed-6324-4c92-8096-5815e91c79a7"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-cache-function-results.md",
+    "resource_id": "c316609e-7e93-4c14-9a27-15b904972bd0"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-cache-property-access.md",
+    "resource_id": "b2cdaa5e-ab10-48bc-abe0-47bb860632d8"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-cache-storage.md",
+    "resource_id": "bcceb70d-c4bf-45a1-9838-efb207d5a416"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-combine-iterations.md",
+    "resource_id": "934c5814-7bb9-4e70-8feb-5597c6967438"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-hoist-regexp.md",
+    "resource_id": "b29f3c22-e441-47e0-a867-56454d3266f5"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-min-max-loop.md",
+    "resource_id": "e20fe7e4-0119-4b02-9794-6b15aa337213"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/js-set-map-lookups.md",
+    "resource_id": "eb64f9ca-bf9c-47b9-b0e5-d76fddc0f324"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rendering-hydration-no-flicker.md",
+    "resource_id": "b3fd39e0-c5f7-4f2e-93e4-61176ba98944"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rendering-hydration-suppress-warning.md",
+    "resource_id": "ff5e53ea-b53d-48e4-8761-a27cf743cb23"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rendering-usetransition-loading.md",
+    "resource_id": "a1eea156-b340-4ef8-a344-c48c75cb4d3b"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-derived-state.md",
+    "resource_id": "fa6ce5ec-3cf4-4875-962a-bcdec1665c5b"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-functional-setstate.md",
+    "resource_id": "da3c7bdd-8b0d-4cdc-8995-c4230a3067c0"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-lazy-state-init.md",
+    "resource_id": "f67e5e80-e351-4753-bc2f-edd07c96f443"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-memo-with-default-value.md",
+    "resource_id": "06f6e1c3-4783-4ccd-ad36-597e15b3a926"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-move-effect-to-event.md",
+    "resource_id": "f0124db3-9ec4-436d-9a8b-f9ee3c32e420"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-simple-expression-in-memo.md",
+    "resource_id": "966e5184-b1e9-4d15-a0bf-75d6684cd256"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-transitions.md",
+    "resource_id": "b73d4269-54fa-45d5-a167-752fe834294d"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/rerender-use-ref-transient-values.md",
+    "resource_id": "cb1aaea2-a895-4979-b961-8f30b3479556"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/server-cache-lru.md",
+    "resource_id": "cb27a4c1-b5b7-4e20-ad4f-b16dbdacfcc9"
+  },
+  {
+    "slug": "vercel-react-best-practices",
+    "path": "rules/server-serialization.md",
+    "resource_id": "0847eccb-3fb0-48b7-8467-18ea889b7bd3"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "README.md",
+    "resource_id": "9b79d47b-d3a8-4a7e-8c89-948cf1f2e70c"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/list-performance-item-memo.md",
+    "resource_id": "c897bccb-07c3-4986-98fa-68aa71536c04"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/list-performance-item-types.md",
+    "resource_id": "e859c77f-3ed0-47fc-9737-58e55af0ee5f"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/react-compiler-destructure-functions.md",
+    "resource_id": "ed2a986e-7b0f-4b87-bf7f-f2c5ca092efd"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/react-state-dispatcher.md",
+    "resource_id": "c2344536-58fa-405e-83d3-791494a89cff"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/react-state-fallback.md",
+    "resource_id": "c0901f51-7455-45fc-ab96-b60ff9d01e4c"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/react-state-minimize.md",
+    "resource_id": "b0b84aa5-7e6a-4986-90cb-a12cb42a1786"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/scroll-position-no-state.md",
+    "resource_id": "07a87921-8c48-45f5-b50e-bd30211c0da2"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/ui-image-gallery.md",
+    "resource_id": "9b246923-ad24-4b28-9f3a-83da5e91914e"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/ui-measure-views.md",
+    "resource_id": "a47dae74-5ba2-4ce6-b97e-c6c89a34d127"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/ui-native-modals.md",
+    "resource_id": "e9b63c72-93ff-4e66-84b9-11de6f996126"
+  },
+  {
+    "slug": "vercel-react-native-skills",
+    "path": "rules/ui-scrollview-content-inset.md",
+    "resource_id": "fa214c1a-a26c-4619-b717-d966969ea750"
+  },
+  {
+    "slug": "vite",
+    "path": "references/build-and-ssr.md",
+    "resource_id": "a1d05b03-3542-4829-9304-2906d1b5b214"
+  },
+  {
+    "slug": "vite",
+    "path": "references/core-config.md",
+    "resource_id": "957a767b-4466-4904-b684-d1e625e9a0c6"
+  },
+  {
+    "slug": "vite",
+    "path": "references/core-plugin-api.md",
+    "resource_id": "efacaa36-b55e-4bbc-a48b-57272f40b623"
+  },
+  {
+    "slug": "vitepress",
+    "path": "references/advanced-i18n.md",
+    "resource_id": "b684bbc0-8441-4970-8b07-918c01e2b539"
+  },
+  {
+    "slug": "vitepress",
+    "path": "references/core-cli.md",
+    "resource_id": "0311fe20-661b-4f6e-84d9-e6bc51312e24"
+  },
+  {
+    "slug": "vitepress",
+    "path": "references/core-markdown.md",
+    "resource_id": "ab5a9eaa-d311-4169-8dcf-83abea7c48d5"
+  },
+  {
+    "slug": "vitepress",
+    "path": "references/features-dynamic-routes.md",
+    "resource_id": "fb7e2daa-2852-4213-a351-821ec6a66205"
+  },
+  {
+    "slug": "vitepress",
+    "path": "references/theme-custom.md",
+    "resource_id": "c518ce49-d242-4131-adea-68a613ca696e"
+  },
+  {
+    "slug": "vitest",
+    "path": "GENERATION.md",
+    "resource_id": "a4942590-f01a-4e0a-8928-3ed9c68c0c68"
+  },
+  {
+    "slug": "vitest",
+    "path": "references/advanced-vi.md",
+    "resource_id": "dc893974-1273-4d97-8d42-709b1638430e"
+  },
+  {
+    "slug": "vitest",
+    "path": "references/core-test-api.md",
+    "resource_id": "ab24269f-2e5e-4be2-9884-89b6f4587ece"
+  },
+  {
+    "slug": "vitest",
+    "path": "references/features-context.md",
+    "resource_id": "f96681ee-9c70-4c6e-aabf-5b825bee08a3"
+  },
+  {
+    "slug": "vitest",
+    "path": "references/features-coverage.md",
+    "resource_id": "e4146859-8b8a-477d-896b-53e6a1d6c46f"
+  },
+  {
+    "slug": "vitest",
+    "path": "references/features-filtering.md",
+    "resource_id": "e39e42f7-581d-4eac-8565-b48800045f30"
+  },
+  {
+    "slug": "vue",
+    "path": "references/script-setup-macros.md",
+    "resource_id": "f2eb86e1-be98-4f8c-a34a-4cea8eacc0c5"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/animation-class-based-technique.md",
+    "resource_id": "c0a0c577-3efc-4cb3-819b-5408b359054d"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/animation-state-driven-technique.md",
+    "resource_id": "cb549e00-a1b9-45cb-8933-cbbe9f4b8619"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-data-flow.md",
+    "resource_id": "c0ac3501-2ae7-4899-87d0-69712ab5f653"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-fallthrough-attrs.md",
+    "resource_id": "94f16d42-908d-4b01-908c-ec98ffcb305e"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-keep-alive.md",
+    "resource_id": "f1f38249-ddf3-4fac-bd36-739e1fc388f5"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-suspense.md",
+    "resource_id": "fdc5dcb8-f66d-4a36-9dca-d38e0d647fc0"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-transition-group.md",
+    "resource_id": "ae1e8a1f-4a4f-41f0-994f-d1ea046a4a54"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/component-transition.md",
+    "resource_id": "ed0a03f2-63c5-44c0-b83a-36c3bc68457f"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/perf-virtualize-large-lists.md",
+    "resource_id": "eb6aa0f6-8bfb-4a36-8b7e-f69006fab716"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/plugins.md",
+    "resource_id": "f8b8fc3c-09db-459d-bdf6-ce11abf0a456"
+  },
+  {
+    "slug": "vue-best-practices",
+    "path": "references/reactivity.md",
+    "resource_id": "0033ff19-3e27-4007-9935-88f3f69cb9ef"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/animation-key-for-rerender.md",
+    "resource_id": "bcc2cb24-9114-478a-a004-e7715c08277e"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/async-component-error-handling.md",
+    "resource_id": "cf38294e-84aa-4bcb-85d8-b77515955043"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/async-component-suspense-control.md",
+    "resource_id": "d35faa7d-59c4-405c-b81c-8767267e3cf5"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/async-component-vue-router.md",
+    "resource_id": "de7dcdef-352c-422b-965b-04469fce8439"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/click-events-on-components.md",
+    "resource_id": "9aedda62-1463-41fc-84b6-7c10518f8d3c"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/component-naming-conflicts.md",
+    "resource_id": "b1ba7d69-5522-4ef2-94ee-b8685617a202"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/component-ref-requires-defineexpose.md",
+    "resource_id": "b3c6e429-efe0-4927-a39e-efe804230f81"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/composable-avoid-hidden-side-effects.md",
+    "resource_id": "04491fe0-42b3-4c76-b72e-fcee6ddd6b98"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/composable-call-location-restrictions.md",
+    "resource_id": "f62d777c-f670-463a-b95b-b9d15c1a82bc"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/composable-naming-return-pattern.md",
+    "resource_id": "042810df-0da0-4e14-a251-7e13d487ca02"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/composable-tovalue-inside-watcheffect.md",
+    "resource_id": "d96de9ef-bf70-4484-b34e-388e1ed6735a"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/composition-api-not-functional-programming.md",
+    "resource_id": "a10768cc-5f64-4a0b-979a-9367e0d09b44"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/computed-no-parameters.md",
+    "resource_id": "e1d5774b-64dc-4e6a-8510-481cfec5fff9"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/define-expose-before-await.md",
+    "resource_id": "c71e2b89-8d7b-408b-9083-93438f0efca7"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/define-model-default-value-sync.md",
+    "resource_id": "a3573599-1cd3-4986-a36a-0235ebe11407"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/defineEmits-must-be-top-level.md",
+    "resource_id": "fc16fa77-cfbe-426f-b543-0906ca81de31"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/definemodel-object-mutation-no-emit.md",
+    "resource_id": "ee40f2ad-5524-46ea-8334-acce116dc535"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/dom-update-timing-nexttick.md",
+    "resource_id": "a0cb2994-d8c0-4bf4-919c-a3a42dd4fc8f"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/in-dom-template-parsing-caveats.md",
+    "resource_id": "da805b6a-b243-41aa-bc8b-c3b73a7181a3"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/lifecycle-hooks-synchronous-registration.md",
+    "resource_id": "98d471e9-10e1-432d-ba0b-7e9c52a7d4dd"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/multi-root-component-class-attrs.md",
+    "resource_id": "94d4cf54-8d6b-4836-b620-179fc1046158"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/no-v-if-with-v-for.md",
+    "resource_id": "b4700e3c-474c-4a35-84e2-036bf32f3b20"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/perf-props-stability-update-optimization.md",
+    "resource_id": "e9654589-e93e-44e3-8f5a-3d2d5d0f0ba9"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/plugin-global-properties-sparingly.md",
+    "resource_id": "c169108f-4d03-4e43-8da0-aab9135108fd"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/plugin-install-before-mount.md",
+    "resource_id": "aa6a5d2c-f083-43b4-a644-2d2a42a6cbd7"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/plugin-prefer-provide-inject-over-global-properties.md",
+    "resource_id": "a2d75d32-23d1-4a26-ac7c-4a4d12edd8f5"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/prop-defineprops-scope-limitation.md",
+    "resource_id": "d80d7fe3-6cab-4860-ae82-11bd22d19034"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/provide-inject-debugging-challenges.md",
+    "resource_id": "f96058b8-774c-4b7a-bcd1-db789b4a0a87"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/provide-inject-reactivity-not-automatic.md",
+    "resource_id": "d87a4675-0eca-4fd5-969e-64ac5c7662e6"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/reactive-destructuring.md",
+    "resource_id": "d01124e0-0c5f-4446-bdd9-2e14151a2707"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/reactivity-same-tick-batching.md",
+    "resource_id": "da98f5fa-1526-4ecb-b195-1a3e9fa57187"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ref-value-access.md",
+    "resource_id": "924d46ee-5e89-4b6a-9304-64846256b934"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/render-function-avoid-internal-vnode-properties.md",
+    "resource_id": "f296453f-bfff-4d6e-b59a-3d27fe9262f7"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/render-function-vnodes-must-be-unique.md",
+    "resource_id": "a757ef10-0cf6-498c-a0e4-0b54d3242510"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/rendering-render-function-h-import-vue3.md",
+    "resource_id": "c4c013db-f4c7-48ff-868b-dc3056e52efd"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/rendering-render-function-return-from-setup.md",
+    "resource_id": "c852dd21-8360-4085-aba5-016df6ef711d"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/self-referencing-component-name.md",
+    "resource_id": "084218da-abd4-49ea-9a35-c89eafe073d4"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/sfc-scoped-css-dynamic-content.md",
+    "resource_id": "fb4b1ebc-9ef5-4df0-ab86-a17a83265fe1"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/sfc-script-setup-reactivity.md",
+    "resource_id": "a65c4aed-ee05-483a-876e-91a12db5fe5a"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/slot-implicit-default-content.md",
+    "resource_id": "f5ece8ae-1b90-4a51-87ed-6a7f4e9e3868"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/slot-name-reserved-prop.md",
+    "resource_id": "917306db-3028-4fd9-9b87-1ea76fa9dcd6"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/slot-named-scoped-explicit-default.md",
+    "resource_id": "d6878844-ecc9-4303-b8a6-8f2bf5051910"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ssr-hydration-mismatch-causes.md",
+    "resource_id": "efde7d21-6098-49c5-8287-e48e4fff7485"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ssr-platform-specific-apis.md",
+    "resource_id": "a36ef07c-7b34-45b4-8b3a-c0692617e539"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/teleport-scoped-styles-limitation.md",
+    "resource_id": "be5c3192-eda8-4994-a776-0c92837d2faa"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/teleport-ssr-hydration.md",
+    "resource_id": "bfe8c651-710d-49ba-ab05-a697e23083eb"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/template-expressions-restrictions.md",
+    "resource_id": "b4fe39f0-6869-404f-815e-74c4db36a9d7"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/template-functions-no-side-effects.md",
+    "resource_id": "b21af887-45fb-477f-8134-59c6ebe8412d"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/template-ref-v-for-order.md",
+    "resource_id": "f890cfd1-33d4-4fee-974c-f3d2cbd345dd"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/transition-group-move-animation-position-absolute.md",
+    "resource_id": "bac8489a-a6c1-4501-a000-43f09da09630"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/transition-group-no-default-wrapper-vue3.md",
+    "resource_id": "fd38608b-eb60-48e2-91d1-f20ade2eb9ba"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/transition-js-hooks-done-callback.md",
+    "resource_id": "0086a0b5-68be-4374-a7e8-2d642ab8400e"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/transition-nested-duration.md",
+    "resource_id": "9c658a60-dce0-432b-871d-3e51d768a1f9"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/transition-unmount-hook-timing.md",
+    "resource_id": "ba81fc9b-22b3-491c-8b7d-9dd376851a63"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ts-event-handler-explicit-typing.md",
+    "resource_id": "d3d70aa3-dfdb-4ea9-bd3e-71fca9fdc913"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ts-shallowref-for-dynamic-components.md",
+    "resource_id": "e8b93d20-b9d0-44be-9c43-ee7fd3ebae9e"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ts-template-ref-null-handling.md",
+    "resource_id": "a4288767-b4a2-4a38-b8ff-d73c033382b7"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/ts-template-type-casting.md",
+    "resource_id": "99b6c20b-2dbc-49cd-a0c9-a35b48b7dfe9"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/undeclared-emits-double-firing.md",
+    "resource_id": "a4da95f5-6bed-4541-a508-bdae2cd96b84"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/use-template-ref-vue35.md",
+    "resource_id": "9df1d440-8784-4982-8c0a-192e36574ffa"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/v-for-key-attribute.md",
+    "resource_id": "fee84d30-b042-4b7f-b460-07a22497b367"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/v-for-range-starts-at-one.md",
+    "resource_id": "d73df31d-8e00-4d5d-8a7c-8748c30ad8ba"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/v-model-ime-composition.md",
+    "resource_id": "c5e63549-5f24-40eb-ad7e-0ac0dd904804"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/v-model-number-modifier-behavior.md",
+    "resource_id": "fc26e423-82c8-4800-97f0-f6b2a745bd90"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/v-show-template-limitation.md",
+    "resource_id": "98d61b5f-ca40-4932-a699-f599796e8d03"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/watch-async-creation-memory-leak.md",
+    "resource_id": "c56d4e4c-21e0-461d-adbc-8c84eddcd380"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/watch-flush-timing.md",
+    "resource_id": "d8be8ffa-2d39-427b-bbe5-d03f8b5555c4"
+  },
+  {
+    "slug": "vue-debug-guides",
+    "path": "reference/watcheffect-async-dependency-tracking.md",
+    "resource_id": "9faf807f-25ea-4bb5-a4c3-5475d485ae83"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createEventHook.md",
+    "resource_id": "ed6f8d41-2e70-48ce-ac58-259842ea568c"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createGenericProjection.md",
+    "resource_id": "97f57d9a-257a-483a-9a48-838c966d12ce"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createProjection.md",
+    "resource_id": "d54a7416-1222-46a3-ba54-8e553affaa63"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createRef.md",
+    "resource_id": "95f228a6-fca1-43b6-8dc4-61245421be62"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createReusableTemplate.md",
+    "resource_id": "935ae126-3030-40f9-8d4a-6ed731db2835"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createSharedComposable.md",
+    "resource_id": "f67de419-d798-47fd-bb26-27140b836959"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/createUnrefFn.md",
+    "resource_id": "9d28a498-0cda-4001-9775-84691b973362"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/extendRef.md",
+    "resource_id": "9d1f3ab3-f57f-4127-8261-7297cf2befdf"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/from.md",
+    "resource_id": "c566b1ab-332f-49c4-9110-36741ba78c80"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/injectLocal.md",
+    "resource_id": "e4b89591-c481-4fae-9313-00fc2ea0909b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/logicOr.md",
+    "resource_id": "dc3dc8ec-78e3-4050-9a52-d207ef7acb21"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/onClickOutside.md",
+    "resource_id": "c41ee7a5-b028-45c8-ab2a-7f82dcfb64b6"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/onLongPress.md",
+    "resource_id": "b7979b45-78fa-423d-8c53-0ac534595d48"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/onStartTyping.md",
+    "resource_id": "f2507dae-c36b-4f6c-b12b-7782ca5c805c"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/reactiveOmit.md",
+    "resource_id": "e1e3cda9-3814-4dad-96af-94a926b6e2d8"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/refDebounced.md",
+    "resource_id": "08e97dd9-28d7-4534-abcf-602e3fdfd81b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/refDefault.md",
+    "resource_id": "e03d059a-7d76-4932-b2a3-f536f82b48a7"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/refManualReset.md",
+    "resource_id": "db2bf195-3875-4dfe-b1f6-18a16d734ec0"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/refThrottled.md",
+    "resource_id": "9e1cd301-6a66-4654-a3f4-da6ffecd2def"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/set.md",
+    "resource_id": "ce93314f-2dd9-4123-a3b2-451239185c01"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/toReactive.md",
+    "resource_id": "0404bbfa-aecd-453a-8ac3-a07ce0bfa804"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/toRefs.md",
+    "resource_id": "bb19ecea-41ac-44ab-87bd-9d4509df2716"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/tryOnScopeDispose.md",
+    "resource_id": "b6ae8805-d3d5-48d9-b81b-679aaba4f34c"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/tryOnUnmounted.md",
+    "resource_id": "c8f561ce-0e6c-41db-960b-cf1fbee3c561"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useArrayDifference.md",
+    "resource_id": "e583c90e-1226-4f33-aeb9-8e06f420f99a"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useArrayEvery.md",
+    "resource_id": "eef6582f-2053-48fd-870e-b2961825976d"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useArrayFindLast.md",
+    "resource_id": "a3997c7e-7baa-41ce-abd9-f5d27dd7929b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useArrayIncludes.md",
+    "resource_id": "b0e41cb2-8c54-4be1-bc1a-47b534654c16"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useArrayUnique.md",
+    "resource_id": "00176012-d866-4486-a13b-dc4232f4d126"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useAsyncState.md",
+    "resource_id": "f5613ee4-0d41-4c1e-8291-d7bc9b786c42"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useAsyncValidator.md",
+    "resource_id": "d77aa39c-a1b7-4735-a3f7-f78dea1a874e"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useAuth.md",
+    "resource_id": "eef9f03d-88b1-474e-b4c1-f30c85c24bec"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useBase64.md",
+    "resource_id": "9eabc336-a303-4671-84f9-4ac75f02e821"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useBreakpoints.md",
+    "resource_id": "ab86f389-ac84-4cd0-87dc-5961ee821353"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useBrowserLocation.md",
+    "resource_id": "d0ba02e8-7d70-4527-8c0c-f4559e3f8934"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useChangeCase.md",
+    "resource_id": "c5ce1df3-223d-486e-a028-561c6c245a92"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useCloned.md",
+    "resource_id": "e71f5a56-692f-456d-bd56-320fec991672"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useCountdown.md",
+    "resource_id": "b985a247-445f-443c-bd2e-3c804d2c8c9f"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useCssVar.md",
+    "resource_id": "fc7a3354-95fb-4a14-acbf-b359330748f6"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useCurrentElement.md",
+    "resource_id": "db80983d-e962-43bd-85fb-7b8accbb9ff5"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useCycleList.md",
+    "resource_id": "0400d38a-defb-406f-9f25-e38ccc47682b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDark.md",
+    "resource_id": "ce3e03dc-42c4-4b06-88b3-61c80195c8ce"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDeviceMotion.md",
+    "resource_id": "a7e3267d-19ba-417e-a954-59f8c64b1662"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDisplayMedia.md",
+    "resource_id": "e3ae3fbf-9a2a-4490-9a9b-b4da4d3e9952"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDraggable.md",
+    "resource_id": "f476a0a4-4896-4e41-b36d-3b7ce4cc0bb6"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDrauu.md",
+    "resource_id": "c1b21cca-3307-447f-a842-dec3a26801c1"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useDropZone.md",
+    "resource_id": "04bb1f3e-6177-4d38-bba0-6e3471ab7012"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useElementHover.md",
+    "resource_id": "c23bc287-f423-4180-9b21-a0bc67550243"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useEventBus.md",
+    "resource_id": "ec4d7dd0-ebe2-464c-b8f3-91f803fc01aa"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useEventListener.md",
+    "resource_id": "f042edd6-35f0-4ca5-a39e-c3012e6cf7b1"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useFirestore.md",
+    "resource_id": "9ed1e6f4-a3d2-400d-8750-49a6e562ca91"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useFocus.md",
+    "resource_id": "cbe8105a-9799-41c1-9ec3-b0930b54ef1b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useIDBKeyval.md",
+    "resource_id": "ee4fde3e-f8d8-47a0-bd46-fbff2640d0ef"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useImage.md",
+    "resource_id": "d956f64d-80c0-4af4-8c6f-3bc2c8b96ce1"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useIntersectionObserver.md",
+    "resource_id": "d7736973-d0f0-4c9d-a3a2-7a447568f511"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useIpcRenderer.md",
+    "resource_id": "9c68bde4-cc16-4bd5-858f-e96f4aae9ded"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useIpcRendererOn.md",
+    "resource_id": "05b03988-ede3-448c-b438-6225965ba6dc"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useManualRefHistory.md",
+    "resource_id": "d22d06f6-d53e-4909-bbff-4d1d275be744"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useMounted.md",
+    "resource_id": "01dd63fb-21bc-418e-aefa-9a2c961d9256"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useMouse.md",
+    "resource_id": "af896071-e711-4e9f-8cb3-dea6991afed3"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useMutationObserver.md",
+    "resource_id": "aee21b3d-7a3a-4a54-95e6-cdacf0063f70"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useNProgress.md",
+    "resource_id": "d94f7a28-17e8-47ab-9487-eb7787445093"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useNavigatorLanguage.md",
+    "resource_id": "a10ee097-d40a-4f6e-9ca4-d1783380493c"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useNetwork.md",
+    "resource_id": "cd0ea1de-5085-41c4-a103-a8e1fe643f49"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useObservable.md",
+    "resource_id": "d28e3021-041d-49c7-82a0-b9f10ac89234"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useOnline.md",
+    "resource_id": "08af8d99-5644-41aa-b2ea-eac7d7973b60"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePageLeave.md",
+    "resource_id": "b5ef7397-eba2-4dc5-8cec-0f50ea298a28"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useParallax.md",
+    "resource_id": "d60e90b8-8d65-41d5-832f-3444b56fb0b9"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useParentElement.md",
+    "resource_id": "db79f55f-4d85-42f8-879a-c312d32e0b54"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePerformanceObserver.md",
+    "resource_id": "c0adcb10-3b98-44a4-92d1-74997e5532d4"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePermission.md",
+    "resource_id": "f9124332-07cf-486e-9a02-d37886b77621"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePointer.md",
+    "resource_id": "bfcb9dfb-ae5a-4033-82f7-0f9ab35856d6"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePointerSwipe.md",
+    "resource_id": "ba863424-f686-4e4b-83e6-a2786ff22546"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePreferredContrast.md",
+    "resource_id": "a152cbf6-622c-4a05-8d08-3e05d8bc7a37"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePreferredLanguages.md",
+    "resource_id": "c026acc8-7703-4d23-8755-834f553d399e"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/usePreferredReducedMotion.md",
+    "resource_id": "e48ef70d-21c2-4a17-8ef0-6414be9160fd"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useProjection.md",
+    "resource_id": "082173c3-c60e-4b34-a245-d8317bfd764a"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useQRCode.md",
+    "resource_id": "c47a85a6-8374-4f16-bff8-7d10f93d950f"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useResizeObserver.md",
+    "resource_id": "ebe10e21-f890-4244-ab1a-9c8c329337b9"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useRound.md",
+    "resource_id": "bbadaf3d-e143-4257-9a5a-83d9c6d8f9b9"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useScreenOrientation.md",
+    "resource_id": "fdd957dc-009c-4939-a701-3fe3fc467a6c"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useScreenSafeArea.md",
+    "resource_id": "037b6aea-8532-408b-88a0-790bc93c704d"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useScriptTag.md",
+    "resource_id": "db06e90f-4272-4fe7-a0af-6b3b5200eaf8"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useScroll.md",
+    "resource_id": "dbcd698f-996d-41a4-a633-9b45a180ec57"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useSessionStorage.md",
+    "resource_id": "c94ae144-1379-4150-8056-259b1342090f"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useSpeechRecognition.md",
+    "resource_id": "0520b42d-ee7d-4443-ab2b-52964eef07f1"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useStorage.md",
+    "resource_id": "9ac58bbc-5002-40fc-b8aa-1ce6596cc434"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useStorageAsync.md",
+    "resource_id": "c40e3931-6da3-4421-8bbe-b5dabc84ccb3"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useSubject.md",
+    "resource_id": "bf4f8b4e-7930-4369-90e2-e4cfa3302bd7"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useSupported.md",
+    "resource_id": "f37a8fda-596e-4f4e-820f-4c658a6c9a66"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTemplateRefsList.md",
+    "resource_id": "ff6818e5-f68d-444e-8ec0-de7aff14a184"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTextareaAutosize.md",
+    "resource_id": "0735a400-3d7d-4411-8691-29fbf64b3b41"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useThrottleFn.md",
+    "resource_id": "f41622d5-64b1-4d1a-a2c5-f5bbacc29ef4"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useThrottledRefHistory.md",
+    "resource_id": "fcb62a56-0d9d-42a7-88f7-c598f84be824"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTimeAgoIntl.md",
+    "resource_id": "ca34d291-7532-4fb6-ac44-8901fa8327e5"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTimeout.md",
+    "resource_id": "93b71ba7-9164-46df-bfd7-b864a2195fbe"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTimestamp.md",
+    "resource_id": "a233214d-9188-4f39-a7ad-262b8cb6d1b1"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useTitle.md",
+    "resource_id": "e38ee9b5-7e52-4993-b554-75290c3450bd"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useToggle.md",
+    "resource_id": "064ca267-a379-4642-a29a-fdac20ae67dd"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useVibrate.md",
+    "resource_id": "d789d33b-8abc-4e9a-bca0-f1a886e9a66f"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useWakeLock.md",
+    "resource_id": "92b8beda-dbcc-4a8e-a7e7-61e51056fb8e"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useWebNotification.md",
+    "resource_id": "c1d18252-7b04-42b5-b845-d64d613f1c09"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useWebSocket.md",
+    "resource_id": "fae664d1-dfae-4333-8867-2f385430309d"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useWebWorker.md",
+    "resource_id": "fbbf7349-ede8-4447-9138-34dae3eff741"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useWebWorkerFn.md",
+    "resource_id": "928f8c79-a8e9-466f-ba0e-a021e06ac75a"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/useZoomFactor.md",
+    "resource_id": "b23b51bc-0fa4-4ba3-a584-7c530427b32f"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/watchAtMost.md",
+    "resource_id": "d9e07c76-fd82-45ec-9495-3e5b6d394b2b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/watchExtractedObservable.md",
+    "resource_id": "b5ad61d4-b300-4c50-8613-a754037568d0"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/watchImmediate.md",
+    "resource_id": "c4c397e8-2022-4733-b9f8-9a841b2eee1b"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/watchPausable.md",
+    "resource_id": "efa5d144-401f-486d-88f9-0fcf550c145a"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/watchThrottled.md",
+    "resource_id": "ddb6d311-3790-48c3-bd87-eab388a4505e"
+  },
+  {
+    "slug": "vueuse-functions",
+    "path": "references/whenever.md",
+    "resource_id": "db829b08-0485-4378-a407-863eca4dd599"
+  },
+  {
+    "slug": "web-artifacts-builder",
+    "path": "LICENSE.txt",
+    "resource_id": "053739a0-9a45-414c-87de-880a89a9456a"
+  },
+  {
+    "slug": "web-artifacts-builder",
+    "path": "scripts/bundle-artifact.sh",
+    "resource_id": "a9f90d4c-9c0a-45e4-9d20-a1d13c29b698"
+  },
+  {
+    "slug": "web-artifacts-builder",
+    "path": "scripts/init-artifact.sh",
+    "resource_id": "ebda9dd1-df80-4e72-9a51-55746192553c"
+  },
+  {
+    "slug": "writing-skills",
+    "path": "anthropic-best-practices.md",
+    "resource_id": "9ffe0ff5-fccc-440f-88eb-ff5175b4cc61"
+  },
+  {
+    "slug": "writing-skills",
+    "path": "examples/CLAUDE_MD_TESTING.md",
+    "resource_id": "b13375bf-80fa-4b7a-bb42-429459a7faac"
+  },
+  {
+    "slug": "writing-skills",
+    "path": "graphviz-conventions.dot",
+    "resource_id": "f5dd8c14-e7e9-47e5-8667-9b07c6c84c3c"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+    "resource_id": "fca4e423-d91a-4068-abd8-ecde779fd898"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+    "resource_id": "c341aea4-e3ac-4bb8-8278-4f78c327b47d"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+    "resource_id": "9a26fc00-fc52-41a1-9d28-61a19c6808ee"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+    "resource_id": "de600938-3729-469b-bc68-35bfe77e5aa2"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+    "resource_id": "a8886bb1-65d5-4231-83ef-d113614dfbe2"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+    "resource_id": "cc34023a-f101-450b-9bd4-f2dc064fc75b"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+    "resource_id": "e7158dd5-31d6-4388-8672-018be75247cd"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+    "resource_id": "d98989d5-d8ad-4e69-8310-7f5c0961969a"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+    "resource_id": "9728ebf3-6ce0-4821-8137-76cd2b00139c"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+    "resource_id": "ce4f8cab-77c5-4177-a11b-91c661de4b16"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+    "resource_id": "d52889f2-cb82-4d66-a3a8-9e6b8587201b"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+    "resource_id": "d2b73bfc-70bb-4036-928a-a3463b3b7b70"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+    "resource_id": "d6959b2c-5430-4b4f-a4ae-5c38fcb20adc"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+    "resource_id": "ef2677fb-88a0-43b6-a74b-e86b5daa3457"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+    "resource_id": "e56eda3d-4328-4cc7-9d65-b0ac5a356b91"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/microsoft/wml-2012.xsd",
+    "resource_id": "00f3fdbe-8b03-4f76-8ebe-d414c3db8326"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/microsoft/wml-2018.xsd",
+    "resource_id": "fa1b4ec7-9e04-4e7a-81cb-a5a17b74923b"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+    "resource_id": "d01151bf-f231-443b-a9be-ba4938779b85"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/soffice.py",
+    "resource_id": "c24167b1-e3b5-49b7-814b-f4fa1f745ae8"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/unpack.py",
+    "resource_id": "cc3b18d5-bf82-4578-83f3-9200620f6884"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/validators/base.py",
+    "resource_id": "d0e866a7-281d-4cbf-84f2-ff51d3827175"
+  },
+  {
+    "slug": "xlsx",
+    "path": "scripts/office/validators/redlining.py",
+    "resource_id": "cb8b01fb-f891-48f0-8513-6438f7cde931"
+  }
+]

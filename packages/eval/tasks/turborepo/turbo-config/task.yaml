@@ -1,0 +1,61 @@
+id: "turborepo-config-001"
+name: "Configure Turborepo for monorepo"
+targetSkillSlugs:
+  - turborepo
+domain: "turborepo"
+difficulty: "easy"
+prompt: |
+  Create a turbo.json configuration file for a monorepo with:
+  1. A "build" task that depends on ^build (topological), outputs dist/** and .next/**
+  2. A "dev" task with no caching and persistent mode
+  3. A "test" task that depends on ^build, no caching
+  4. A "lint" task with no dependencies
+  5. A "check-types" task that depends on ^check-types
+
+  Also create a root package.json with:
+  1. Bun workspaces pointing to apps/* and packages/*
+  2. Scripts for: dev, build, test, lint, check-types (all using turbo)
+  3. turbo as a devDependency
+verifier:
+  type: composite
+  deterministicWeight: 0.7
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "turbo.json exists"
+        kind: file-exists
+        config: { path: "turbo.json" }
+      - name: "package.json exists"
+        kind: file-exists
+        config: { path: "package.json" }
+      - name: "Has build task"
+        kind: file-contains
+        config:
+          path: "turbo.json"
+          pattern: "build"
+          shouldMatch: true
+      - name: "Has dev task"
+        kind: file-contains
+        config:
+          path: "turbo.json"
+          pattern: "dev"
+          shouldMatch: true
+      - name: "Has workspaces"
+        kind: file-contains
+        config:
+          path: "package.json"
+          pattern: "workspaces"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Turborepo config:
+      - Are task dependencies correctly set (^build for topological)?
+      - Is caching properly configured per task?
+      - Is the dev task persistent?
+      - Are workspace patterns correct for Bun?
+    dimensions:
+      - correctness
+      - best-practices
+tags: ["turborepo", "config", "monorepo"]
+timeoutMs: 60000

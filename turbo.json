@@ -35,6 +35,8 @@
     "scrape:import-missing": { "cache": false },
     "scrape:resolve-refs": { "cache": false },
     "scrape:sync-links": { "cache": false },
-    "scrape:pipeline": { "cache": false }
+    "scrape:pipeline": { "cache": false },
+    "eval": { "cache": false },
+    "eval:run": { "cache": false }
   }
 }

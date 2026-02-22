@@ -1,0 +1,65 @@
+id: "hono-create-middleware-001"
+name: "Create Hono auth middleware"
+targetSkillSlugs:
+  - hono
+domain: "hono"
+difficulty: "medium"
+prompt: |
+  Create a Hono middleware at middleware/auth.ts that:
+  1. Checks for a Bearer token in the Authorization header
+  2. Validates the token is not empty
+  3. Sets the userId from the token payload on the context using c.set()
+  4. Returns 401 JSON response if token is missing or invalid
+  5. Export it as a named export called authMiddleware
+
+  Also create an index.ts with a Hono app that:
+  1. Imports and uses the auth middleware on a /api/* route group
+  2. Has a GET /api/profile endpoint that returns { userId } from context
+  3. Has a GET /health endpoint (no auth) that returns { status: "ok" }
+scaffold:
+  "package.json": |
+    { "name": "hono-eval", "type": "module", "dependencies": { "hono": "^4.0.0" } }
+verifier:
+  type: composite
+  deterministicWeight: 0.6
+  deterministic:
+    type: deterministic
+    checks:
+      - name: "Middleware file exists"
+        kind: file-exists
+        config: { path: "middleware/auth.ts" }
+      - name: "Index file exists"
+        kind: file-exists
+        config: { path: "index.ts" }
+      - name: "Uses Hono import"
+        kind: file-contains
+        config:
+          path: "index.ts"
+          pattern: "hono"
+          shouldMatch: true
+      - name: "Has auth middleware export"
+        kind: file-contains
+        config:
+          path: "middleware/auth.ts"
+          pattern: "authMiddleware"
+          shouldMatch: true
+      - name: "Returns 401 for unauthorized"
+        kind: file-contains
+        config:
+          path: "middleware/auth.ts"
+          pattern: "401"
+          shouldMatch: true
+  llmJudge:
+    type: llm-judge
+    rubric: |
+      Evaluate the Hono middleware implementation:
+      - Does it correctly extract and validate Bearer tokens?
+      - Does it properly use Hono's context (c.set/c.get) for passing user data?
+      - Is the error response properly formatted as JSON?
+      - Does the app correctly separate authenticated and public routes?
+    dimensions:
+      - correctness
+      - best-practices
+      - code-quality
+tags: ["middleware", "auth", "hono"]
+timeoutMs: 60000
