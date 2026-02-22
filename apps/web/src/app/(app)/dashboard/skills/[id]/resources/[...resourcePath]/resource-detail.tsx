@@ -45,6 +45,7 @@ export default function ResourceDetail({
   );
   const skillQuery = useQuery(trpc.skills.getById.queryOptions({ id: skillId }));
   const [mobileContentTab, setMobileContentTab] = useState<"markdown" | "graph">("markdown");
+  const [desktopGraphHeight, setDesktopGraphHeight] = useState(560);
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId }));
 
   const resources = skillQuery.data?.resources ?? [];
@@ -94,6 +95,19 @@ export default function ResourceDetail({
     window.scrollTo({ top: 0, behavior: "auto" });
     setMobileContentTab("markdown");
   }, [skillId, resourcePath]);
+
+  useEffect(() => {
+    const updateDesktopGraphHeight = () => {
+      const viewportHeight = window.innerHeight;
+      const verticalOffset = 132;
+      setDesktopGraphHeight(Math.max(420, viewportHeight - verticalOffset));
+    };
+
+    updateDesktopGraphHeight();
+    window.addEventListener("resize", updateDesktopGraphHeight);
+
+    return () => window.removeEventListener("resize", updateDesktopGraphHeight);
+  }, []);
 
   if (resourceQuery.isLoading) {
     return (
@@ -225,7 +239,7 @@ export default function ResourceDetail({
             {canRenderMarkdown ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="hidden items-start gap-2 text-base min-w-0 lg:flex">
+                  <CardTitle className="hidden items-center gap-2 text-base min-w-0 lg:flex">
                     <FileText className="size-4" aria-hidden="true" />
                     <span>Resource Content</span>
                   </CardTitle>
@@ -325,7 +339,7 @@ export default function ResourceDetail({
             </Card>
           </section>
 
-          <aside className="min-w-0 space-y-6 lg:col-span-4 lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-92px)]">
+          <aside className="min-w-0 space-y-6 lg:col-span-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Resource Details</CardTitle>
@@ -355,7 +369,7 @@ export default function ResourceDetail({
               </CardContent>
             </Card>
 
-            <Card className="hidden flex-col lg:flex lg:min-h-0 lg:flex-1">
+            <Card className="hidden flex-col lg:flex lg:min-h-0 lg:flex-1 lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-92px)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Network className="size-4" aria-hidden="true" />
@@ -377,7 +391,7 @@ export default function ResourceDetail({
                   <ForceGraph
                     data={graphQuery.data}
                     focusNodeId={resourceQuery.data?.id ?? skillId}
-                    height={600}
+                    height={desktopGraphHeight - 40}
                   />
                 )}
               </CardContent>
