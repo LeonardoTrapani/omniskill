@@ -460,6 +460,10 @@ export default function SkillDetail({ id }: { id: string }) {
                   <p className="break-words">{data.slug}</p>
                 </div>
                 <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
+                  <p className="text-muted-foreground">Owner</p>
+                  <p className="break-words">{data.ownerUserId ?? "Global"}</p>
+                </div>
+                <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
                   <p className="text-muted-foreground">Created</p>
                   <p>{formatDate(data.createdAt)}</p>
                 </div>

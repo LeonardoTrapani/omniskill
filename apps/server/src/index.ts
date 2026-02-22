@@ -7,6 +7,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
+import { handleChatRequest } from "./chat";
+
 const app = new Hono();
 
 app.use(logger());
@@ -22,6 +24,8 @@ app.use(
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
+app.post("/api/chat", (c) => handleChatRequest(c));
+
 app.use(
   "/trpc/*",
   trpcServer({
@@ -36,4 +40,7 @@ app.get("/", (c) => {
   return c.text("OK");
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  idleTimeout: 120,
+};

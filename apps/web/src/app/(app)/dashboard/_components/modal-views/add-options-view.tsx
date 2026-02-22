@@ -4,7 +4,6 @@ import { type Dispatch } from "react";
 import { Copy, Sparkles, Loader2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 import { trpc, queryClient } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
@@ -18,8 +17,6 @@ interface AddOptionsViewProps {
 }
 
 export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsViewProps) {
-  const router = useRouter();
-
   const duplicateMutation = useMutation(
     trpc.skills.duplicate.mutationOptions({
       onSuccess: () => {
@@ -31,7 +28,6 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
         });
         toast.success(`"${skill.name}" added to your collection`);
         onClose();
-        router.push("/dashboard");
       },
       onError: (error) => {
         toast.error(`Failed to add skill: ${error.message}`);

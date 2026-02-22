@@ -34,7 +34,10 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
-type ModalTarget = { type: "skill"; skill: SelectedSkill } | { type: "create" } | null;
+type ModalTarget =
+  | { type: "skill"; skill: SelectedSkill }
+  | { type: "create"; prompt: string }
+  | null;
 
 /** Trigger button — render in as many places as needed, all point to the same palette */
 export function SkillCommandTrigger({ onOpen }: { onOpen: () => void }) {
@@ -155,12 +158,13 @@ export function SkillCommandPalette({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    openModal({ type: "create" });
+    openModal({ type: "create", prompt: search });
   };
 
   const initialSkill = modalTarget?.type === "skill" ? modalTarget.skill : undefined;
   const initialView: ModalView | undefined =
     modalTarget?.type === "create" ? "chat-create" : undefined;
+  const initialPrompt = modalTarget?.type === "create" ? modalTarget.prompt : undefined;
 
   const showSuggestions = hasQuery && (isLoading || suggestions.length > 0);
 
@@ -251,6 +255,7 @@ export function SkillCommandPalette({
         }}
         initialSkill={initialSkill}
         initialView={initialView}
+        initialPrompt={initialPrompt}
       />
     </>
   );

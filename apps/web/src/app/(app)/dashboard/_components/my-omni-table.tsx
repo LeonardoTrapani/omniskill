@@ -43,7 +43,7 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
       {/* Title */}
       <div className="px-6 md:px-8 pt-8 pb-6">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
-          MY VAULT
+          MY OMNI
         </h2>
       </div>
 

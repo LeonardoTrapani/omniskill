@@ -18,6 +18,7 @@ interface AddSkillModalProps {
   onBack?: () => void;
   initialSkill?: SelectedSkill | null;
   initialView?: ModalView;
+  initialPrompt?: string;
 }
 
 const viewTitles: Record<ModalView, string> = {
@@ -34,6 +35,7 @@ export default function AddSkillModal({
   onBack,
   initialSkill,
   initialView,
+  initialPrompt,
 }: AddSkillModalProps) {
   const { state, dispatch } = useModalMachine({ initialSkill, initialView });
 
@@ -86,6 +88,7 @@ export default function AddSkillModal({
             <ChatView
               mode={state.view === "chat-customize" ? "customize" : "create"}
               selectedSkill={state.selectedSkill}
+              initialInput={state.view === "chat-create" ? initialPrompt : undefined}
             />
           )}
         </div>

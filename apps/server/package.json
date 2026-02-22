@@ -10,12 +10,14 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.30",
     "@hono/trpc-server": "^0.4.0",
     "@omniscient/api": "workspace:*",
     "@omniscient/auth": "workspace:*",
     "@omniscient/db": "workspace:*",
     "@omniscient/env": "workspace:*",
     "@trpc/server": "catalog:",
+    "ai": "^6.0.97",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",

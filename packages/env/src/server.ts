@@ -13,6 +13,8 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: z.string().min(1),
     GITHUB_CLIENT_SECRET: z.string().min(1),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
+    GOOGLE_GENERATIVE_AI_MODEL: z.string().min(1).default("gemini-flash-latest"),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

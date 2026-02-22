@@ -1,19 +1,47 @@
-// AI SDK chat API route — plumbing only
-// To enable AI responses, install a model provider (e.g. @ai-sdk/openai)
-// and uncomment the streamText call below.
-//
-// import { streamText } from "ai";
-// import { openai } from "@ai-sdk/openai";
+import { env } from "@omniscient/env/web";
 
-export async function POST() {
-  // const { messages } = await request.json();
-  //
-  // const result = streamText({
-  //   model: openai("gpt-4o-mini"),
-  //   messages,
-  // });
-  //
-  // return result.toDataStreamResponse();
+const REQUEST_HEADERS_TO_FORWARD = [
+  "content-type",
+  "cookie",
+  "authorization",
+  "x-vercel-ai-ui-message-stream",
+  "x-vercel-ai-data-stream",
+];
 
-  return Response.json({ error: "AI provider not configured yet" }, { status: 501 });
+const RESPONSE_HEADERS_TO_FORWARD = [
+  "content-type",
+  "x-vercel-ai-ui-message-stream",
+  "x-vercel-ai-data-stream",
+];
+
+export async function POST(request: Request) {
+  try {
+    const headers = new Headers();
+    for (const header of REQUEST_HEADERS_TO_FORWARD) {
+      const value = request.headers.get(header);
+      if (value) headers.set(header, value);
+    }
+
+    const body = await request.text();
+
+    const upstream = await fetch(`${env.NEXT_PUBLIC_SERVER_URL}/api/chat`, {
+      method: "POST",
+      headers,
+      body,
+      cache: "no-store",
+    });
+
+    const responseHeaders = new Headers();
+    for (const header of RESPONSE_HEADERS_TO_FORWARD) {
+      const value = upstream.headers.get(header);
+      if (value) responseHeaders.set(header, value);
+    }
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers: responseHeaders,
+    });
+  } catch {
+    return Response.json({ error: "chat backend is unreachable" }, { status: 502 });
+  }
 }
