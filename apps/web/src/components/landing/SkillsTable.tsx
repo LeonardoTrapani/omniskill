@@ -2,14 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Search, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
-import { authClient } from "@/lib/auth-client";
 import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
-import type { SelectedSkill } from "@/app/(app)/dashboard/_hooks/use-modal-machine";
+import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
 
 interface SkillsTableProps {
   limit?: number;
@@ -26,11 +24,10 @@ export default function SkillsTable({
   infiniteScroll = false,
   className,
 }: SkillsTableProps) {
-  const router = useRouter();
-  const { data: session } = authClient.useSession();
   const [search, setSearch] = useState("");
-  const [selectedSkill, setSelectedSkill] = useState<SelectedSkill | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const { selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } = useAddSkillFlow({
+    loginNext: "/skills",
+  });
 
   const pageSize = limit ?? 50;
 
@@ -78,30 +75,6 @@ export default function SkillsTable({
 
     return () => observer.disconnect();
   }, [infiniteScroll, loadMore]);
-
-  const handleAdd = (skill: {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-  }) => {
-    if (!session?.user) {
-      router.push("/login?next=/skills");
-      return;
-    }
-    setSelectedSkill({
-      id: skill.id,
-      name: skill.name,
-      slug: skill.slug,
-      description: skill.description ?? "",
-    });
-    setModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setSelectedSkill(null);
-  };
 
   return (
     <section id="skills" className={className ?? "py-24 px-6 md:px-16"}>
@@ -201,7 +174,7 @@ export default function SkillsTable({
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          handleAdd(skill);
+                          openAddSkillFlow(skill);
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border transition-all duration-150 border-border text-muted-foreground hover:text-primary hover:border-primary/40"
                       >
@@ -257,7 +230,7 @@ export default function SkillsTable({
       <AddSkillModal
         key={selectedSkill?.id ?? "none"}
         open={modalOpen}
-        onClose={handleModalClose}
+        onClose={closeAddSkillFlow}
         initialSkill={selectedSkill}
       />
     </section>

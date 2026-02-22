@@ -2,23 +2,37 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowUpRight, FileText, Loader2, Network } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ArrowUpRight, FileText, Loader2, Network, Pencil, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { toast } from "sonner";
 
+import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
 import { ForceGraph } from "@/components/graph/force-graph";
 import { createMarkdownComponents } from "@/components/skills/markdown-components";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
 
+import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
 import { ResourceHoverLink } from "@/components/skills/resource-link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { trpc } from "@/utils/trpc";
+import { queryClient, trpc } from "@/utils/trpc";
 
 function formatDate(value: string | Date) {
   const date = typeof value === "string" ? new Date(value) : value;
@@ -41,11 +55,31 @@ function displayValue(value: unknown) {
 }
 
 export default function SkillDetail({ id }: { id: string }) {
+  const router = useRouter();
+  const { session, selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } =
+    useAddSkillFlow({ loginNext: `/dashboard/skills/${id}` });
   const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId: id }));
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [mobileContentTab, setMobileContentTab] = useState<"markdown" | "graph">("markdown");
   const [desktopGraphHeight, setDesktopGraphHeight] = useState(560);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const deleteMutation = useMutation(
+    trpc.skills.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graphForSkill.queryKey() });
+        toast.success(`"${data?.name ?? "Skill"}" has been deleted`);
+        setDeleteDialogOpen(false);
+        router.push("/dashboard" as Route);
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete skill: ${error.message}`);
+      },
+    }),
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -103,6 +137,9 @@ export default function SkillDetail({ id }: { id: string }) {
   };
 
   const skillId = data?.id ?? id;
+  const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
+  const canManageSkill = data?.visibility === "private" && isOwnedByViewer;
+  const canAddToCodebase = data?.visibility === "public" && !isOwnedByViewer;
 
   const markdownComponents = useMemo(
     () =>
@@ -159,23 +196,48 @@ export default function SkillDetail({ id }: { id: string }) {
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
       <div className="mx-auto w-full max-w-6xl">
-        <div className="mb-4">
+        <div className="mb-4 w-full flex justify-between">
           <Link href={"/dashboard" as Route}>
             <Button variant="outline" size="sm">
               <ArrowLeft />
               Back to Skills
             </Button>
           </Link>
+          <div className="flex items-center justify-start gap-2 sm:justify-end">
+            {canAddToCodebase ? (
+              <Button size="sm" onClick={() => openAddSkillFlow(data)}>
+                Add to Codebase
+              </Button>
+            ) : null}
+            {canManageSkill ? (
+              <>
+                <Link href={`/dashboard/skills/${data.id}/edit` as Route}>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="size-4" />
+                    Edit
+                  </Button>
+                </Link>
+                <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="size-4" />
+                  Delete
+                </Button>
+              </>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-12">
           <section className="min-w-0 space-y-6 lg:col-span-8">
             <Card>
               <CardHeader>
-                <CardDescription>skills / {data.slug}</CardDescription>
-                <CardTitle className="text-2xl leading-tight text-primary sm:text-3xl break-words">
-                  {data.name}
-                </CardTitle>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-2 min-w-0">
+                    <CardDescription>skills / {data.slug}</CardDescription>
+                    <CardTitle className="text-2xl leading-tight text-primary sm:text-3xl break-words">
+                      {data.name}
+                    </CardTitle>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <p
                     className={[
@@ -438,6 +500,35 @@ export default function SkillDetail({ id }: { id: string }) {
           </aside>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete skill</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{data.name}&rdquo;? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate({ id: data.id })}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AddSkillModal
+        key={selectedSkill?.id ?? "none"}
+        open={modalOpen}
+        onClose={closeAddSkillFlow}
+        initialSkill={selectedSkill}
+      />
     </main>
   );
 }
