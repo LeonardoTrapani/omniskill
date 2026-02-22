@@ -83,5 +83,6 @@ omniscient/
 
 - Installer command used on the landing page: `curl -fsSL https://omniscient.sh/install | bash`
 - Installer script source lives at `apps/web/public/install`
+- Installer default server URL is `https://server.omniscient.sh` (override with `--server-url` or `SERVER_URL`)
 - CLI binaries are published by GitHub Actions workflow `.github/workflows/release-cli.yml`
 - To publish a new CLI release, push a semver tag (for example: `git tag v0.1.0 && git push origin v0.1.0`)

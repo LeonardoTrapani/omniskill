@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO="${OMNISCIENT_REPO:-LeonardoTrapani/omniscient}"
 INSTALL_DIR="${OMNISCIENT_INSTALL_DIR:-$HOME/.local/bin}"
-DEFAULT_SERVER_URL="${OMNISCIENT_SERVER_URL:-https://api.omniscient.sh}"
+DEFAULT_SERVER_URL="${OMNISCIENT_SERVER_URL:-https://server.omniscient.sh}"
 VERSION="latest"
 BIN_NAME="omniscient"
 
