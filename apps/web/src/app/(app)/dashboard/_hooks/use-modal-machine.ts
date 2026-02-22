@@ -79,7 +79,12 @@ function reducer(state: ModalState, action: ModalAction): ModalState {
   }
 }
 
-export function useModalMachine() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export function useModalMachine(initialSkill?: SelectedSkill | null) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialSkill
+      ? { view: "add-options" as const, selectedSkill: initialSkill, history: [] }
+      : initialState,
+  );
   return { state, dispatch };
 }

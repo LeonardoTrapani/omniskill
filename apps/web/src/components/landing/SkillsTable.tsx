@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
+import { authClient } from "@/lib/auth-client";
+import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
+import type { SelectedSkill } from "@/app/(app)/dashboard/_hooks/use-modal-machine";
 
 interface SkillsTableProps {
   limit?: number;
@@ -20,8 +24,11 @@ export default function SkillsTable({
   showViewAll = true,
   className,
 }: SkillsTableProps) {
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [search, setSearch] = useState("");
-  const [addedSkills, setAddedSkills] = useState<Set<string>>(new Set());
+  const [selectedSkill, setSelectedSkill] = useState<SelectedSkill | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery(
     trpc.skills.list.queryOptions({
@@ -32,16 +39,28 @@ export default function SkillsTable({
 
   const skills = data?.items ?? [];
 
-  const handleAdd = (id: string) => {
-    setAddedSkills((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const handleAdd = (skill: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+  }) => {
+    if (!session?.user) {
+      router.push("/login?next=/skills");
+      return;
+    }
+    setSelectedSkill({
+      id: skill.id,
+      name: skill.name,
+      slug: skill.slug,
+      description: skill.description ?? "",
     });
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedSkill(null);
   };
 
   return (
@@ -108,7 +127,6 @@ export default function SkillsTable({
           {!isLoading &&
             !isError &&
             skills.map((skill, index) => {
-              const isAdded = addedSkills.has(skill.id);
               return (
                 <motion.div
                   key={skill.id}
@@ -145,21 +163,11 @@ export default function SkillsTable({
                   {/* Add button */}
                   <div className="flex justify-end">
                     <button
-                      onClick={() => handleAdd(skill.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border transition-all duration-150 ${
-                        isAdded
-                          ? "border-primary/40 text-primary bg-primary/10"
-                          : "border-border text-muted-foreground hover:text-primary hover:border-primary/40"
-                      }`}
+                      onClick={() => handleAdd(skill)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border transition-all duration-150 border-border text-muted-foreground hover:text-primary hover:border-primary/40"
                     >
-                      {isAdded ? (
-                        "Added"
-                      ) : (
-                        <>
-                          <Plus className="w-3 h-3" />
-                          <span className="hidden sm:inline">Add</span>
-                        </>
-                      )}
+                      <Plus className="w-3 h-3" />
+                      <span className="hidden sm:inline">Add</span>
                     </button>
                   </div>
                 </motion.div>
@@ -197,6 +205,13 @@ export default function SkillsTable({
           </div>
         </motion.div>
       </div>
+
+      <AddSkillModal
+        key={selectedSkill?.id ?? "none"}
+        open={modalOpen}
+        onClose={handleModalClose}
+        initialSkill={selectedSkill}
+      />
     </section>
   );
 }

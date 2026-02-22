@@ -1,4 +1,6 @@
 import type { ComponentPropsWithoutRef } from "react";
+import Link from "next/link";
+import type { Route } from "next";
 
 import { ResourceHoverLink, type ResourceLike } from "@/components/skills/resource-link";
 import { Separator } from "@/components/ui/separator";
@@ -43,14 +45,29 @@ export function createMarkdownComponents(options: {
       />
     ),
     a: ({ href = "", children, ...props }: ComponentPropsWithoutRef<"a">) => {
-      const resource = findResourceByHref(href);
+      if (href.startsWith("skill://")) {
+        const targetId = href.replace("skill://", "");
+        return (
+          <Link
+            href={`/dashboard/skills/${targetId}` as Route}
+            className="text-primary underline underline-offset-4 break-all"
+          >
+            {children}
+          </Link>
+        );
+      }
 
+      const resource = findResourceByHref(href);
       if (resource) {
         return (
           <ResourceHoverLink resource={resource} skillId={skillId} skillName={skillName}>
             {children}
           </ResourceHoverLink>
         );
+      }
+
+      if (href.startsWith("resource://")) {
+        return <span className="text-muted-foreground">{children}</span>;
       }
 
       return (

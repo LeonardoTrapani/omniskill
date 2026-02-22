@@ -6,7 +6,7 @@ import { skill, skillResource } from "@omniscient/db/schema/skills";
 import { parseMentions } from "./mentions";
 
 const SKILL_FALLBACK = "`(unknown skill)`";
-const RESOURCE_FALLBACK = "`(unknown resource)` in skill `(unknown skill)`";
+const RESOURCE_FALLBACK = "`(unknown resource)`";
 
 export async function renderMentions(markdown: string, currentSkillId?: string): Promise<string> {
   const mentions = parseMentions(markdown);
@@ -72,17 +72,19 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
 
     if (normalizedType === "skill") {
       const slug = skillSlugMap.get(normalizedId);
-      if (slug) return `\`${slug}\``;
+      if (slug) return `[\`${slug}\`](skill://${normalizedId})`;
       return SKILL_FALLBACK;
     }
 
     if (normalizedType === "resource") {
       const info = resourceInfoMap.get(normalizedId);
       if (info) {
-        if (currentSkillId && info.skillId === currentSkillId) {
+        const sameSkill =
+          currentSkillId && info.skillId.toLowerCase() === currentSkillId.toLowerCase();
+        if (sameSkill) {
           return `[\`${info.resourcePath}\`](resource://${normalizedId})`;
         }
-        return `[\`${info.resourcePath}\`](resource://${normalizedId}) in skill \`${info.skillSlug}\``;
+        return `[\`${info.resourcePath}\`](resource://${normalizedId}) in [\`${info.skillSlug}\`](skill://${info.skillId})`;
       }
       return RESOURCE_FALLBACK;
     }

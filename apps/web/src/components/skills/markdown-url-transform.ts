@@ -1,7 +1,8 @@
 import { defaultUrlTransform } from "react-markdown";
 
 export function markdownUrlTransform(url: string) {
-  if (url.toLowerCase().startsWith("resource://")) {
+  const lower = url.toLowerCase();
+  if (lower.startsWith("resource://") || lower.startsWith("skill://")) {
     return url;
   }
 
