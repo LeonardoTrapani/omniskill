@@ -40,6 +40,7 @@ export default function SkillsTable({
         {
           limit: pageSize,
           search: search.trim() || undefined,
+          visibility: "public",
         },
         {
           getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

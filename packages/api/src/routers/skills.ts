@@ -266,11 +266,12 @@ export const skillsRouter = router({
         query: z.string().min(1),
         scope: z.enum(["own", "all"]).default("own"),
         limit: z.number().int().min(1).max(50).default(5),
+        visibility: visibilityEnum.optional(),
       }),
     )
     .output(z.object({ items: z.array(searchResultItem), total: z.number() }))
     .query(async ({ ctx, input }) => {
-      const { query, scope, limit } = input;
+      const { query, scope, limit, visibility } = input;
 
       if (scope === "own" && !ctx.session) {
         throw new TRPCError({
@@ -288,7 +289,11 @@ export const skillsRouter = router({
           : visibilityFilter(ctx.session);
 
       const matchCondition = searchCondition(query);
-      const whereClause = and(matchCondition, scopeCondition);
+      const conditions = [matchCondition, scopeCondition];
+      if (visibility) {
+        conditions.push(eq(skill.visibility, visibility));
+      }
+      const whereClause = and(...conditions);
 
       // additive score: trigram similarity base + exact substring bonuses.
       // the ILIKE bonuses ensure "docker" in a description outranks "doc" trigram overlaps.

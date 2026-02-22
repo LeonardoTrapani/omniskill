@@ -1,10 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, type FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { Search, Copy, ArrowUp, Loader2, Plus } from "lucide-react";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
+import { cn } from "@/lib/utils";
 import { trpc } from "@/utils/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,17 +84,26 @@ export function SkillCommandPalette({
       query: debouncedSearch.trim(),
       scope: "all",
       limit: 3,
+      visibility: "public",
     }),
     placeholderData: keepPreviousData,
     enabled: open && hasQuery,
   });
 
   const suggestions = data?.items ?? [];
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  // reset selection when suggestions change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [debouncedSearch]);
 
   // focus input when dialog opens
   useEffect(() => {
     if (open) {
       requestAnimationFrame(() => inputRef.current?.focus());
+    } else {
+      setSelectedIndex(-1);
     }
   }, [open]);
 
@@ -106,6 +123,34 @@ export function SkillCommandPalette({
       setModalKey((k) => k + 1);
     },
     [onOpenChange],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (!suggestions.length) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((i) => (i < suggestions.length - 1 ? i + 1 : 0));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((i) => (i > 0 ? i - 1 : suggestions.length - 1));
+      } else if (e.key === "Enter" && selectedIndex >= 0) {
+        e.preventDefault();
+        const skill = suggestions[selectedIndex];
+        if (skill) {
+          openModal({
+            type: "skill",
+            skill: {
+              id: skill.id,
+              name: skill.name,
+              slug: skill.slug,
+              description: skill.description,
+            },
+          });
+        }
+      }
+    },
+    [suggestions, selectedIndex, openModal],
   );
 
   const handleSubmit = (e: FormEvent) => {
@@ -136,6 +181,7 @@ export function SkillCommandPalette({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="I want my agent to know how to use..."
               className="w-full bg-transparent px-1 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none"
               aria-label="Describe the skill you need"
@@ -163,7 +209,7 @@ export function SkillCommandPalette({
                 </div>
               )}
 
-              {suggestions.map((skill) => (
+              {suggestions.map((skill, index) => (
                 <button
                   key={skill.id}
                   type="button"
@@ -178,7 +224,13 @@ export function SkillCommandPalette({
                       },
                     })
                   }
-                  className="flex items-center gap-3 w-full px-6 py-2.5 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  className={cn(
+                    "flex items-center gap-3 w-full px-6 py-2.5 text-left text-sm text-muted-foreground transition-colors",
+                    selectedIndex === index
+                      ? "bg-secondary/50 text-foreground"
+                      : "hover:text-foreground hover:bg-secondary/50",
+                  )}
                 >
                   <Plus className="size-3.5 flex-shrink-0 opacity-50" />
                   {skill.name}
