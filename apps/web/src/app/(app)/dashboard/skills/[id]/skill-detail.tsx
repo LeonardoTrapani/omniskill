@@ -11,8 +11,7 @@ import remarkGfm from "remark-gfm";
 import { ForceGraph } from "@/components/graph/force-graph";
 import { createMarkdownComponents } from "@/components/skills/markdown-components";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
-import { DownloadContentButton } from "@/components/skills/download-content-button";
-import { getResourceDownloadName, getResourceMimeType } from "@/components/skills/resource-file";
+
 import { ResourceHoverLink } from "@/components/skills/resource-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,11 +45,25 @@ export default function SkillDetail({ id }: { id: string }) {
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId: id }));
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [mobileContentTab, setMobileContentTab] = useState<"markdown" | "graph">("markdown");
+  const [desktopGraphHeight, setDesktopGraphHeight] = useState(560);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
     setMobileContentTab("markdown");
   }, [id]);
+
+  useEffect(() => {
+    const updateDesktopGraphHeight = () => {
+      const viewportHeight = window.innerHeight;
+      const verticalOffset = 132;
+      setDesktopGraphHeight(Math.max(420, viewportHeight - verticalOffset));
+    };
+
+    updateDesktopGraphHeight();
+    window.addEventListener("resize", updateDesktopGraphHeight);
+
+    return () => window.removeEventListener("resize", updateDesktopGraphHeight);
+  }, []);
 
   const frontmatter = useMemo(() => (data ? jsonEntries(data.frontmatter) : []), [data]);
   const metadata = useMemo(() => (data ? jsonEntries(data.metadata) : []), [data]);
@@ -144,7 +157,7 @@ export default function SkillDetail({ id }: { id: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10 overflow-x-hidden">
+    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-4">
           <Link href={"/dashboard" as Route}>
@@ -159,17 +172,7 @@ export default function SkillDetail({ id }: { id: string }) {
           <section className="min-w-0 space-y-6 lg:col-span-8">
             <Card>
               <CardHeader>
-                <CardDescription className="flex w-full justify-between">
-                  <div>skills / {data.slug}</div>
-                  <DownloadContentButton
-                    content={data.originalMarkdown}
-                    fileName={`${data.slug || "skill"}.md`}
-                    mimeType="text/markdown;charset=utf-8"
-                    variant="outline"
-                    size="sm"
-                    label="Download"
-                  />
-                </CardDescription>
+                <CardDescription>skills / {data.slug}</CardDescription>
                 <CardTitle className="text-2xl leading-tight text-primary sm:text-3xl break-words">
                   {data.name}
                 </CardTitle>
@@ -373,20 +376,7 @@ export default function SkillDetail({ id }: { id: string }) {
                             >
                               {resource.path}
                             </ResourceHoverLink>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{resource.kind}</Badge>
-                              <DownloadContentButton
-                                content={resource.content}
-                                fileName={getResourceDownloadName(
-                                  resource.path,
-                                  `${resource.id}.txt`,
-                                )}
-                                mimeType={getResourceMimeType(resource.path)}
-                                iconOnly
-                                label="Download"
-                                variant="outline"
-                              />
-                            </div>
+                            <Badge variant="outline">{resource.kind}</Badge>
                           </div>
                         </div>
                       ))}
@@ -422,26 +412,30 @@ export default function SkillDetail({ id }: { id: string }) {
               </CardContent>
             </Card>
 
-            <Card className="hidden lg:flex lg:sticky lg:top-6">
+            <Card className="hidden flex-col lg:flex lg:min-h-0 lg:flex-1 lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-92px)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Network className="size-4" aria-hidden="true" />
                   Skill Graph
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="min-h-0 flex-1">
                 {graphQuery.isLoading && (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex h-full items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
                 {graphQuery.isError && (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex h-full items-center justify-center">
                     <p className="text-sm text-muted-foreground">Failed to load graph</p>
                   </div>
                 )}
                 {graphQuery.data && (
-                  <ForceGraph data={graphQuery.data} focusNodeId={id} height={600} />
+                  <ForceGraph
+                    data={graphQuery.data}
+                    focusNodeId={id}
+                    height={desktopGraphHeight - 40}
+                  />
                 )}
               </CardContent>
             </Card>

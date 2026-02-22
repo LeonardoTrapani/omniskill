@@ -5,8 +5,6 @@ import SkillsTable from "@/components/landing/SkillsTable";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/landing/Footer";
 import { brainAscii } from "@/lib/constants";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 
 export default function SkillsPage() {
   const [visibleLines, setVisibleLines] = useState(0);
@@ -43,14 +41,6 @@ export default function SkillsPage() {
         {/* Header */}
         <div className="pt-12 pb-0 px-6 md:px-16">
           <div className="max-w-[1280px] mx-auto">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-8"
-            >
-              <ArrowLeft className="w-3 h-3" />
-              Back to home
-            </Link>
-
             <div className="border border-primary/20 bg-background/40 backdrop-blur-sm p-8 md:p-12">
               <p className="text-xs text-primary uppercase tracking-[0.08em] mb-3">
                 Skills Marketplace
@@ -66,7 +56,7 @@ export default function SkillsPage() {
           </div>
         </div>
 
-        <SkillsTable showViewAll={false} className="pt-8 pb-24 px-6 md:px-16" />
+        <SkillsTable showViewAll={false} infiniteScroll className="pt-8 pb-24 px-6 md:px-16" />
 
         <Footer />
       </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
 import { FileText } from "lucide-react";
@@ -66,14 +65,12 @@ export function ResourceHoverLink({
   const mimeType = getResourceMimeType(resource.path);
 
   return (
-    <HoverCard openDelay={120} closeDelay={80}>
-      <HoverCardTrigger asChild>
-        <Link
-          href={buildResourceHref(skillId, resource.path)}
-          className={className ?? "text-primary underline underline-offset-4"}
-        >
-          {children ?? resource.path}
-        </Link>
+    <HoverCard>
+      <HoverCardTrigger
+        href={buildResourceHref(skillId, resource.path)}
+        className={className ?? "text-primary underline underline-offset-4"}
+      >
+        {children ?? resource.path}
       </HoverCardTrigger>
       <HoverCardContent className="w-[360px] overflow-hidden">
         <div className="space-y-3 min-w-0">

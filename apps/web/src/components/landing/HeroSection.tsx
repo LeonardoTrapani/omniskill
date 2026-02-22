@@ -7,21 +7,21 @@ import { Copy, ArrowUp } from "lucide-react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth-client";
 
-/* Shadow layer: box-drawing + block chars (rendered behind in muted color) */
-const asciiLogoShadow = ` ██████╗ ███╗   ███╗███╗   ██╗██╗███████╗ ██████╗███████╗███╗   ██╗████████╗
-██╔═══██╗████╗ ████║████╗  ██║██║██╔════╝██╔════╝██╔════╝████╗  ██║╚══██╔══╝
-██║   ██║██╔████╔██║██╔██╗ ██║██║███████╗██║     █████╗  ██╔██╗ ██║   ██║
-██║   ██║██║╚██╔╝██║██║╚██╗██║██║╚════██║██║     ██╔══╝  ██║╚██╗██║   ██║
-╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║███████║╚██████╗███████╗██║ ╚████║   ██║
- ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝`;
+// /* Shadow layer: box-drawing + block chars (rendered behind in muted color) */
+// const asciiLogoShadow = ` ██████╗ ███╗   ███╗███╗   ██╗██╗███████╗ ██████╗███████╗███╗   ██╗████████╗
+// ██╔═══██╗████╗ ████║████╗  ██║██║██╔════╝██╔════╝██╔════╝████╗  ██║╚══██╔══╝
+// ██║   ██║██╔████╔██║██╔██╗ ██║██║███████╗██║     █████╗  ██╔██╗ ██║   ██║
+// ██║   ██║██║╚██╔╝██║██║╚██╗██║██║╚════██║██║     ██╔══╝  ██║╚██╗██║   ██║
+// ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║███████║╚██████╗███████╗██║ ╚████║   ██║
+//  ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝`;
 
-/* Foreground layer: only █ blocks and spaces (rendered on top in foreground color) */
-const asciiLogoSolid = ` ██████  ███    ███ ███    ██ ██ ███████  ██████ ███████ ███    ██ ████████
-██    ██ ████  ████ ████   ██ ██ ██      ██      ██      ████   ██    ██
-██    ██ ██ ████ ██ ██ ██  ██ ██ ███████ ██      █████   ██ ██  ██    ██
-██    ██ ██  ██  ██ ██  ██ ██ ██      ██ ██      ██      ██  ██ ██    ██
- ██████  ██      ██ ██   ████ ██ ███████  ██████ ███████ ██   ████    ██
-                                                                       `;
+// /* Foreground layer: only █ blocks and spaces (rendered on top in foreground color) */
+// const asciiLogoSolid = ` ██████  ███    ███ ███    ██ ██ ███████  ██████ ███████ ███    ██ ████████
+// ██    ██ ████  ████ ████   ██ ██ ██      ██      ██      ████   ██    ██
+// ██    ██ ██ ████ ██ ██ ██  ██ ██ ███████ ██      █████   ██ ██  ██    ██
+// ██    ██ ██  ██  ██ ██  ██ ██ ██      ██ ██      ██      ██  ██ ██    ██
+//  ██████  ██      ██ ██   ████ ██ ███████  ██████ ███████ ██   ████    ██
+//                                                                        `;
 
 const brainAscii = `
 
@@ -223,8 +223,8 @@ function buildBrainFrames(ascii: string, frameCount: number) {
   });
 }
 
-const normalizedShadow = normalizeAsciiArt(asciiLogoShadow);
-const normalizedSolid = normalizeAsciiArt(asciiLogoSolid);
+// const normalizedShadow = normalizeAsciiArt(asciiLogoShadow);
+// const normalizedSolid = normalizeAsciiArt(asciiLogoSolid);
 const normalizedBrainAscii = normalizeAsciiArt(brainAscii);
 const brainFrames = buildBrainFrames(normalizedBrainAscii, BRAIN_FRAME_COUNT);
 
@@ -290,7 +290,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pb-16">
           <div className="max-w-5xl mx-auto w-full">
             {/* ASCII Logo — Vercel skills.sh approach: two layered <pre> tags */}
             <motion.div
@@ -299,16 +299,14 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               transition={{ duration: 0.6, delay: 0.05 }}
               className="relative mb-6 w-full flex items-start justify-center select-none"
             >
-              <div className="relative mx-auto w-fit max-w-full">
-                {/* Shadow layer (box-drawing chars, muted) */}
+              {/* <div className="relative mx-auto w-fit max-w-full">
                 <pre className="inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-muted-foreground/50 font-[family-name:var(--font-fira-mono)]">
                   {normalizedShadow}
                 </pre>
-                {/* Foreground layer (solid blocks only, on top) */}
                 <pre className="absolute top-0 left-0 inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-foreground font-[family-name:var(--font-fira-mono)]">
                   {normalizedSolid}
                 </pre>
-              </div>
+              </div> */}
             </motion.div>
 
             {/* Subtitle */}
@@ -316,7 +314,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="text-xs sm:text-sm uppercase tracking-[0.2em] text-muted-foreground font-normal mb-10"
+              className="text-3xl mb-4"
             >
               your agent's <span className="text-primary">second brain</span>
             </motion.p>

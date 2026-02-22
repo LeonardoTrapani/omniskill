@@ -143,7 +143,7 @@ export default function ResourceDetail({
   const canRenderMarkdown = canRenderResourceAsMarkdown(resource.path, resource.kind);
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10 overflow-x-hidden">
+    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-4 flex flex-wrap gap-2">
           <Link href={"/dashboard" as Route}>
@@ -164,17 +164,7 @@ export default function ResourceDetail({
           <section className="min-w-0 space-y-6 lg:col-span-8">
             <Card>
               <CardHeader>
-                <CardDescription className="flex w-full justify-between">
-                  <div>resource / {resource.kind}</div>
-                  <DownloadContentButton
-                    content={resource.content}
-                    fileName={resourceDownloadName}
-                    mimeType={resourceMimeType}
-                    variant="outline"
-                    size="sm"
-                    label="Download"
-                  />
-                </CardDescription>
+                <CardDescription>resource / {resource.kind}</CardDescription>
                 <CardTitle className="text-2xl leading-tight sm:text-3xl break-words">
                   {resource.path}
                 </CardTitle>
@@ -285,19 +275,22 @@ export default function ResourceDetail({
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex min-h-[180px] flex-col items-start justify-center gap-3 border border-dashed border-border p-4">
-                <p className="text-sm text-muted-foreground">
-                  This resource type is not shown as markdown.
-                </p>
-                <DownloadContentButton
-                  content={resource.content}
-                  fileName={resourceDownloadName}
-                  mimeType={resourceMimeType}
-                  variant="outline"
-                  size="sm"
-                  label="Download"
-                />
-              </div>
+              <Card>
+                <CardContent className="flex min-h-[180px] flex-col items-center justify-center gap-3 text-center">
+                  <FileText className="size-8 text-muted-foreground/50" aria-hidden="true" />
+                  <p className="text-sm text-muted-foreground">
+                    This file cannot be rendered as Markdown.
+                  </p>
+                  <DownloadContentButton
+                    content={resource.content}
+                    fileName={resourceDownloadName}
+                    mimeType={resourceMimeType}
+                    variant="outline"
+                    size="sm"
+                    label="Download File"
+                  />
+                </CardContent>
+              </Card>
             )}
 
             <Card>
@@ -322,17 +315,7 @@ export default function ResourceDetail({
                           >
                             {item.path}
                           </Link>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{item.kind}</Badge>
-                            <DownloadContentButton
-                              content={item.content}
-                              fileName={getResourceDownloadName(item.path, `${item.id}.txt`)}
-                              mimeType={getResourceMimeType(item.path)}
-                              iconOnly
-                              label="Download"
-                              variant="outline"
-                            />
-                          </div>
+                          <Badge variant="outline">{item.kind}</Badge>
                         </div>
                       </div>
                     ))}
@@ -342,7 +325,7 @@ export default function ResourceDetail({
             </Card>
           </section>
 
-          <aside className="min-w-0 space-y-6 lg:col-span-4">
+          <aside className="min-w-0 space-y-6 lg:col-span-4 lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-92px)]">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Resource Details</CardTitle>
@@ -372,21 +355,21 @@ export default function ResourceDetail({
               </CardContent>
             </Card>
 
-            <Card className="hidden lg:flex lg:sticky lg:top-6">
+            <Card className="hidden flex-col lg:flex lg:min-h-0 lg:flex-1">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Network className="size-4" aria-hidden="true" />
                   Skill Graph
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="min-h-0 flex-1">
                 {graphQuery.isLoading && (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex h-full items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
                 {graphQuery.isError && (
-                  <div className="flex items-center justify-center h-[480px]">
+                  <div className="flex h-full items-center justify-center">
                     <p className="text-sm text-muted-foreground">Failed to load graph</p>
                   </div>
                 )}
