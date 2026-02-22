@@ -8,6 +8,8 @@ import { authClient } from "@/lib/auth-client";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 
+const CANONICAL_APP_ORIGIN = "https://omniscient.sh";
+
 function GitHubIcon({ className, ...props }: ComponentProps<"svg">) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -61,7 +63,7 @@ function LoginPageContent() {
     setLoadingProvider(provider);
     authClient.signIn.social({
       provider,
-      callbackURL: `${window.location.origin}${callbackURL}`,
+      callbackURL: `${CANONICAL_APP_ORIGIN}${callbackURL}`,
     });
   };
 

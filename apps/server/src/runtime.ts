@@ -10,11 +10,27 @@ import { handleChatRequest } from "./chat.js";
 
 const app = new Hono();
 
+function getAllowedOrigins(origin: string): string[] {
+  const origins = new Set<string>([origin]);
+  const parsed = new URL(origin);
+  const host = parsed.hostname;
+  const isLocalHost = host === "localhost" || host === "127.0.0.1";
+
+  if (!isLocalHost && host.includes(".")) {
+    const altHost = host.startsWith("www.") ? host.slice(4) : `www.${host}`;
+    origins.add(`${parsed.protocol}//${altHost}`);
+  }
+
+  return [...origins];
+}
+
+const allowedOrigins = getAllowedOrigins(env.CORS_ORIGIN);
+
 app.use(logger());
 app.use(
   "/*",
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: allowedOrigins,
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
