@@ -37,7 +37,7 @@ export default function MyOmniTable({ onDelete }: MyOmniTableProps) {
       {/* Title */}
       <div className="px-6 md:px-8 pt-8 pb-6">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
-          MY OMNI
+          MY VAULT
         </h2>
       </div>
 

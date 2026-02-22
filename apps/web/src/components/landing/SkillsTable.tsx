@@ -198,7 +198,10 @@ export default function SkillsTable({
                     {/* Add button */}
                     <div className="flex justify-end">
                       <button
-                        onClick={() => handleAdd(skill)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAdd(skill);
+                        }}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium border transition-all duration-150 border-border text-muted-foreground hover:text-primary hover:border-primary/40"
                       >
                         <Plus className="w-3 h-3" />
