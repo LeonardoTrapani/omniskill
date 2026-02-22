@@ -4,9 +4,21 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./server": "./src/server.ts",
-    "./web": "./src/web.ts",
-    "./cli": "./src/cli.ts"
+    "./server": {
+      "bun": "./src/server.ts",
+      "default": "./dist/server.mjs"
+    },
+    "./web": {
+      "bun": "./src/web.ts",
+      "default": "./dist/web.mjs"
+    },
+    "./cli": {
+      "bun": "./src/cli.ts",
+      "default": "./dist/cli.mjs"
+    }
+  },
+  "scripts": {
+    "build": "bun build ./src/server.ts --outfile ./dist/server.mjs --target=node --format=esm && bun build ./src/web.ts --outfile ./dist/web.mjs --target=node --format=esm && bun build ./src/cli.ts --outfile ./dist/cli.mjs --target=node --format=esm"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.1",

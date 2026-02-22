@@ -1,4 +1,4 @@
-import { protectedProcedure, publicProcedure, router } from "../index";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { skillsRouter } from "./skills";
 
 export const appRouter = router({

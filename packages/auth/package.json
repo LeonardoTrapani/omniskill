@@ -3,13 +3,17 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "default": "./dist/index.mjs"
     },
     "./*": {
+      "bun": "./src/*.ts",
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
+  },
   "dependencies": {
     "@omniscient/db": "workspace:*",
     "@omniscient/env": "workspace:*",

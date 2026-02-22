@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "customConditions": ["bun"],
     "lib": ["ESNext"],
     "verbatimModuleSyntax": true,
     "strict": true,

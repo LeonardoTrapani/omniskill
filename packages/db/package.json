@@ -3,13 +3,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./src/index.ts"
+      "bun": "./src/index.ts",
+      "default": "./dist/index.mjs"
     },
     "./*": {
+      "bun": "./src/*.ts",
       "default": "./src/*.ts"
     }
   },
   "scripts": {
+    "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "@omniscient/db";
 import { skill, skillLink, skillResource } from "@omniscient/db/schema/skills";
 
-import { protectedProcedure, publicProcedure, router } from "../index";
+import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { syncAutoLinks } from "../lib/link-sync";
 import { renderMentions } from "../lib/render-mentions";
 
@@ -253,11 +253,19 @@ const searchResultItem = z.object({
 
 export const skillsRouter = router({
   count: publicProcedure.output(z.object({ count: z.number() })).query(async () => {
-    const [result] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(skill)
-      .where(eq(skill.visibility, "public"));
-    return { count: result?.count ?? 0 };
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(skill)
+        .where(eq(skill.visibility, "public"));
+      return { count: result?.count ?? 0 };
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `skills.count failed: ${details}`,
+      });
+    }
   }),
 
   search: publicProcedure

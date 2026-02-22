@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, ArrowUp } from "lucide-react";
+import { Copy, ArrowUp, Check } from "lucide-react";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth-client";
 
@@ -232,6 +232,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
   const router = useRouter();
   const [brainFrameIndex, setBrainFrameIndex] = useState(0);
   const [heroPrompt, setHeroPrompt] = useState("");
+  const [didCopyInstallCommand, setDidCopyInstallCommand] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
   const ctaHref = session ? "/dashboard" : "/login";
@@ -273,6 +274,16 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
     }
 
     router.push(dashboardPath as "/dashboard");
+  };
+
+  const handleInstallCommandCopy = async () => {
+    try {
+      await navigator.clipboard.writeText("curl -fsSL https://omniscient.sh/install | bash");
+      setDidCopyInstallCommand(true);
+      window.setTimeout(() => setDidCopyInstallCommand(false), 1500);
+    } catch {
+      setDidCopyInstallCommand(false);
+    }
   };
 
   return (
@@ -377,12 +388,19 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               </Link>
               <button
                 className="order-1 w-full sm:order-2 sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-background/95 backdrop-blur-md border border-border text-foreground text-sm hover:border-primary/50 transition-colors duration-150"
-                onClick={() =>
-                  navigator.clipboard.writeText("curl -fsSL https://omniscient.sh/install | bash")
-                }
+                onClick={handleInstallCommandCopy}
               >
-                <Copy className="w-3.5 h-3.5" />
+                {didCopyInstallCommand ? (
+                  <Check className="w-3.5 h-3.5 text-primary" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
                 curl -fsSL https://omniscient.sh/install | bash
+                {didCopyInstallCommand ? (
+                  <span className="text-xs text-primary" aria-live="polite">
+                    copied
+                  </span>
+                ) : null}
               </button>
             </motion.div>
           </div>
