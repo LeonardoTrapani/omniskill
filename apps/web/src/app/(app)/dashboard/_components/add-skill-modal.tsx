@@ -5,7 +5,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useModalMachine } from "../_hooks/use-modal-machine";
-import type { ModalView } from "../_hooks/use-modal-machine";
+import type { ModalView, SelectedSkill } from "../_hooks/use-modal-machine";
 
 import ChoiceView from "./modal-views/choice-view";
 import BrowseSkillsView from "./modal-views/browse-skills-view";
@@ -15,6 +15,9 @@ import ChatView from "./modal-views/chat-view";
 interface AddSkillModalProps {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
+  initialSkill?: SelectedSkill | null;
+  initialView?: ModalView;
 }
 
 const viewTitles: Record<ModalView, string> = {
@@ -25,12 +28,29 @@ const viewTitles: Record<ModalView, string> = {
   "chat-create": "Create New Skill",
 };
 
-export default function AddSkillModal({ open, onClose }: AddSkillModalProps) {
-  const { state, dispatch } = useModalMachine();
+export default function AddSkillModal({
+  open,
+  onClose,
+  onBack,
+  initialSkill,
+  initialView,
+}: AddSkillModalProps) {
+  const { state, dispatch } = useModalMachine({ initialSkill, initialView });
 
   const handleClose = () => {
     dispatch({ type: "RESET" });
     onClose();
+  };
+
+  const handleBack = () => {
+    if (state.history.length > 0) {
+      dispatch({ type: "GO_BACK" });
+    } else if (onBack) {
+      dispatch({ type: "RESET" });
+      onBack();
+    } else {
+      handleClose();
+    }
   };
 
   const canGoBack = state.view !== "initial-choice";
@@ -42,12 +62,7 @@ export default function AddSkillModal({ open, onClose }: AddSkillModalProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {canGoBack && (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => dispatch({ type: "GO_BACK" })}
-                aria-label="Go back"
-              >
+              <Button variant="ghost" size="icon-xs" onClick={handleBack} aria-label="Go back">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             )}

@@ -53,7 +53,7 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
           ) : (
             <Copy className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
           )}
-          <h3 className="text-sm font-semibold text-foreground mb-1">Add Raw</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-1">Import</h3>
           <p className="text-xs text-muted-foreground">Add this skill as-is to your collection</p>
         </button>
 
@@ -64,7 +64,7 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
           <Edit className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
           <h3 className="text-sm font-semibold text-foreground mb-1">Customize Skill</h3>
           <p className="text-xs text-muted-foreground">
-            Modify this skill with AI assistance before adding
+            Modify this skill with and link it to your vault (AI)
           </p>
         </button>
       </div>

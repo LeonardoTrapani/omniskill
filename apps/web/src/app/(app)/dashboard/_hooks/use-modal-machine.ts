@@ -79,7 +79,18 @@ function reducer(state: ModalState, action: ModalAction): ModalState {
   }
 }
 
-export function useModalMachine() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+interface ModalMachineOptions {
+  initialSkill?: SelectedSkill | null;
+  initialView?: ModalView;
+}
+
+export function useModalMachine(options?: ModalMachineOptions) {
+  const init: ModalState = options?.initialSkill
+    ? { view: "add-options", selectedSkill: options.initialSkill, history: [] }
+    : options?.initialView
+      ? { view: options.initialView, selectedSkill: null, history: [] }
+      : initialState;
+
+  const [state, dispatch] = useReducer(reducer, init);
   return { state, dispatch };
 }
