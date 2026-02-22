@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import type { ComponentProps } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -46,7 +46,7 @@ function getSafeCallbackURL(next: string | null): string {
   return next;
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const { isPending } = authClient.useSession();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
@@ -137,5 +137,13 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

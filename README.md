@@ -78,3 +78,10 @@ omniscient/
 - `bun run db:migrate`: Run database migrations
 - `bun run db:studio`: Open database studio UI
 - `bun run check`: Run Oxlint and Oxfmt
+
+## CLI distribution
+
+- Installer command used on the landing page: `curl -fsSL https://omniscient.sh/install | bash`
+- Installer script source lives at `apps/web/public/install`
+- CLI binaries are published by GitHub Actions workflow `.github/workflows/release-cli.yml`
+- To publish a new CLI release, push a semver tag (for example: `git tag v0.1.0 && git push origin v0.1.0`)

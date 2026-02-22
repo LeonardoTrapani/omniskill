@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ function getErrorMessage(error: unknown, fallback: string) {
   );
 }
 
-export default function DeviceAuthorizationPage() {
+function DeviceAuthorizationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
@@ -216,5 +216,13 @@ export default function DeviceAuthorizationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function DeviceAuthorizationPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <DeviceAuthorizationContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { X, Menu, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import UserMenu from "@/components/user-menu";
@@ -23,7 +23,6 @@ const appNav = [
 export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -47,16 +46,16 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
 
   // read ?q= param to auto-open palette
   useEffect(() => {
-    const q = searchParams.get("q");
-    if (q && session) {
-      setCmdInitialSearch(q);
-      setCmdOpen(true);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("q");
-      const cleaned = params.toString() ? `${pathname}?${params}` : pathname;
-      window.history.replaceState(null, "", cleaned);
-    }
-  }, [searchParams, pathname, session]);
+    if (!session) return;
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    if (!q) return;
+    setCmdInitialSearch(q);
+    setCmdOpen(true);
+    params.delete("q");
+    const cleaned = params.toString() ? `${pathname}?${params}` : pathname;
+    window.history.replaceState(null, "", cleaned);
+  }, [pathname, session]);
 
   // global cmd+k listener
   useEffect(() => {

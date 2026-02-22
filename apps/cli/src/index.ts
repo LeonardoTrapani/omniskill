@@ -11,6 +11,7 @@ import { logoutCommand } from "./commands/logout";
 import { searchCommand } from "./commands/search";
 import { syncCommand } from "./commands/sync";
 import { whoamiCommand } from "./commands/whoami";
+import { getCliVersion } from "./lib/version";
 
 class UsageError extends Error {
   constructor(message: string) {
@@ -21,6 +22,8 @@ class UsageError extends Error {
 
 function printUsage() {
   p.log.info("usage:");
+  p.log.info("  omniscient --version");
+  p.log.info("  omniscient --help");
   p.log.info("  omniscient health");
   p.log.info("  omniscient login");
   p.log.info("  omniscient logout");
@@ -34,13 +37,24 @@ function printUsage() {
   p.log.info("  omniscient import <slug-or-uuid> [--slug <new-slug>]");
 }
 
+function printVersion() {
+  p.log.info(`omniscient ${getCliVersion()}`);
+}
+
 async function run(args: string[]) {
-  if (args.length === 0) {
+  const firstArg = args[0];
+
+  if (!firstArg || firstArg === "--help" || firstArg === "-h" || firstArg === "help") {
     printUsage();
     return;
   }
 
-  switch (args[0]) {
+  if (firstArg === "--version" || firstArg === "-v" || firstArg === "version") {
+    printVersion();
+    return;
+  }
+
+  switch (firstArg) {
     case "health":
       await healthCommand();
       return;
@@ -75,7 +89,7 @@ async function run(args: string[]) {
       await importCommand();
       return;
     default:
-      throw new UsageError(`unknown command: ${args[0]}`);
+      throw new UsageError(`unknown command: ${firstArg}`);
   }
 }
 

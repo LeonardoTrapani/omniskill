@@ -20,6 +20,12 @@ SERVER_URL=http://localhost:3000
 bun cli
 ```
 
+Show CLI version:
+
+```bash
+bun cli --version
+```
+
 Or with file watching via turbo:
 
 ```bash

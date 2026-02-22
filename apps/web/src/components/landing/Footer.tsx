@@ -3,11 +3,11 @@
 import Link from "next/link";
 
 const footerLinks = [
-  { label: "Skills", href: "/skills" },
-  { label: "Docs", href: "#docs" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Github", href: "#github" },
-];
+  { label: "Skills", href: "/skills", type: "route" },
+  { label: "Docs", href: "#docs", type: "anchor" },
+  { label: "Pricing", href: "#pricing", type: "anchor" },
+  { label: "Github", href: "#github", type: "anchor" },
+] as const;
 
 export default function Footer() {
   return (
@@ -26,15 +26,25 @@ export default function Footer() {
 
             {/* Right side - nav links */}
             <div className="flex flex-wrap items-center gap-6">
-              {footerLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {footerLinks.map((link) =>
+                link.type === "route" ? (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
+                  >
+                    {link.label}
+                  </a>
+                ),
+              )}
             </div>
           </div>
         </div>

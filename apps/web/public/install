@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO="${OMNISCIENT_REPO:-LeonardoTrapani/omniscient}"
+INSTALL_DIR="${OMNISCIENT_INSTALL_DIR:-$HOME/.local/bin}"
+DEFAULT_SERVER_URL="${OMNISCIENT_SERVER_URL:-https://api.omniscient.sh}"
+VERSION="latest"
+BIN_NAME="omniscient"
+
+usage() {
+  cat <<'EOF'
+install omniscient cli
+
+usage:
+  curl -fsSL https://omniscient.sh/install | bash
+  curl -fsSL https://omniscient.sh/install | bash -s -- --version v0.1.0
+
+options:
+  --version <tag>       install a specific release tag (default: latest)
+  --repo <owner/repo>   github repo to download releases from
+  --install-dir <path>  directory to install the binary into
+  --server-url <url>    default server url baked into wrapper
+  -h, --help            show this help
+EOF
+}
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    printf 'missing required command: %s\n' "$1" >&2
+    exit 1
+  fi
+}
+
+read_arg_value() {
+  local flag="$1"
+  local value="${2:-}"
+
+  if [[ -z "$value" || "$value" == --* ]]; then
+    printf 'missing value for %s\n' "$flag" >&2
+    exit 1
+  fi
+
+  printf '%s' "$value"
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --version)
+      VERSION="$(read_arg_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --repo)
+      REPO="$(read_arg_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --install-dir)
+      INSTALL_DIR="$(read_arg_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --server-url)
+      DEFAULT_SERVER_URL="$(read_arg_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'unknown option: %s\n\n' "$1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+require_cmd curl
+require_cmd uname
+require_cmd mktemp
+require_cmd chmod
+require_cmd mkdir
+require_cmd mv
+require_cmd sed
+
+os_raw="$(uname -s)"
+arch_raw="$(uname -m)"
+
+case "$os_raw" in
+  Linux) os="linux" ;;
+  Darwin) os="darwin" ;;
+  *)
+    printf 'unsupported operating system: %s\n' "$os_raw" >&2
+    exit 1
+    ;;
+esac
+
+case "$arch_raw" in
+  x86_64 | amd64) arch="x64" ;;
+  arm64 | aarch64) arch="arm64" ;;
+  *)
+    printf 'unsupported cpu architecture: %s\n' "$arch_raw" >&2
+    exit 1
+    ;;
+esac
+
+if [[ "$VERSION" == "latest" ]]; then
+  release_json="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${REPO}/releases/latest")"
+  VERSION="$(
+    printf '%s' "$release_json" | sed -n '/"tag_name"/ { s/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/; p; q; }'
+  )"
+
+  if [[ -z "$VERSION" ]]; then
+    printf 'could not resolve latest release from github for %s\n' "$REPO" >&2
+    exit 1
+  fi
+elif [[ "$VERSION" != v* ]]; then
+  VERSION="v${VERSION}"
+fi
+
+asset_name="${BIN_NAME}-${os}-${arch}"
+download_url="https://github.com/${REPO}/releases/download/${VERSION}/${asset_name}"
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+tmp_binary="${tmp_dir}/${asset_name}"
+tmp_wrapper="${tmp_dir}/${BIN_NAME}"
+
+printf 'downloading %s (%s)\n' "$asset_name" "$VERSION"
+curl -fL "$download_url" -o "$tmp_binary"
+chmod +x "$tmp_binary"
+
+mkdir -p "$INSTALL_DIR"
+
+target_binary="${INSTALL_DIR}/.${BIN_NAME}-bin"
+target_wrapper="${INSTALL_DIR}/${BIN_NAME}"
+
+mv "$tmp_binary" "$target_binary"
+
+cat >"$tmp_wrapper" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+SERVER_URL="\${SERVER_URL:-${DEFAULT_SERVER_URL}}" OMNISCIENT_VERSION="${VERSION}" exec "${target_binary}" "\$@"
+EOF
+
+chmod +x "$tmp_wrapper"
+mv "$tmp_wrapper" "$target_wrapper"
+
+printf 'installed %s %s to %s\n' "$BIN_NAME" "$VERSION" "$target_wrapper"
+
+case ":$PATH:" in
+  *":${INSTALL_DIR}:"*)
+    ;;
+  *)
+    printf 'add %s to your PATH to run %s from anywhere\n' "$INSTALL_DIR" "$BIN_NAME"
+    ;;
+esac
+
+printf 'run `%s --version` to verify\n' "$BIN_NAME"
