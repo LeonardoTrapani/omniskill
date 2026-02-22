@@ -25,9 +25,12 @@ const viewTitles: Record<ModalView, string> = {
   "initial-choice": "Add New Skill",
   "browse-existing": "Browse Skills",
   "add-options": "Add Skill",
-  "chat-customize": "Customize Skill",
   "chat-create": "Create New Skill",
 };
+
+function buildCustomizeStartPrompt(skill: SelectedSkill) {
+  return `I found skill "${skill.name}" (${skill.slug}) and I would like to integrate it into ...`;
+}
 
 export default function AddSkillModal({
   open,
@@ -84,11 +87,14 @@ export default function AddSkillModal({
           {state.view === "add-options" && state.selectedSkill && (
             <AddOptionsView skill={state.selectedSkill} dispatch={dispatch} onClose={handleClose} />
           )}
-          {(state.view === "chat-customize" || state.view === "chat-create") && (
+          {state.view === "chat-create" && (
             <ChatView
-              mode={state.view === "chat-customize" ? "customize" : "create"}
               selectedSkill={state.selectedSkill}
-              initialInput={state.view === "chat-create" ? initialPrompt : undefined}
+              initialInput={
+                state.selectedSkill
+                  ? buildCustomizeStartPrompt(state.selectedSkill)
+                  : (initialPrompt ?? undefined)
+              }
             />
           )}
         </div>

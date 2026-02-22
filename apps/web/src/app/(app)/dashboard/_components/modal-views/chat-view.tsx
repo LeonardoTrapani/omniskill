@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   CheckCircle2,
   ChevronRight,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isToolUIPart, type UIMessage } from "ai";
+import { useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -31,12 +32,15 @@ import {
   PromptInputTextarea,
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
+import { cn } from "@/lib/utils";
+import { trpc } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
 interface ChatViewProps {
-  mode: "customize" | "create";
   selectedSkill: SelectedSkill | null;
   initialInput?: string;
+  height?: number;
+  className?: string;
 }
 
 type TextPart = {
@@ -51,6 +55,13 @@ const TOOL_LABELS: Record<string, string> = {
   update_skill: "update skill",
   duplicate_skill: "duplicate skill",
 };
+
+const GRAPH_MUTATION_TOOLS = new Set([
+  "create_skill",
+  "update_skill",
+  "delete_skill",
+  "duplicate_skill",
+]);
 
 function formatJson(value: unknown): string {
   if (value === undefined) return "";
@@ -224,16 +235,23 @@ function renderMessagePart(
   return null;
 }
 
-function buildInitialAssistantMessage(mode: "customize" | "create") {
-  if (mode === "customize") {
-    return "What would you like to edit about that skill?";
+function buildInitialAssistantMessage(selectedSkill: SelectedSkill | null) {
+  if (selectedSkill) {
+    return `Great, we can work from "${selectedSkill.name}". Tell me the outcome you want, and I will propose import, link, and custom options before writing.`;
   }
 
   return "Tell me what skill you want. I will search for existing options first, propose import/link/create paths, and only create after your explicit sign-off.";
 }
 
-export default function ChatView({ mode, selectedSkill, initialInput }: ChatViewProps) {
+export default function ChatView({
+  selectedSkill,
+  initialInput,
+  height,
+  className,
+}: ChatViewProps) {
+  const queryClient = useQueryClient();
   const [input, setInput] = useState(initialInput ?? "");
+  const handledMutationToolCallsRef = useRef<Set<string>>(new Set());
 
   const markdownComponents = useMemo(
     () =>
@@ -247,22 +265,22 @@ export default function ChatView({ mode, selectedSkill, initialInput }: ChatView
 
   useEffect(() => {
     setInput(initialInput ?? "");
-  }, [initialInput, mode]);
+  }, [initialInput]);
 
   const initialMessages = useMemo<UIMessage[]>(
     () => [
       {
-        id: `init-${mode}`,
+        id: `init-${selectedSkill?.id ?? "create"}`,
         role: "assistant",
         parts: [
           {
             type: "text",
-            text: buildInitialAssistantMessage(mode),
+            text: buildInitialAssistantMessage(selectedSkill),
           },
         ],
       },
     ],
-    [mode],
+    [selectedSkill],
   );
 
   const transport = useMemo(
@@ -275,18 +293,54 @@ export default function ChatView({ mode, selectedSkill, initialInput }: ChatView
             messages,
             trigger,
             messageId,
-            mode,
             selectedSkill,
           },
         }),
       }),
-    [mode, selectedSkill],
+    [selectedSkill],
   );
 
   const { messages, sendMessage, status, error } = useChat<UIMessage>({
     messages: initialMessages,
     transport,
   });
+
+  useEffect(() => {
+    let shouldInvalidateGraph = false;
+
+    for (const message of messages) {
+      for (const part of message.parts) {
+        if (!isToolUIPart(part) || part.state !== "output-available") {
+          continue;
+        }
+
+        const toolName = part.type.replace("tool-", "");
+        if (!GRAPH_MUTATION_TOOLS.has(toolName)) {
+          continue;
+        }
+
+        const output = (part as { output?: { ok?: boolean } }).output;
+        if (output?.ok === false) {
+          continue;
+        }
+
+        const toolCallKey = part.toolCallId ?? `${message.id}:${part.type}`;
+        if (handledMutationToolCallsRef.current.has(toolCallKey)) {
+          continue;
+        }
+
+        handledMutationToolCallsRef.current.add(toolCallKey);
+        shouldInvalidateGraph = true;
+      }
+    }
+
+    if (!shouldInvalidateGraph) {
+      return;
+    }
+
+    void queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+    void queryClient.invalidateQueries({ queryKey: trpc.skills.graphForSkill.queryKey() });
+  }, [messages, queryClient]);
 
   const handleSubmit = (message: PromptInputMessage) => {
     if (!message.text?.trim()) return;
@@ -295,16 +349,23 @@ export default function ChatView({ mode, selectedSkill, initialInput }: ChatView
   };
 
   return (
-    <div className="flex h-[60vh] flex-col overflow-hidden font-[family-name:var(--font-chat)]">
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden font-[family-name:var(--font-chat)]",
+        height ? "min-h-0" : "h-[60vh]",
+        className,
+      )}
+      style={height ? { height } : undefined}
+    >
       <Conversation className="min-h-0 flex-1">
         <ConversationContent className="gap-3 p-0">
           {messages.length === 0 && (
             <ConversationEmptyState
-              title={mode === "create" ? "Create a skill" : "Customize this skill"}
+              title={selectedSkill ? "Integrate this skill" : "Create a skill"}
               description={
-                mode === "create"
-                  ? "Describe what the skill should do, and the assistant will search before creating."
-                  : "Describe what to adjust, and the assistant will propose edits before writing."
+                selectedSkill
+                  ? "Describe what you want to build from this skill, and the assistant will search before creating."
+                  : "Describe what the skill should do, and the assistant will search before creating."
               }
             />
           )}
@@ -353,11 +414,7 @@ export default function ChatView({ mode, selectedSkill, initialInput }: ChatView
           <PromptInputTextarea
             value={input}
             onChange={(event) => setInput(event.currentTarget.value)}
-            placeholder={
-              mode === "create"
-                ? "Describe the outcome, trigger phrases, and any references to include..."
-                : "What should change: wording, links, resources, or structure?"
-            }
+            placeholder="Describe the outcome, trigger phrases, and any references to include..."
             className="max-h-32 min-h-10 text-[13px]"
           />
           <PromptInputFooter>

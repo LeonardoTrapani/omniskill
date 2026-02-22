@@ -6,7 +6,6 @@ import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage }
 import type { Context as HonoContext } from "hono";
 import { z } from "zod";
 
-const chatModeSchema = z.enum(["create", "customize"]);
 const visibilitySchema = z.enum(["public", "private"]);
 const resourceKindSchema = z.enum(["reference", "script", "asset", "other"]);
 
@@ -14,12 +13,11 @@ const selectedSkillSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   slug: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string(),
 });
 
 const chatRequestSchema = z.object({
   messages: z.array(z.unknown()),
-  mode: chatModeSchema.default("create"),
   selectedSkill: selectedSkillSchema.nullish(),
 });
 
@@ -73,7 +71,6 @@ const duplicateSkillInputSchema = z.object({
   slug: z.string().min(1).optional(),
 });
 
-type ChatMode = z.infer<typeof chatModeSchema>;
 type SelectedSkill = z.infer<typeof selectedSkillSchema>;
 
 function isTextPart(part: unknown): part is { type: "text"; text: string } {
@@ -119,27 +116,14 @@ function toSlug(input: string): string {
   return `skill-${Date.now()}`;
 }
 
-function buildSystemPrompt({
-  mode,
-  selectedSkill,
-}: {
-  mode: ChatMode;
-  selectedSkill: SelectedSkill | null;
-}) {
-  const modeInstructions =
-    mode === "customize"
-      ? [
-          "Customization mode is active.",
-          "The selected skill is inspiration-first: treat it as the base to fork, adapt, or split.",
-          "Your first assistant response must be exactly: What would you like to edit about that skill?",
-          "After that, ask focused follow-ups and propose a concrete change set before any write action.",
-          "If the user wants to edit the selected public skill, duplicate it into their private vault first.",
-        ].join("\n")
-      : [
-          "Creation mode is active.",
-          "Always start by asking what outcome the user wants, then search for existing skills before creating anything new.",
-          "Offer options: import as-is, link to an existing skill/resource, or create from scratch.",
-        ].join("\n");
+function buildSystemPrompt({ selectedSkill }: { selectedSkill: SelectedSkill | null }) {
+  const selectedSkillInstructions = selectedSkill
+    ? [
+        "A selected skill was provided by the UI.",
+        "Treat it as context the user may want to import, link, adapt, or extend.",
+        "If they want to build from it, inspect it with get_skill before proposing write actions.",
+      ].join("\n")
+    : "No selected skill context was provided.";
 
   const selectedSkillContext = selectedSkill
     ? [
@@ -161,6 +145,11 @@ function buildSystemPrompt({
     "4) iterate -> collect feedback and revise",
     "5) execute -> only after explicit user sign-off",
     "",
+    "Conversation behavior:",
+    "- Start by clarifying the outcome and constraints.",
+    "- Search existing skills before proposing a new one.",
+    "- Offer options: import as-is, link to existing skills/resources, or create from scratch.",
+    "",
     "Skill authoring constraints:",
     "- Keep SKILL.md concise and procedural.",
     "- Include YAML frontmatter with name and description semantics reflected in skill metadata.",
@@ -177,7 +166,7 @@ function buildSystemPrompt({
     "- Before execution, present a short final plan with slug, visibility, resources, and link targets.",
     "- After execution, summarize what was created/changed and what links/resources were included.",
     "",
-    modeInstructions,
+    selectedSkillInstructions,
     selectedSkillContext,
   ]
     .filter(Boolean)
@@ -210,12 +199,7 @@ export async function handleChatRequest(c: HonoContext) {
     );
   }
 
-  const mode = parsed.data.mode;
   const selectedSkill = parsed.data.selectedSkill ?? null;
-
-  if (mode === "customize" && !selectedSkill) {
-    return c.json({ error: "selectedSkill is required in customize mode" }, 400);
-  }
 
   const context = await createContext({ context: c });
   if (!context.session) {
@@ -230,7 +214,7 @@ export async function handleChatRequest(c: HonoContext) {
 
   const result = streamText({
     model: google(env.GOOGLE_GENERATIVE_AI_MODEL),
-    system: buildSystemPrompt({ mode, selectedSkill }),
+    system: buildSystemPrompt({ selectedSkill }),
     messages: modelMessages,
     stopWhen: stepCountIs(10),
     tools: {
@@ -264,7 +248,7 @@ export async function handleChatRequest(c: HonoContext) {
 
       get_skill: tool({
         description:
-          "Get full skill content (markdown + resources) by id or slug. In customize mode it defaults to the selected skill.",
+          "Get full skill content (markdown + resources) by id or slug. If no input is provided, it falls back to selectedSkill when available.",
         inputSchema: getSkillInputSchema,
         execute: async (input) => {
           try {
@@ -272,14 +256,15 @@ export async function handleChatRequest(c: HonoContext) {
               ? await caller.skills.getById({ id: input.id })
               : input.slug
                 ? await caller.skills.getBySlug({ slug: input.slug })
-                : mode === "customize" && selectedSkill
+                : selectedSkill
                   ? await caller.skills.getById({ id: selectedSkill.id })
                   : null;
 
             if (!skill) {
               return {
                 ok: false,
-                error: "Provide id or slug. In customize mode, selected skill is used by default.",
+                error:
+                  "Provide id or slug. If selected skill context is present it will be used by default.",
               };
             }
 
@@ -337,7 +322,6 @@ export async function handleChatRequest(c: HonoContext) {
               },
               metadata: {
                 source: "ai-chat",
-                mode,
               },
               sourceIdentifier: input.sourceIdentifier ?? "ai-chat",
               resources: input.resources,
@@ -362,7 +346,7 @@ export async function handleChatRequest(c: HonoContext) {
 
       update_skill: tool({
         description:
-          "Update an existing skill. In customize mode, id defaults to selected skill id. Use only after user sign-off.",
+          "Update an existing skill. If selected skill context exists, id defaults to that skill. Use only after user sign-off.",
         inputSchema: updateSkillInputSchema,
         execute: async (input) => {
           if (!canWrite) {
@@ -373,7 +357,7 @@ export async function handleChatRequest(c: HonoContext) {
             };
           }
 
-          const targetId = input.id ?? (mode === "customize" ? selectedSkill?.id : undefined);
+          const targetId = input.id ?? selectedSkill?.id;
           if (!targetId) {
             return { ok: false, error: "Skill id is required for updates." };
           }
@@ -405,7 +389,6 @@ export async function handleChatRequest(c: HonoContext) {
                 : {}),
               metadata: {
                 source: "ai-chat",
-                mode,
               },
             });
 

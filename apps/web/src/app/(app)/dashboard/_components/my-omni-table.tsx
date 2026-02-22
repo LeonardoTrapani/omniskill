@@ -40,15 +40,8 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
       className={cn("border border-border flex flex-col min-h-0", className)}
       style={height ? { height } : undefined}
     >
-      {/* Title */}
-      <div className="px-6 md:px-8 pt-8 pb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
-          MY OMNI
-        </h2>
-      </div>
-
       {/* Search */}
-      <div className="px-6 md:px-8 pb-6">
+      <div className="px-6 md:px-8 pt-6 pb-6">
         <div className="flex items-center gap-3 border border-border px-4 py-3 focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input

@@ -1,11 +1,6 @@
 import { useReducer } from "react";
 
-export type ModalView =
-  | "initial-choice"
-  | "browse-existing"
-  | "add-options"
-  | "chat-customize"
-  | "chat-create";
+export type ModalView = "initial-choice" | "browse-existing" | "add-options" | "chat-create";
 
 export interface SelectedSkill {
   id: string;
@@ -58,7 +53,7 @@ function reducer(state: ModalState, action: ModalAction): ModalState {
     case "CUSTOMIZE_SKILL":
       return {
         ...state,
-        view: "chat-customize",
+        view: "chat-create",
         history: [...state.history, state.view],
       };
     case "GO_BACK": {
