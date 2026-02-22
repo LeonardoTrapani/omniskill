@@ -19,7 +19,12 @@
     "PGHOST",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
-    "REGOLO_API_KEY"
+    "REGOLO_API_KEY",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "CORS_ORIGIN",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "POSTGRES_DATABASE"
   ],
   "tasks": {
     "build": {
