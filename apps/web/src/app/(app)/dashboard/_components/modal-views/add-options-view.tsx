@@ -1,7 +1,7 @@
 "use client";
 
 import { type Dispatch } from "react";
-import { Copy, Sparkles, Loader2 } from "lucide-react";
+import { Copy, Sparkles, Loader2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 
@@ -20,8 +20,12 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
   const duplicateMutation = useMutation(
     trpc.skills.duplicate.mutationOptions({
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.listByOwner.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.graph.queryKey(),
+        });
         toast.success(`"${skill.name}" added to your collection`);
         onClose();
       },
@@ -57,7 +61,7 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
           onClick={() => dispatch({ type: "CUSTOMIZE_SKILL" })}
           className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group"
         >
-          <Sparkles className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
+          <Edit className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
           <h3 className="text-sm font-semibold text-foreground mb-1">Customize Skill</h3>
           <p className="text-xs text-muted-foreground">
             Modify this skill with AI assistance before adding

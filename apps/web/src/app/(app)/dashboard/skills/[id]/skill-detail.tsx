@@ -291,9 +291,19 @@ export default function SkillDetail({ id }: { id: string }) {
                   aria-labelledby="skill-content-tab-graph"
                   className={mobileContentTab === "graph" ? "lg:hidden" : "hidden"}
                 >
-                  <div className="flex min-h-[280px] h-[45vh] items-center justify-center border border-dashed border-primary/30 bg-primary/5 p-4 text-center text-sm text-primary/80">
-                    Graph canvas coming soon
-                  </div>
+                  {graphQuery.isLoading && (
+                    <div className="flex items-center justify-center h-[45vh] min-h-[280px]">
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                  {graphQuery.isError && (
+                    <div className="flex items-center justify-center h-[45vh] min-h-[280px]">
+                      <p className="text-sm text-muted-foreground">Failed to load graph</p>
+                    </div>
+                  )}
+                  {graphQuery.data && (
+                    <ForceGraph data={graphQuery.data} focusNodeId={id} height={400} />
+                  )}
                 </div>
               </CardContent>
             </Card>
