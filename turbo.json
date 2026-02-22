@@ -1,6 +1,26 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "NEON_PROJECT_ID",
+    "PGDATABASE",
+    "DATABASE_URL_UNPOOLED",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_HOST",
+    "POSTGRES_URL_NO_SSL",
+    "PGUSER",
+    "POSTGRES_URL",
+    "POSTGRES_URL_NON_POOLING",
+    "PGPASSWORD",
+    "DATABASE_URL",
+    "POSTGRES_USER",
+    "PGHOST_UNPOOLED",
+    "POSTGRES_PRISMA_URL",
+    "PGHOST",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "REGOLO_API_KEY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
