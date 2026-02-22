@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "hono",
-  "installCommand": "bun install",
-  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then bun run --filter @omniscient/db db:migrate; fi && bun run --filter server build"
+  "installCommand": "ROOT=.; [ -f turbo.json ] || ROOT=../..; bun install --cwd \"$ROOT\" --frozen-lockfile",
+  "buildCommand": "ROOT=.; [ -f turbo.json ] || ROOT=../..; if [ \"$VERCEL_ENV\" = \"production\" ]; then bun run --cwd \"$ROOT\" db:migrate; fi && bun run --cwd \"$ROOT\" build --filter=server"
 }
