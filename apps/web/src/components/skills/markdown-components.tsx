@@ -12,16 +12,22 @@ export function createMarkdownComponents(options: {
 
   return {
     h1: (props: ComponentPropsWithoutRef<"h1">) => (
-      <h1 className="text-4xl font-semibold tracking-tight mt-8 mb-4 first:mt-0" {...props} />
+      <h1
+        className="mt-8 mb-4 text-3xl font-semibold tracking-tight break-words first:mt-0 sm:text-4xl"
+        {...props}
+      />
     ),
     h2: (props: ComponentPropsWithoutRef<"h2">) => (
-      <h2 className="text-2xl font-semibold tracking-tight mt-7 mb-3" {...props} />
+      <h2
+        className="mt-7 mb-3 text-xl font-semibold tracking-tight break-words sm:text-2xl"
+        {...props}
+      />
     ),
     h3: (props: ComponentPropsWithoutRef<"h3">) => (
-      <h3 className="text-xl font-medium mt-6 mb-2" {...props} />
+      <h3 className="mt-6 mb-2 text-lg font-medium break-words sm:text-xl" {...props} />
     ),
     p: (props: ComponentPropsWithoutRef<"p">) => (
-      <p className="text-sm text-foreground/95 leading-7 mb-4" {...props} />
+      <p className="mb-4 text-sm leading-7 text-foreground/95 break-words" {...props} />
     ),
     ul: (props: ComponentPropsWithoutRef<"ul">) => (
       <ul className="list-disc ml-6 space-y-2 text-sm mb-4" {...props} />
@@ -49,7 +55,7 @@ export function createMarkdownComponents(options: {
 
       return (
         <a
-          className="text-primary underline underline-offset-4"
+          className="text-primary underline underline-offset-4 break-all"
           target="_blank"
           rel="noreferrer"
           href={href}
@@ -59,6 +65,9 @@ export function createMarkdownComponents(options: {
         </a>
       );
     },
+    pre: (props: ComponentPropsWithoutRef<"pre">) => (
+      <pre className="max-w-full overflow-x-auto" {...props} />
+    ),
     table: (props: ComponentPropsWithoutRef<"table">) => (
       <div className="overflow-x-auto border border-border my-4">
         <table className="w-full text-sm" {...props} />

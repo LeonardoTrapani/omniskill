@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowUpRight, FileText, FolderTree, Network } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { createMarkdownComponents } from "@/components/skills/markdown-components";
+import { DownloadContentButton } from "@/components/skills/download-content-button";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+import {
+  canRenderResourceAsMarkdown,
+  getResourceDownloadName,
+  getResourceMimeType,
+} from "@/components/skills/resource-file";
 import { buildResourceHref } from "@/components/skills/resource-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +43,7 @@ export default function ResourceDetail({
     trpc.skills.getResourceBySkillIdAndPath.queryOptions({ skillId, resourcePath }),
   );
   const skillQuery = useQuery(trpc.skills.getById.queryOptions({ id: skillId }));
+  const [mobileContentTab, setMobileContentTab] = useState<"markdown" | "graph">("markdown");
 
   const resources = skillQuery.data?.resources ?? [];
   const resourcesById = useMemo(
@@ -83,11 +90,12 @@ export default function ResourceDetail({
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
+    setMobileContentTab("markdown");
   }, [skillId, resourcePath]);
 
   if (resourceQuery.isLoading) {
     return (
-      <main className="min-h-screen bg-background px-6 py-8 md:px-10">
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
         <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-8">
             <Skeleton className="h-36 w-full" />
@@ -103,7 +111,7 @@ export default function ResourceDetail({
 
   if (resourceQuery.isError || !resourceQuery.data) {
     return (
-      <main className="min-h-screen bg-background px-6 py-8 md:px-10">
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
         <div className="mx-auto w-full max-w-4xl">
           <Card>
             <CardHeader>
@@ -127,9 +135,13 @@ export default function ResourceDetail({
   }
 
   const resource = resourceQuery.data;
+  const parentSkillName = skillQuery.data?.name ?? resource.skillName;
+  const resourceDownloadName = getResourceDownloadName(resource.path, `${resource.id}.txt`);
+  const resourceMimeType = getResourceMimeType(resource.path);
+  const canRenderMarkdown = canRenderResourceAsMarkdown(resource.path, resource.kind);
 
   return (
-    <main className="min-h-screen bg-background px-6 py-8 md:px-10">
+    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10 overflow-x-hidden">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-4 flex flex-wrap gap-2">
           <Link href={"/dashboard" as Route}>
@@ -147,52 +159,130 @@ export default function ResourceDetail({
         </div>
 
         <div className="grid gap-6 lg:grid-cols-12">
-          <section className="space-y-6 lg:col-span-8">
+          <section className="min-w-0 space-y-6 lg:col-span-8">
             <Card>
               <CardHeader>
-                <CardDescription>skills / {resource.skillSlug}</CardDescription>
-                <CardTitle className="text-3xl leading-tight text-primary">
-                  {skillQuery.data?.name ?? resource.skillName}
+                <CardDescription className="flex w-full justify-between">
+                  <div>resource / {resource.kind}</div>
+                  <DownloadContentButton
+                    content={resource.content}
+                    fileName={resourceDownloadName}
+                    mimeType={resourceMimeType}
+                    variant="outline"
+                    size="sm"
+                    label="Download"
+                  />
+                </CardDescription>
+                <CardTitle className="text-2xl leading-tight sm:text-3xl break-words">
+                  {resource.path}
                 </CardTitle>
-                {skillQuery.data?.description ? (
-                  <p className="text-muted-foreground text-sm break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3] overflow-hidden">
-                    {skillQuery.data.description}
-                  </p>
-                ) : null}
+                <p className="text-muted-foreground text-sm break-words">
+                  Child resource of{" "}
+                  <Link
+                    href={`/dashboard/skills/${resource.skillId}` as Route}
+                    className="text-primary underline underline-offset-4"
+                  >
+                    {parentSkillName}
+                  </Link>
+                  .
+                </p>
                 <div className="flex flex-wrap items-center gap-2 pt-2">
-                  {skillQuery.data?.visibility ? (
-                    <Badge variant="outline">{skillQuery.data.visibility}</Badge>
-                  ) : null}
-                  <Badge variant="secondary">{resources.length} resources</Badge>
-                  {skillQuery.data?.sourceIdentifier ? (
-                    <Badge variant="outline">{skillQuery.data.sourceIdentifier}</Badge>
-                  ) : null}
+                  <Badge variant="secondary">{resource.kind} resource</Badge>
+                  <Badge variant="outline">Updated {formatDate(resource.updatedAt)}</Badge>
                 </div>
               </CardHeader>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FileText className="size-4" aria-hidden="true" />
-                  {resource.path}
-                </CardTitle>
-                <div className="pt-1">
-                  <Badge variant="secondary">{resource.kind} resource</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <article className="min-w-0 break-words">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={markdownComponents}
-                    urlTransform={markdownUrlTransform}
+            <div
+              className="mb-0 grid grid-cols-2 border-x border-t border-border lg:hidden"
+              role="tablist"
+              aria-label="Resource content tabs"
+            >
+              <button
+                type="button"
+                id="resource-content-tab-markdown"
+                role="tab"
+                aria-controls="resource-content-panel-markdown"
+                aria-selected={mobileContentTab === "markdown"}
+                className={`h-11 w-full border-r border-border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                  mobileContentTab === "markdown"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setMobileContentTab("markdown")}
+              >
+                {canRenderMarkdown ? "Markdown" : "Download"}
+              </button>
+              <button
+                type="button"
+                id="resource-content-tab-graph"
+                role="tab"
+                aria-controls="resource-content-panel-graph"
+                aria-selected={mobileContentTab === "graph"}
+                className={`h-11 w-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                  mobileContentTab === "graph"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setMobileContentTab("graph")}
+              >
+                Graph
+              </button>
+            </div>
+
+            {canRenderMarkdown ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="hidden items-start gap-2 text-base min-w-0 lg:flex">
+                    <FileText className="size-4" aria-hidden="true" />
+                    <span>Resource Content</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="min-w-0 overflow-hidden">
+                  <div
+                    id="resource-content-panel-markdown"
+                    role="tabpanel"
+                    aria-labelledby="resource-content-tab-markdown"
+                    className={mobileContentTab === "markdown" ? "" : "hidden lg:block"}
                   >
-                    {resource.content}
-                  </ReactMarkdown>
-                </article>
-              </CardContent>
-            </Card>
+                    <article className="min-w-0 break-words">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={markdownComponents}
+                        urlTransform={markdownUrlTransform}
+                      >
+                        {resource.content}
+                      </ReactMarkdown>
+                    </article>
+                  </div>
+
+                  <div
+                    id="resource-content-panel-graph"
+                    role="tabpanel"
+                    aria-labelledby="resource-content-tab-graph"
+                    className={mobileContentTab === "graph" ? "lg:hidden" : "hidden"}
+                  >
+                    <div className="flex min-h-[280px] h-[45vh] items-center justify-center border border-dashed border-primary/30 bg-primary/5 p-4 text-center text-sm text-primary/80">
+                      Graph canvas coming soon
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex min-h-[180px] flex-col items-start justify-center gap-3 border border-dashed border-border p-4">
+                <p className="text-sm text-muted-foreground">
+                  This resource type is not shown as markdown.
+                </p>
+                <DownloadContentButton
+                  content={resource.content}
+                  fileName={resourceDownloadName}
+                  mimeType={resourceMimeType}
+                  variant="outline"
+                  size="sm"
+                  label="Download"
+                />
+              </div>
+            )}
 
             <Card>
               <CardHeader>
@@ -209,14 +299,24 @@ export default function ResourceDetail({
                   <div className="space-y-2">
                     {resources.map((item) => (
                       <div key={item.id} className="border border-border px-3 py-2">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <Link
                             href={buildResourceHref(skillId, item.path)}
-                            className="text-sm min-w-0 truncate text-primary underline underline-offset-4"
+                            className="text-sm min-w-0 break-all text-primary underline underline-offset-4"
                           >
                             {item.path}
                           </Link>
-                          <Badge variant="outline">{item.kind}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{item.kind}</Badge>
+                            <DownloadContentButton
+                              content={item.content}
+                              fileName={getResourceDownloadName(item.path, `${item.id}.txt`)}
+                              mimeType={getResourceMimeType(item.path)}
+                              iconOnly
+                              label="Download"
+                              variant="outline"
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -226,37 +326,37 @@ export default function ResourceDetail({
             </Card>
           </section>
 
-          <aside className="space-y-6 lg:col-span-4">
+          <aside className="min-w-0 space-y-6 lg:col-span-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Resource Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="grid grid-cols-[112px_1fr] gap-2 text-sm">
+                <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
                   <p className="text-muted-foreground">Kind</p>
                   <p>{resource.kind}</p>
                 </div>
-                <div className="grid grid-cols-[112px_1fr] gap-2 text-sm">
+                <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
                   <p className="text-muted-foreground">Path</p>
-                  <p className="break-words">{resource.path}</p>
+                  <p className="break-all">{resource.path}</p>
                 </div>
-                <div className="grid grid-cols-[112px_1fr] gap-2 text-sm">
+                <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
                   <p className="text-muted-foreground">Parent Skill</p>
                   <Link
                     href={`/dashboard/skills/${resource.skillId}` as Route}
-                    className="text-primary underline underline-offset-4"
+                    className="break-words text-primary underline underline-offset-4"
                   >
-                    {resource.skillName}
+                    {parentSkillName}
                   </Link>
                 </div>
-                <div className="grid grid-cols-[112px_1fr] gap-2 text-sm">
+                <div className="grid gap-1 text-sm sm:grid-cols-[112px_1fr] sm:gap-2">
                   <p className="text-muted-foreground">Updated</p>
                   <p>{formatDate(resource.updatedAt)}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="lg:sticky lg:top-6">
+            <Card className="hidden lg:flex lg:sticky lg:top-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Network className="size-4" aria-hidden="true" />
@@ -265,7 +365,7 @@ export default function ResourceDetail({
                 <CardDescription>Graph visualization placeholder.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border border-dashed border-primary/30 bg-primary/5 text-primary/80 flex h-[calc(100vh-8.5rem)] min-h-[480px] items-center justify-center text-center text-sm p-4">
+                <div className="flex min-h-[280px] h-[50vh] items-center justify-center border border-dashed border-primary/30 bg-primary/5 p-4 text-center text-sm text-primary/80 lg:h-[calc(100vh-8.5rem)] lg:min-h-[480px]">
                   Graph canvas coming soon
                 </div>
               </CardContent>

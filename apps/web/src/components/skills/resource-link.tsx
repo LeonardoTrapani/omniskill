@@ -7,7 +7,13 @@ import { FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { DownloadContentButton } from "@/components/skills/download-content-button";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+import {
+  canRenderResourceAsMarkdown,
+  getResourceDownloadName,
+  getResourceMimeType,
+} from "@/components/skills/resource-file";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +61,9 @@ export function ResourceHoverLink({
 }) {
   const preview = resource.content.trim();
   const snippet = preview.length > 240 ? `${preview.slice(0, 240)}...` : preview;
+  const supportsMarkdownPreview = canRenderResourceAsMarkdown(resource.path, resource.kind);
+  const downloadName = getResourceDownloadName(resource.path, `${resource.id}.txt`);
+  const mimeType = getResourceMimeType(resource.path);
 
   return (
     <HoverCard openDelay={120} closeDelay={80}>
@@ -70,7 +79,17 @@ export function ResourceHoverLink({
         <div className="space-y-3 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <p className="font-medium text-sm truncate">{resource.path}</p>
-            <Badge variant="outline">{resource.kind}</Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge variant="outline">{resource.kind}</Badge>
+              <DownloadContentButton
+                content={resource.content}
+                fileName={downloadName}
+                mimeType={mimeType}
+                iconOnly
+                label="Download"
+                variant="outline"
+              />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">From skill: {skillName ?? "—"}</p>
           <Separator />
@@ -79,7 +98,11 @@ export function ResourceHoverLink({
               <FileText className="size-3" aria-hidden="true" />
               Resource preview
             </p>
-            {snippet ? (
+            {!supportsMarkdownPreview ? (
+              <p className="text-xs leading-5 whitespace-pre-wrap break-words">
+                Preview unavailable for this file type. Use download.
+              </p>
+            ) : snippet ? (
               <article className="prose prose-sm max-w-none overflow-hidden text-xs leading-5 prose-p:my-1 prose-code:rounded-none prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 [&_*]:max-w-full [&_a]:break-all [&_code]:break-words [&_p]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:whitespace-pre [&_ul]:pl-4 [&_ol]:pl-4">
                 <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={markdownUrlTransform}>
                   {snippet}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Geist_Mono, Google_Sans_Code } from "next/font/google";
+import { Fira_Mono, Geist_Mono, Google_Sans_Code } from "next/font/google";
 
 import "./globals.css";
 import Providers from "@/components/providers";
@@ -13,6 +13,12 @@ const geistMono = Geist_Mono({
 const googleSansCode = Google_Sans_Code({
   subsets: ["latin"],
   variable: "--font-google-sans-code",
+});
+
+const firaMono = Fira_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-fira-mono",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistMono.variable} ${googleSansCode.variable} antialiased`}>
+      <body
+        className={`${geistMono.variable} ${googleSansCode.variable} ${firaMono.variable} antialiased`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>
