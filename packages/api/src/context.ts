@@ -6,8 +6,20 @@ export type CreateContextOptions = {
   context: HonoContext;
 };
 
+type Session = {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
+} | null;
+
 export async function createContext({ context }: CreateContextOptions) {
-  const session = await auth.api.getSession({
+  const session = await (
+    auth.api as {
+      getSession: (input: { headers: Headers }) => Promise<Session>;
+    }
+  ).getSession({
     headers: context.req.raw.headers,
   });
   return {

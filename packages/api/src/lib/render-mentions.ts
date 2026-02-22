@@ -21,7 +21,8 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     const rows = await db
       .select({ id: skill.id, slug: skill.slug })
       .from(skill)
-      .where(inArray(skill.id, skillIds));
+      .where(inArray(skill.id, skillIds))
+      .execute();
     for (const row of rows) {
       skillSlugMap.set(row.id, row.slug);
     }
@@ -40,15 +41,17 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
         skillId: skillResource.skillId,
       })
       .from(skillResource)
-      .where(inArray(skillResource.id, resourceIds));
+      .where(inArray(skillResource.id, resourceIds))
+      .execute();
 
-    const parentSkillIds = [...new Set(rows.map((r) => r.skillId))];
+    const parentSkillIds = [...new Set(rows.map((r: { skillId: string }) => r.skillId))];
     const parentSkillSlugMap = new Map<string, string>();
     if (parentSkillIds.length > 0) {
       const parentRows = await db
         .select({ id: skill.id, slug: skill.slug })
         .from(skill)
-        .where(inArray(skill.id, parentSkillIds));
+        .where(inArray(skill.id, parentSkillIds))
+        .execute();
       for (const row of parentRows) {
         parentSkillSlugMap.set(row.id, row.slug);
       }

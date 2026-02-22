@@ -27,10 +27,14 @@ export async function syncAutoLinks(
   const mentions = parseMentions(markdown);
 
   // resolve the source skill's owner
-  const [sourceSkill] = await db
+  const sourceSkillRows = await db
     .select({ ownerUserId: skill.ownerUserId })
     .from(skill)
-    .where(eq(skill.id, sourceSkillId));
+    .where(eq(skill.id, sourceSkillId))
+    .limit(1)
+    .execute();
+
+  const sourceSkill = sourceSkillRows[0];
 
   if (!sourceSkill) return;
 
@@ -45,7 +49,8 @@ export async function syncAutoLinks(
     const rows = await db
       .select({ id: skill.id, ownerUserId: skill.ownerUserId })
       .from(skill)
-      .where(inArray(skill.id, skillMentionIds));
+      .where(inArray(skill.id, skillMentionIds))
+      .execute();
 
     for (const row of rows) {
       existingSkills.set(row.id, row.ownerUserId);
@@ -62,7 +67,8 @@ export async function syncAutoLinks(
       })
       .from(skillResource)
       .innerJoin(skill, eq(skillResource.skillId, skill.id))
-      .where(inArray(skillResource.id, resourceMentionIds));
+      .where(inArray(skillResource.id, resourceMentionIds))
+      .execute();
 
     for (const row of rows) {
       existingResources.set(row.id, row.ownerUserId);
@@ -87,7 +93,8 @@ export async function syncAutoLinks(
         eq(skillLink.sourceSkillId, sourceSkillId),
         sql`${skillLink.metadata}->>'origin' = 'markdown-auto'`,
       ),
-    );
+    )
+    .execute();
 
   if (validMentions.length === 0) return;
 
@@ -101,5 +108,5 @@ export async function syncAutoLinks(
     createdByUserId: userId,
   }));
 
-  await db.insert(skillLink).values(values);
+  await db.insert(skillLink).values(values).execute();
 }
