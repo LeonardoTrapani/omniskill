@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "hono",
   "installCommand": "bun install",
-  "buildCommand": "bun run --filter server build"
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then bun run db:migrate; fi && bun run --filter server build"
 }
