@@ -1,5 +1,4 @@
-import { createContext } from "@omniscient/api/context";
-import { appRouter } from "@omniscient/api/routers/index";
+import { appRouter, createContext } from "@omniscient/api";
 import { env } from "@omniscient/env/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
