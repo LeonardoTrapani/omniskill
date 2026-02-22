@@ -1,4 +1,4 @@
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { db } from "@omniscient/db";
 import { skill, skillResource } from "@omniscient/db/schema/skills";
@@ -34,33 +34,22 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     { resourcePath: string; skillSlug: string; skillId: string }
   >();
   if (resourceIds.length > 0) {
-    const rows = (await db
+    const rows = await db
       .select({
         id: skillResource.id,
         path: skillResource.path,
         skillId: skillResource.skillId,
+        skillSlug: skill.slug,
       })
       .from(skillResource)
+      .innerJoin(skill, eq(skill.id, skillResource.skillId))
       .where(inArray(skillResource.id, resourceIds))
-      .execute()) as Array<{ id: string; path: string; skillId: string }>;
-
-    const parentSkillIds = [...new Set(rows.map((r) => r.skillId))];
-    const parentSkillSlugMap = new Map<string, string>();
-    if (parentSkillIds.length > 0) {
-      const parentRows = (await db
-        .select({ id: skill.id, slug: skill.slug })
-        .from(skill)
-        .where(inArray(skill.id, parentSkillIds))
-        .execute()) as Array<{ id: string; slug: string }>;
-      for (const row of parentRows) {
-        parentSkillSlugMap.set(row.id, row.slug);
-      }
-    }
+      .execute();
 
     for (const row of rows) {
       resourceInfoMap.set(row.id, {
         resourcePath: row.path,
-        skillSlug: parentSkillSlugMap.get(row.skillId) ?? "(unknown skill)",
+        skillSlug: row.skillSlug,
         skillId: row.skillId,
       });
     }
