@@ -45,11 +45,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative overflow-hidden px-6 pb-2 pt-12 md:px-16">
+    <div className="relative overflow-hidden px-4 py-6 sm:px-6 lg:px-48">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_36%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
 
-      <div className="relative max-w-[1280px] mx-auto space-y-6">
+      <div className="relative max-w-7xl lg:max-w-full mx-auto space-y-6">
         {/*<PageHeroCard
           eyebrow="Workspace"
           title="Skill Graph & Vault"

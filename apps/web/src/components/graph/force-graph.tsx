@@ -4,15 +4,10 @@ import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { FileText } from "lucide-react";
 import * as d3 from "d3";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
+import { NodePreviewCard } from "@/components/graph/node-preview-card";
 import { buildResourceHref } from "@/components/skills/resource-link";
-import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export interface GraphNode extends d3.SimulationNodeDatum {
@@ -239,24 +234,20 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
     };
   }, [data, buildGraph]);
 
-  const snippet = hoveredNode?.contentSnippet
-    ? hoveredNode.contentSnippet.length > 240
-      ? `${hoveredNode.contentSnippet.slice(0, 240)}...`
-      : hoveredNode.contentSnippet
-    : null;
+  // Count resources connected to the hovered skill
+  const hoveredResourceCount = useMemo(() => {
+    if (!hoveredNode || hoveredNode.type !== "skill") return 0;
+    return data.edges.filter((e) => {
+      const sourceId = typeof e.source === "object" ? (e.source as GraphNode).id : e.source;
+      return sourceId === hoveredNode.id && e.kind === "parent";
+    }).length;
+  }, [hoveredNode, data.edges]);
 
-  const hoveredUpdatedAt = hoveredNode?.updatedAt
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(
-        new Date(hoveredNode.updatedAt),
-      )
-    : null;
-
-  const isSkill = hoveredNode?.type === "skill";
   const tooltipLeft = isMounted
-    ? Math.max(12, Math.min(tooltipPos.x, window.innerWidth - 372))
+    ? Math.max(12, Math.min(tooltipPos.x, window.innerWidth - 352))
     : tooltipPos.x;
   const tooltipTop = isMounted
-    ? Math.max(12, Math.min(tooltipPos.y, window.innerHeight - 332))
+    ? Math.max(12, Math.min(tooltipPos.y, window.innerHeight - 280))
     : tooltipPos.y;
 
   const tooltip =
@@ -265,48 +256,19 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
         className="pointer-events-none fixed z-[80]"
         style={{ left: tooltipLeft, top: tooltipTop }}
       >
-        <div className="ring-foreground/10 bg-popover text-popover-foreground w-[360px] overflow-hidden rounded-none p-2.5 text-xs/relaxed shadow-md ring-1">
-          <div className="space-y-3 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-sm truncate">{hoveredNode.label}</p>
-              <Badge variant="outline">
-                {isSkill ? "skill" : (hoveredNode.kind ?? "resource")}
-              </Badge>
-            </div>
-
-            {isSkill && hoveredNode.slug ? (
-              <p className="text-xs text-muted-foreground">From slug: {hoveredNode.slug}</p>
-            ) : null}
-
-            {!isSkill && parentSkillName ? (
-              <p className="text-xs text-muted-foreground">From skill: {parentSkillName}</p>
-            ) : null}
-
-            <Separator />
-
-            <div className="rounded-none border border-border bg-secondary/20 p-3 min-w-0">
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                <FileText className="size-3" aria-hidden="true" />
-                {isSkill ? "Skill preview" : "Resource preview"}
-              </p>
-              {snippet ? (
-                <article className="prose prose-sm max-w-none overflow-hidden text-xs leading-5 prose-p:my-1 prose-code:rounded-none prose-code:bg-secondary prose-code:px-1.5 prose-code:py-0.5 [&_*]:max-w-full [&_a]:break-all [&_code]:break-words [&_p]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:whitespace-pre [&_ul]:pl-4 [&_ol]:pl-4">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={markdownUrlTransform}>
-                    {snippet}
-                  </ReactMarkdown>
-                </article>
-              ) : hoveredNode.description ? (
-                <p className="text-xs leading-5 break-words">{hoveredNode.description}</p>
-              ) : (
-                <p className="text-xs leading-5 whitespace-pre-wrap break-words">(empty)</p>
-              )}
-            </div>
-
-            {hoveredUpdatedAt && (
-              <p className="text-[11px] text-muted-foreground">Updated {hoveredUpdatedAt}</p>
-            )}
-          </div>
-        </div>
+        <NodePreviewCard
+          data={{
+            label: hoveredNode.label,
+            type: hoveredNode.type,
+            description: hoveredNode.description,
+            contentSnippet: hoveredNode.contentSnippet,
+            slug: hoveredNode.slug,
+            kind: hoveredNode.kind,
+            parentSkillName,
+            updatedAt: hoveredNode.updatedAt,
+            resourceCount: hoveredResourceCount,
+          }}
+        />
       </div>
     ) : null;
 

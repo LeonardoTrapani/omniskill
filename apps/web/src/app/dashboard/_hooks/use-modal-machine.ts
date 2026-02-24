@@ -7,6 +7,7 @@ export interface SelectedSkill {
   name: string;
   slug: string;
   description: string;
+  resourceCount?: number;
 }
 
 export interface ModalState {

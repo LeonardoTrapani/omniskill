@@ -6,13 +6,13 @@ import { ArrowRight } from "lucide-react";
 
 export default function CTA() {
   return (
-    <section className="px-6 py-20 md:px-10 lg:py-28">
+    <section id="cta">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.45 }}
-        className="mx-auto max-w-2xl text-center"
+        className="mx-auto py-24 text-center"
       >
         <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
           Ready to Get Started?

@@ -125,3 +125,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes ascii-flicker {
+  0%,
+  100% {
+    opacity: var(--ascii-low, 0.02);
+  }
+  12% {
+    opacity: calc(var(--ascii-high, 0.06) * 0.82);
+  }
+  18% {
+    opacity: var(--ascii-low, 0.02);
+  }
+  31% {
+    opacity: var(--ascii-high, 0.06);
+  }
+  43% {
+    opacity: calc(var(--ascii-high, 0.06) * 0.68);
+  }
+  56% {
+    opacity: var(--ascii-low, 0.02);
+  }
+  74% {
+    opacity: var(--ascii-high, 0.06);
+  }
+  83% {
+    opacity: calc(var(--ascii-low, 0.02) * 0.95);
+  }
+}
+
+.ascii-flicker-cell {
+  animation-name: ascii-flicker;
+  animation-timing-function: steps(3, end);
+  animation-iteration-count: infinite;
+  will-change: opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ascii-flicker-cell {
+    animation: none !important;
+    opacity: 0.04 !important;
+  }
+}

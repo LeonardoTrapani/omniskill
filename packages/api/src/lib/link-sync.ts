@@ -15,9 +15,9 @@ import { parseMentions } from "./mentions";
  * same owner as the source skill produce link edges. Cross-owner
  * mentions are silently skipped (consistent with non-existent targets).
  *
- * The delete + insert runs sequentially (neon-http doesn't support
- * transactions). If the insert fails the auto-links are re-synced on
- * the next edit, so the atomicity trade-off is acceptable.
+ * The delete + insert runs sequentially. If the insert fails the
+ * auto-links are re-synced on the next edit, so the atomicity
+ * trade-off is acceptable.
  */
 export async function syncAutoLinks(
   sourceSkillId: string,

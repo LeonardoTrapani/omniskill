@@ -109,7 +109,7 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                   router.push(`/dashboard/skills/${skill.id}` as Route);
                 }
               }}
-              className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
+              className="grid grid-cols-[48px_1fr_80px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
             >
               {/* Rank */}
               <span className="text-sm text-muted-foreground tabular-nums">{index + 1}</span>
@@ -121,11 +121,6 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                     {skill.name}
                   </span>
                   <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
-                  {skill.visibility === "private" && (
-                    <span className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5">
-                      private
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
                   {skill.description}
@@ -133,7 +128,6 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
               </div>
 
               {/* Actions */}
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger

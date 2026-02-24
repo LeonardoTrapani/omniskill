@@ -8,7 +8,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { trpc } from "@/utils/trpc";
 import { useSkillSearch } from "@/hooks/use-skill-search";
-import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
+import AddSkillModal from "@/app/dashboard/_components/add-skill-modal";
 import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
 
 interface SkillsTableProps {
@@ -133,14 +133,14 @@ export default function SkillsTable({
   };
 
   return (
-    <section id="skills" className={className ?? "py-24 px-6 md:px-16"}>
-      <div className="max-w-[1280px] mx-auto">
+    <section id="skills">
+      <div className="mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="border border-border"
+          className="border border-border bg-background/95 backdrop-blur-sm"
         >
           {/* Title */}
           <div className="px-6 md:px-8 pt-8 pb-6">
@@ -214,16 +214,8 @@ export default function SkillsTable({
 
                     {/* Skill name + slug */}
                     <div className="min-w-0 pr-4">
-                      <div className="flex flex-wrap items-baseline gap-x-2">
-                        {skill.name}
-                        <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
-                        {skill.visibility === "private" && (
-                          <span className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5">
-                            private
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
+                      <div className="flex flex-wrap items-baseline gap-x-2">{skill.name}</div>
+                      <p className="text-xs font-normal text-muted-foreground mt-1 hidden md:block truncate">
                         {getDescription(skill)}
                       </p>
                     </div>

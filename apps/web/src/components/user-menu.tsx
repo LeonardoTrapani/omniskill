@@ -72,11 +72,6 @@ export default function UserMenu() {
           <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => window.location.assign("/settings")}>
-            <Settings aria-hidden="true" />
-            Settings
-          </DropdownMenuItem>
-
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Palette aria-hidden="true" />
@@ -104,6 +99,13 @@ export default function UserMenu() {
               })}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem onClick={() => window.location.assign("/settings")}>
+            <Settings aria-hidden="true" />
+            Settings
+          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
