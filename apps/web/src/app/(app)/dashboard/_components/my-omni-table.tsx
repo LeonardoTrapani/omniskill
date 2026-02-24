@@ -37,19 +37,34 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
 
   return (
     <div
-      className={cn("border border-border flex flex-col min-h-0", className)}
+      className={cn(
+        "border border-border bg-background/90 backdrop-blur-sm flex flex-col min-h-0",
+        className,
+      )}
       style={height ? { height } : undefined}
     >
+      <div className="px-6 md:px-8 pt-7 pb-4 border-b border-border/70 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
+          MY VAULT
+        </h2>
+        <span className="text-xs text-muted-foreground">
+          {skills.length} skill{skills.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
       {/* Search */}
-      <div className="px-6 md:px-8 pt-6 pb-6">
-        <div className="flex items-center gap-3 border border-border px-4 py-3 focus-within:border-primary/50 transition-colors">
+      <div className="px-6 md:px-8 pt-5 pb-6">
+        <div className="flex items-center gap-3 border border-border bg-background px-4 py-3 focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search your skills ..."
+            placeholder="Search your skills…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            name="skills-search"
+            autoComplete="off"
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            aria-label="Search your skills"
           />
         </div>
       </div>

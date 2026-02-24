@@ -10,7 +10,7 @@ const metrics = [
 ];
 
 const chartData = [
-  { tool: "Omniscient", score: 95 },
+  { tool: "Omniskill", score: 95 },
   { tool: "Custom Solutions", score: 60 },
   { tool: "Manual Setup", score: 40 },
 ];
@@ -29,12 +29,12 @@ const examples = [
     tab: "Data Processing",
     description: "Build a skill that processes and transforms data",
     noContext: {
-      label: "Without Omniscient",
+      label: "Without Omniskill",
       code: "# Custom setup required\n# Multiple files to manage\n# No sharing between agents",
     },
-    withOmniscient: {
-      label: "With Omniscient",
-      code: 'import { skill } from "@omniscient/core"\n\n@skill({\n  name: "data-processor",\n  inputs: ["json", "csv"],\n  outputs: ["processed"],\n})\nasync function processData(input) {\n  return transform(input);\n}',
+    withOmniskill: {
+      label: "With Omniskill",
+      code: 'import { skill } from "@omniskill/core"\n\n@skill({\n  name: "data-processor",\n  inputs: ["json", "csv"],\n  outputs: ["processed"],\n})\nasync function processData(input) {\n  return transform(input);\n}',
     },
   },
 ];
@@ -61,7 +61,7 @@ export default function Benchmark() {
             BUILT DIFFERENT
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-[700px] mx-auto leading-relaxed">
-            Omniscient is built from the ground up for the agent era.
+            Omniskill is built from the ground up for the agent era.
           </p>
         </motion.div>
 

@@ -5,11 +5,11 @@ import Image from "next/image";
 
 const topFeatures = [
   {
-    title: "OMNISCIENT CLI",
+    title: "OMNISKILL CLI",
     description:
       "A command-first interface for building and managing skills directly from your terminal.",
     imageSrc: "/landing/features/feature-image-1.png",
-    imageAlt: "Omniscient CLI configuration flow",
+    imageAlt: "Omniskill CLI configuration flow",
     indigoOverlay:
       "bg-[radial-gradient(ellipse_62%_48%_at_86%_12%,rgba(99,102,241,0.32),transparent_52%),radial-gradient(circle_at_8%_78%,rgba(99,102,241,0.2),transparent_36%),radial-gradient(circle_at_46%_96%,rgba(99,102,241,0.12),transparent_34%)]",
   },
@@ -18,7 +18,7 @@ const topFeatures = [
     description:
       "Visual skill management, graph exploration, and account settings from your browser.",
     imageSrc: "/landing/features/feature-image-5.png",
-    imageAlt: "Omniscient web console skills marketplace",
+    imageAlt: "Omniskill web console skills marketplace",
     indigoOverlay:
       "bg-[radial-gradient(circle_at_12%_18%,rgba(99,102,241,0.28),transparent_42%),radial-gradient(ellipse_70%_55%_at_92%_74%,rgba(99,102,241,0.2),transparent_48%),radial-gradient(circle_at_58%_6%,rgba(99,102,241,0.16),transparent_28%)]",
   },

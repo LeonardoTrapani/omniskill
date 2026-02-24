@@ -1,22 +1,18 @@
 "use client";
 
-import { type Dispatch } from "react";
-import { Copy, Sparkles, Loader2, Edit } from "lucide-react";
+import { Copy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 
 import { trpc, queryClient } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
-type ModalAction = { type: "CUSTOMIZE_SKILL" };
-
 interface AddOptionsViewProps {
   skill: SelectedSkill;
-  dispatch: Dispatch<ModalAction>;
   onClose: () => void;
 }
 
-export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsViewProps) {
+export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) {
   const duplicateMutation = useMutation(
     trpc.skills.duplicate.mutationOptions({
       onSuccess: () => {
@@ -42,7 +38,7 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
         <p className="text-xs text-muted-foreground mt-1">{skill.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <button
           onClick={() => duplicateMutation.mutate({ id: skill.id })}
           disabled={duplicateMutation.isPending}
@@ -55,17 +51,6 @@ export default function AddOptionsView({ skill, dispatch, onClose }: AddOptionsV
           )}
           <h3 className="text-sm font-semibold text-foreground mb-1">Import</h3>
           <p className="text-xs text-muted-foreground">Add this skill as-is to your collection</p>
-        </button>
-
-        <button
-          onClick={() => dispatch({ type: "CUSTOMIZE_SKILL" })}
-          className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group"
-        >
-          <Edit className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
-          <h3 className="text-sm font-semibold text-foreground mb-1">Customize Skill</h3>
-          <p className="text-xs text-muted-foreground">
-            Modify this skill with and link it to your vault (AI)
-          </p>
         </button>
       </div>
     </div>
