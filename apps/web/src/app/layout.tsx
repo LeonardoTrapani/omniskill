@@ -22,9 +22,9 @@ const firaMono = Fira_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Omniscient - The Open Agent Skills Ecosystem",
+  title: "Omniskill - The Open Agent Skills Ecosystem",
   description:
-    "Omniscient lets you build, share, and manage a graph of reusable skills for your AI agents. Connect your CLI and web app to a powerful skill marketplace.",
+    "Omniskill lets you build, share, and manage a graph of reusable skills for your AI agents. Connect your CLI and web app to a powerful skill marketplace.",
 };
 
 export default function RootLayout({

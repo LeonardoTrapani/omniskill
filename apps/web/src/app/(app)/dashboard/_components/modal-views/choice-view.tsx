@@ -1,9 +1,9 @@
 "use client";
 
-import { Plus, Search, Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 import type { Dispatch } from "react";
 
-type ModalAction = { type: "CHOOSE_EXISTING" } | { type: "CHOOSE_CREATE_NEW" };
+type ModalAction = { type: "CHOOSE_EXISTING" };
 
 interface ChoiceViewProps {
   dispatch: Dispatch<ModalAction>;
@@ -11,7 +11,7 @@ interface ChoiceViewProps {
 
 export default function ChoiceView({ dispatch }: ChoiceViewProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+    <div className="grid grid-cols-1 gap-4 py-4">
       <button
         onClick={() => dispatch({ type: "CHOOSE_EXISTING" })}
         className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group"
@@ -20,17 +20,6 @@ export default function ChoiceView({ dispatch }: ChoiceViewProps) {
         <h3 className="text-sm font-semibold text-foreground mb-1">Add From Existing</h3>
         <p className="text-xs text-muted-foreground">
           Browse and add skills from the public marketplace
-        </p>
-      </button>
-
-      <button
-        onClick={() => dispatch({ type: "CHOOSE_CREATE_NEW" })}
-        className="border border-border p-6 text-left hover:border-primary/50 hover:bg-secondary/50 transition-all group"
-      >
-        <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mb-3" />
-        <h3 className="text-sm font-semibold text-foreground mb-1">Create a New Skill</h3>
-        <p className="text-xs text-muted-foreground">
-          Describe what you need and create a custom skill
         </p>
       </button>
     </div>

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Search, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+
 import { trpc } from "@/utils/trpc";
+import { useSkillSearch } from "@/hooks/use-skill-search";
 import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
 import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
 
@@ -14,6 +16,7 @@ interface SkillsTableProps {
   showSearch?: boolean;
   showViewAll?: boolean;
   infiniteScroll?: boolean;
+  initialSearch?: string;
   className?: string;
 }
 
@@ -22,42 +25,83 @@ export default function SkillsTable({
   showSearch = true,
   showViewAll = true,
   infiniteScroll = false,
+  initialSearch = "",
   className,
 }: SkillsTableProps) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const { selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } = useAddSkillFlow({
     loginNext: "/skills",
   });
 
   const pageSize = limit ?? 50;
+  const hasSearchQuery = search.trim().length > 0;
+
+  const {
+    items: searchedSkills,
+    isLoading: isSearchLoading,
+    isError: isSearchError,
+    isFetching: isSearchFetching,
+    debouncedQuery,
+    canLoadMore: canLoadMoreSearch,
+    loadMore: loadMoreSearch,
+  } = useSkillSearch({
+    query: search,
+    enabled: hasSearchQuery,
+    scope: "all",
+    visibility: "public",
+    initialLimit: 5,
+    limitStep: 5,
+    maxLimit: 50,
+  });
 
   const { data, isLoading, isError, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useInfiniteQuery(
-      trpc.skills.list.infiniteQueryOptions(
+    useInfiniteQuery({
+      ...trpc.skills.list.infiniteQueryOptions(
         {
           limit: pageSize,
-          search: search.trim() || undefined,
           visibility: "public",
         },
         {
           getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
         },
       ),
-    );
+      enabled: !hasSearchQuery,
+    });
 
   const pages = data?.pages ?? [];
-  const skills = pages.flatMap((page) => page.items);
+  const listedSkills = pages.flatMap((page) => page.items);
   const nextCursor = pages.at(-1)?.nextCursor;
+  const skills = hasSearchQuery ? searchedSkills : listedSkills;
+  const isSearchDebouncing = hasSearchQuery && search.trim() !== debouncedQuery;
+  const tableLoading = hasSearchQuery ? isSearchLoading || isSearchDebouncing : isLoading;
+  const tableError = hasSearchQuery ? isSearchError : isError;
+  const hasMoreResults = hasSearchQuery ? canLoadMoreSearch : Boolean(hasNextPage);
+  const isFetchingMore = hasSearchQuery ? isSearchFetching && !isSearchLoading : isFetchingNextPage;
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(() => {
+    if (hasSearchQuery) {
+      if (!canLoadMoreSearch || isSearchFetching) return;
+      loadMoreSearch();
+      return;
+    }
+
     if (!infiniteScroll || !hasNextPage || isFetchingNextPage) return;
     void fetchNextPage();
-  }, [infiniteScroll, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [
+    hasSearchQuery,
+    canLoadMoreSearch,
+    isSearchFetching,
+    loadMoreSearch,
+    infiniteScroll,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  ]);
 
   useEffect(() => {
-    if (!infiniteScroll) return;
+    if (!infiniteScroll && !hasSearchQuery) return;
 
     const element = sentinelRef.current;
     if (!element) return;
@@ -74,7 +118,19 @@ export default function SkillsTable({
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [infiniteScroll, loadMore]);
+  }, [infiniteScroll, hasSearchQuery, loadMore]);
+
+  useEffect(() => {
+    setSearch(initialSearch);
+  }, [initialSearch]);
+
+  const getDescription = (skill: (typeof skills)[number]) => {
+    if ("snippet" in skill && skill.snippet) {
+      return skill.snippet;
+    }
+
+    return skill.description;
+  };
 
   return (
     <section id="skills" className={className ?? "py-24 px-6 md:px-16"}>
@@ -100,9 +156,12 @@ export default function SkillsTable({
                 <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search skills ..."
+                  placeholder="Search skills…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  name="marketplace-search"
+                  autoComplete="off"
+                  aria-label="Search marketplace skills"
                   className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                 />
               </div>
@@ -119,7 +178,7 @@ export default function SkillsTable({
           </div>
 
           {/* Loading */}
-          {isLoading && (
+          {tableLoading && (
             <div className="border-t border-border px-6 md:px-8 py-16 text-center">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">Loading skills...</p>
@@ -127,15 +186,15 @@ export default function SkillsTable({
           )}
 
           {/* Error */}
-          {isError && (
+          {tableError && (
             <div className="border-t border-border px-6 md:px-8 py-16 text-center">
               <p className="text-sm text-muted-foreground">Failed to load skills</p>
             </div>
           )}
 
           {/* Rows */}
-          {!isLoading &&
-            !isError &&
+          {!tableLoading &&
+            !tableError &&
             skills.map((skill, index) => {
               return (
                 <Link
@@ -165,7 +224,7 @@ export default function SkillsTable({
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
-                        {skill.description}
+                        {getDescription(skill)}
                       </p>
                     </div>
 
@@ -187,16 +246,18 @@ export default function SkillsTable({
               );
             })}
 
-          {infiniteScroll && !isLoading && !isError && <div ref={sentinelRef} className="h-1" />}
+          {(infiniteScroll || hasSearchQuery) && !tableLoading && !tableError && (
+            <div ref={sentinelRef} className="h-1" />
+          )}
 
-          {infiniteScroll && isFetchingNextPage && (
+          {hasMoreResults && isFetchingMore && (
             <div className="border-t border-border px-6 md:px-8 py-6 text-center">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
             </div>
           )}
 
           {/* Empty state */}
-          {!isLoading && !isError && skills.length === 0 && (
+          {!tableLoading && !tableError && skills.length === 0 && (
             <div className="border-t border-border px-6 md:px-8 py-16 text-center">
               <p className="text-sm text-muted-foreground">
                 {search.trim() ? (
@@ -212,7 +273,7 @@ export default function SkillsTable({
           <div className="border-t border-border px-6 md:px-8 py-4 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">
               {skills.length} skill{skills.length !== 1 ? "s" : ""}
-              {nextCursor ? "+" : ""}
+              {hasSearchQuery ? (hasMoreResults ? "+" : "") : nextCursor ? "+" : ""}
             </span>
             {showViewAll && (
               <Link

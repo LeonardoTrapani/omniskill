@@ -14,7 +14,7 @@ export default async function Home() {
     <main className="min-h-screen bg-background">
       <Navbar skillCount={skillCount} />
       <HeroSection skillCount={skillCount} />
-      <SkillsTable limit={5} showSearch={false} />
+      <SkillsTable limit={5} showSearch />
       <Features />
       <Pricing />
       <CTA />

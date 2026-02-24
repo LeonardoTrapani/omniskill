@@ -52,10 +52,10 @@ export default function SkillGraph({ height }: SkillGraphProps) {
 
   return (
     <div
-      className="border border-border flex flex-col min-h-0"
+      className="border border-border bg-background/90 backdrop-blur-sm flex flex-col min-h-0"
       style={height ? { height } : undefined}
     >
-      <div className="px-6 md:px-8 pt-8 pb-4 flex items-center justify-between">
+      <div className="px-6 md:px-8 pt-7 pb-4 flex items-center justify-between border-b border-border/70">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
           SKILL GRAPH
         </h2>
@@ -69,17 +69,19 @@ export default function SkillGraph({ height }: SkillGraphProps) {
 
       <div
         ref={graphViewportRef}
-        className={height ? "flex-1 min-h-0" : ""}
+        className={height ? "flex-1 min-h-0 relative overflow-hidden" : "relative overflow-hidden"}
         style={!height ? { height: forceGraphHeight } : undefined}
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_12%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_28%),radial-gradient(circle_at_88%_84%,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_34%)]" />
+
         {isLoading && (
-          <div className="flex items-center justify-center h-full">
+          <div className="relative flex items-center justify-center h-full">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         )}
 
         {isError && (
-          <div className="flex items-center justify-center h-full">
+          <div className="relative flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Failed to load graph</p>
           </div>
         )}

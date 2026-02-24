@@ -4,13 +4,20 @@ import { useState, useEffect } from "react";
 import SkillsTable from "@/components/landing/SkillsTable";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/landing/Footer";
+import PageHeroCard from "@/components/page-hero-card";
 import { brainAscii } from "@/lib/constants";
 
 export default function SkillsPage() {
+  const [initialSearch, setInitialSearch] = useState("");
   const [visibleLines, setVisibleLines] = useState(0);
   const brainLines = brainAscii.split("\n");
 
   // Animate brain ASCII line by line
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setInitialSearch(params.get("q") ?? "");
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setVisibleLines((prev) => {
@@ -41,22 +48,20 @@ export default function SkillsPage() {
         {/* Header */}
         <div className="pt-12 pb-0 px-6 md:px-16">
           <div className="max-w-[1280px] mx-auto">
-            <div className="border border-primary/20 bg-background/40 backdrop-blur-sm p-8 md:p-12">
-              <p className="text-xs text-primary uppercase tracking-[0.08em] mb-3">
-                Skills Marketplace
-              </p>
-              <h1 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight mb-4">
-                Explore the ecosystem
-              </h1>
-              <p className="text-base text-muted-foreground max-w-[640px] leading-relaxed">
-                Browse the complete catalog of skills in the Omniscient ecosystem. Install skills to
-                your agent graph with one click, or publish your own for the community.
-              </p>
-            </div>
+            <PageHeroCard
+              eyebrow="Skills Marketplace"
+              title="Explore the Ecosystem"
+              description="Browse the complete catalog of skills in the Omniskill ecosystem. Install skills to your agent graph with one click, or publish your own for the community."
+            />
           </div>
         </div>
 
-        <SkillsTable showViewAll={false} infiniteScroll className="pt-8 pb-24 px-6 md:px-16" />
+        <SkillsTable
+          showViewAll={false}
+          infiniteScroll
+          initialSearch={initialSearch}
+          className="pt-8 pb-24 px-6 md:px-16"
+        />
 
         <Footer />
       </div>

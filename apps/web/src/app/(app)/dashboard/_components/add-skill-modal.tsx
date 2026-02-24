@@ -10,37 +10,22 @@ import type { ModalView, SelectedSkill } from "../_hooks/use-modal-machine";
 import ChoiceView from "./modal-views/choice-view";
 import BrowseSkillsView from "./modal-views/browse-skills-view";
 import AddOptionsView from "./modal-views/add-options-view";
-import ChatView from "./modal-views/chat-view";
 
 interface AddSkillModalProps {
   open: boolean;
   onClose: () => void;
   onBack?: () => void;
   initialSkill?: SelectedSkill | null;
-  initialView?: ModalView;
-  initialPrompt?: string;
 }
 
 const viewTitles: Record<ModalView, string> = {
   "initial-choice": "Add New Skill",
   "browse-existing": "Browse Skills",
   "add-options": "Add Skill",
-  "chat-create": "Create New Skill",
 };
 
-function buildCustomizeStartPrompt(skill: SelectedSkill) {
-  return `I found skill "${skill.name}" (${skill.slug}) and I would like to integrate it into ...`;
-}
-
-export default function AddSkillModal({
-  open,
-  onClose,
-  onBack,
-  initialSkill,
-  initialView,
-  initialPrompt,
-}: AddSkillModalProps) {
-  const { state, dispatch } = useModalMachine({ initialSkill, initialView });
+export default function AddSkillModal({ open, onClose, onBack, initialSkill }: AddSkillModalProps) {
+  const { state, dispatch } = useModalMachine({ initialSkill });
 
   const handleClose = () => {
     dispatch({ type: "RESET" });
@@ -85,17 +70,7 @@ export default function AddSkillModal({
           {state.view === "initial-choice" && <ChoiceView dispatch={dispatch} />}
           {state.view === "browse-existing" && <BrowseSkillsView dispatch={dispatch} />}
           {state.view === "add-options" && state.selectedSkill && (
-            <AddOptionsView skill={state.selectedSkill} dispatch={dispatch} onClose={handleClose} />
-          )}
-          {state.view === "chat-create" && (
-            <ChatView
-              selectedSkill={state.selectedSkill}
-              initialInput={
-                state.selectedSkill
-                  ? buildCustomizeStartPrompt(state.selectedSkill)
-                  : (initialPrompt ?? undefined)
-              }
-            />
+            <AddOptionsView skill={state.selectedSkill} onClose={handleClose} />
           )}
         </div>
       </AlertDialogContent>

@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { X, Menu, LogOut } from "lucide-react";
+
 import { authClient } from "@/lib/auth-client";
+import BrandMark from "@/components/brand-mark";
 import UserMenu from "@/components/user-menu";
 import { SkillCommandTrigger, SkillCommandPalette } from "@/components/skill-command-palette";
 
@@ -20,13 +22,14 @@ const appNav = [
   { label: "Explore", href: "/skills" },
 ];
 
-export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
+export default function Navbar({ skillCount }: { skillCount?: number }) {
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdInitialSearch, setCmdInitialSearch] = useState("");
+  const [resolvedSkillCount, setResolvedSkillCount] = useState<number>(skillCount ?? 0);
   const { data: session, isPending } = authClient.useSession();
 
   const navItems = session ? appNav : publicNav;
@@ -43,6 +46,35 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    if (typeof skillCount === "number") {
+      setResolvedSkillCount(skillCount);
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetch("/trpc/skills.count")
+      .then(async (response) => {
+        if (!response.ok) return;
+        const json = (await response.json()) as { result?: { data?: { count?: number } } };
+        const count = json.result?.data?.count;
+
+        if (!cancelled && typeof count === "number") {
+          setResolvedSkillCount(count);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedSkillCount(0);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [skillCount]);
 
   // read ?q= param to auto-open palette
   useEffect(() => {
@@ -80,8 +112,12 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
         }`}
       >
         <div className="relative max-w-5xl mx-auto px-6 md:px-10 flex items-center justify-between h-[52px]">
-          <Link href="/" className="text-sm font-medium text-foreground tracking-tight">
-            omniscient
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground tracking-tight"
+          >
+            <BrandMark className="size-3.5" />
+            <span>omniskill</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
@@ -135,7 +171,10 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
           <div className="fixed bottom-0 left-0 right-0 z-[70] lg:hidden">
             <div className="bg-background border-t border-border mx-2 mb-2 p-6">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-sm font-medium text-foreground">omniscient</span>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                  <BrandMark className="size-3.5" />
+                  <span>omniskill</span>
+                </span>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="w-8 h-8 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground transition-colors"
@@ -192,7 +231,7 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
         </>
       )}
 
-      {/* single palette instance — dialog + modals only */}
+      {/* single palette instance */}
       {!isPending && session && (
         <SkillCommandPalette
           open={cmdOpen}
@@ -201,7 +240,7 @@ export default function Navbar({ skillCount = 0 }: { skillCount?: number }) {
             if (!next) setCmdInitialSearch("");
           }}
           initialSearch={cmdInitialSearch}
-          skillCount={skillCount}
+          skillCount={resolvedSkillCount}
         />
       )}
     </>
