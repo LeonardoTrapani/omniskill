@@ -1,0 +1,666 @@
+"use client";
+
+import Link from "next/link";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  FileText,
+  Info,
+  Loader2,
+  Network,
+  Paperclip,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { toast } from "sonner";
+
+import AddSkillModal from "@/app/dashboard/_components/add-skill-modal";
+import { ForceGraph } from "@/components/graph/force-graph";
+import { createMarkdownComponents } from "@/components/skills/markdown-components";
+import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+
+import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
+import { ResourceHoverLink } from "@/components/skills/resource-link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { queryClient, trpc } from "@/utils/trpc";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+function formatDate(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function jsonEntries(value: Record<string, unknown>) {
+  return Object.entries(value).slice(0, 12);
+}
+
+function displayValue(value: unknown) {
+  if (value == null) return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return JSON.stringify(value);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Panel                                                              */
+/*  Reusable bordered panel matching dashboard components              */
+/* ------------------------------------------------------------------ */
+function Panel({
+  icon,
+  title,
+  trailing,
+  children,
+  className,
+  collapsible = false,
+  defaultOpen = true,
+  isEmpty = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  trailing?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  isEmpty?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  const headerContent = (
+    <>
+      <div className="flex items-center gap-2">
+        {icon}
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
+          {title}
+        </h2>
+        {isEmpty && !open && (
+          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/50">
+            empty
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {trailing}
+        {collapsible && (
+          <ChevronDown
+            className={`size-3.5 text-muted-foreground transition-transform duration-150 ${open ? "" : "-rotate-90"}`}
+            aria-hidden="true"
+          />
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
+      {collapsible ? (
+        <button
+          type="button"
+          className="flex w-full items-center justify-between px-5 py-3.5 border-b border-border/70 transition-colors duration-150 hover:bg-secondary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={open}
+        >
+          {headerContent}
+        </button>
+      ) : (
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
+          {headerContent}
+        </div>
+      )}
+      {(!collapsible || open) && children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
+export default function SkillDetail({ id }: { id: string }) {
+  const router = useRouter();
+  const { session, selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } =
+    useAddSkillFlow({ loginNext: `/dashboard/skills/${id}` });
+  const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
+  const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId: id }));
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const deleteMutation = useMutation(
+    trpc.skills.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
+        queryClient.invalidateQueries({ queryKey: trpc.skills.graphForSkill.queryKey() });
+        toast.success(`"${data?.name ?? "Skill"}" has been deleted`);
+        setDeleteDialogOpen(false);
+        router.push("/dashboard" as Route);
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete skill: ${error.message}`);
+      },
+    }),
+  );
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [id]);
+
+  const frontmatter = useMemo(() => (data ? jsonEntries(data.frontmatter) : []), [data]);
+  const metadata = useMemo(() => (data ? jsonEntries(data.metadata) : []), [data]);
+  const resources = data?.resources ?? [];
+
+  const resourcesById = useMemo(
+    () => new Map(resources.map((resource) => [resource.id, resource])),
+    [resources],
+  );
+
+  const resourcesByPath = useMemo(
+    () => new Map(resources.map((resource) => [resource.path, resource])),
+    [resources],
+  );
+
+  const findResourceByHref = (href: string) => {
+    let decodedHref = href;
+    try {
+      decodedHref = decodeURIComponent(href);
+    } catch {}
+
+    if (decodedHref.startsWith("resource://")) {
+      const byId = resourcesById.get(decodedHref.replace("resource://", ""));
+      if (byId) return byId;
+    }
+
+    if (resourcesByPath.has(decodedHref)) {
+      return resourcesByPath.get(decodedHref)!;
+    }
+
+    const match = resources.find(
+      (resource) =>
+        decodedHref.endsWith(resource.path) || decodedHref.endsWith(`/${resource.path}`),
+    );
+
+    return match ?? null;
+  };
+
+  const skillId = data?.id ?? id;
+  const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
+  const canManageSkill = data?.visibility === "private" && isOwnedByViewer;
+  const canAddToVault = data?.visibility === "public" && !isOwnedByViewer;
+
+  const markdownComponents = useMemo(
+    () =>
+      createMarkdownComponents({
+        skillId,
+        skillName: data?.name,
+        findResourceByHref,
+      }),
+    [data?.name, skillId, resourcesById, resourcesByPath],
+  );
+
+  /* ---- Loading ---- */
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-4 w-[560px]" />
+          </div>
+          <Separator />
+          <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+            <div className="space-y-6">
+              <Skeleton className="h-96 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  /* ---- Error ---- */
+  if (isError || !data) {
+    return (
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 py-32">
+          <p className="text-sm text-muted-foreground">
+            The requested skill is not accessible or does not exist.
+          </p>
+          <Link href={"/dashboard" as Route}>
+            <Button variant="outline" size="sm">
+              Back to Skills
+            </Button>
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  /* Merge frontmatter + metadata for the details panel */
+  const allDataEntries = [...frontmatter, ...metadata];
+
+  return (
+    <main className="relative min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
+
+      <div className="relative mx-auto max-w-7xl">
+        {/* ============================================================ */}
+        {/*  HEADER                                                       */}
+        {/* ============================================================ */}
+        <header className="space-y-5 pb-8">
+          {/* Top bar: nav + actions */}
+          <div className="flex items-center justify-between gap-4">
+            <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Link
+                href={"/dashboard" as Route}
+                className="transition-colors duration-150 hover:text-foreground"
+              >
+                skills
+              </Link>
+              <span className="text-border">/</span>
+              <span className="truncate text-foreground">{data.slug}</span>
+            </nav>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {canAddToVault && (
+                <Button
+                  size="default"
+                  className="px-3.5 text-sm"
+                  onClick={() => openAddSkillFlow(data)}
+                >
+                  Add to Vault
+                </Button>
+              )}
+              {canManageSkill && (
+                <>
+                  <Link href={`/dashboard/skills/${data.id}/edit` as Route}>
+                    <Button variant="outline" size="sm" aria-label="Edit skill">
+                      <Pencil className="size-3.5" aria-hidden="true" />
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    aria-label="Delete skill"
+                  >
+                    <Trash2 className="size-3.5" aria-hidden="true" />
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Title + description */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold leading-tight text-foreground text-balance break-words sm:text-3xl">
+              {data.name}
+            </h1>
+            {data.description && (
+              <div>
+                <p
+                  className={[
+                    "text-sm leading-relaxed text-muted-foreground break-words text-pretty",
+                    descriptionExpanded
+                      ? ""
+                      : "[display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {data.description}
+                </p>
+                {data.description.length > 200 && (
+                  <button
+                    type="button"
+                    className="mt-1 text-[11px] text-primary transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    onClick={() => setDescriptionExpanded((prev) => !prev)}
+                    aria-label={descriptionExpanded ? "Collapse description" : "Expand description"}
+                  >
+                    {descriptionExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Metadata row */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <span
+                className={`inline-block size-1.5 ${data.visibility === "public" ? "bg-emerald-500" : "bg-amber-500"}`}
+                aria-hidden="true"
+              />
+              {data.visibility}
+            </span>
+            <span className="text-border">|</span>
+            <span>
+              {data.resources.length} resource{data.resources.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-border">|</span>
+            <span>Updated {formatDate(data.updatedAt)}</span>
+            {data.sourceIdentifier && (
+              <>
+                <span className="text-border">|</span>
+                <span>{data.sourceIdentifier}</span>
+              </>
+            )}
+            {data.sourceUrl && (
+              <>
+                <span className="text-border">|</span>
+                <a
+                  href={data.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-0.5 text-primary transition-colors duration-150 hover:text-primary/80"
+                >
+                  Source
+                  <ArrowUpRight className="size-3" aria-hidden="true" />
+                </a>
+              </>
+            )}
+          </div>
+        </header>
+
+        <Separator className="mb-8" />
+
+        {/* ============================================================ */}
+        {/*  BODY: content + sidebar                                      */}
+        {/* ============================================================ */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+          {/* ---- Main column ---- */}
+          <div className="min-w-0 space-y-6">
+            {/* Mobile graph toggle */}
+            <div className="lg:hidden">
+              <Panel
+                icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                title="Skill Graph"
+                collapsible
+                defaultOpen={false}
+              >
+                <div>
+                  {graphQuery.isLoading && (
+                    <div className="flex h-[320px] items-center justify-center">
+                      <Loader2
+                        className="size-4 animate-spin text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
+                  {graphQuery.isError && (
+                    <div className="flex h-[320px] items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Failed to load graph</p>
+                    </div>
+                  )}
+                  {graphQuery.data && (
+                    <ForceGraph data={graphQuery.data} focusNodeId={id} height={360} />
+                  )}
+                </div>
+              </Panel>
+            </div>
+
+            {/* SKILL.md panel */}
+            <Panel
+              icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+              title="SKILL.md"
+            >
+              <div className="px-5 py-5">
+                <article className="min-w-0 break-words">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                    urlTransform={markdownUrlTransform}
+                  >
+                    {data.renderedMarkdown || data.originalMarkdown}
+                  </ReactMarkdown>
+                </article>
+              </div>
+            </Panel>
+
+            {/* Frontmatter + metadata panel */}
+            <Panel
+              icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+              title="Skill Data"
+              trailing={
+                <span className="text-[10px] text-muted-foreground">
+                  {allDataEntries.length} field{allDataEntries.length !== 1 ? "s" : ""}
+                </span>
+              }
+              collapsible
+              defaultOpen={allDataEntries.length > 0}
+              isEmpty={allDataEntries.length === 0}
+            >
+              <div className="px-5 py-4">
+                {allDataEntries.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No data fields.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Frontmatter */}
+                    {frontmatter.length > 0 && (
+                      <div>
+                        <p className="mb-2 text-[10px] uppercase tracking-[0.08em] text-muted-foreground/70">
+                          Frontmatter
+                        </p>
+                        <div className="space-y-1.5">
+                          {frontmatter.map(([key, value]) => (
+                            <div key={key} className="grid gap-1 sm:grid-cols-[160px_1fr] sm:gap-3">
+                              <p className="text-[11px] text-muted-foreground break-words">{key}</p>
+                              <p className="text-xs text-foreground break-words">
+                                {displayValue(value)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Panel>
+
+            {/* Resources panel */}
+            <Panel
+              icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+              title="Resources"
+              trailing={
+                <span className="text-[10px] text-muted-foreground">
+                  {data.resources.length} file{data.resources.length !== 1 ? "s" : ""}
+                </span>
+              }
+              collapsible
+              defaultOpen={data.resources.length > 0}
+              isEmpty={data.resources.length === 0}
+            >
+              <div>
+                {data.resources.length === 0 ? (
+                  <p className="px-5 py-4 text-xs text-muted-foreground">No resources attached.</p>
+                ) : (
+                  <div>
+                    {data.resources.map((resource, idx) => (
+                      <div
+                        key={resource.id}
+                        className={`flex items-center justify-between gap-3 px-5 py-2.5 ${
+                          idx < data.resources.length - 1 ? "border-b border-border/40" : ""
+                        }`}
+                      >
+                        <ResourceHoverLink
+                          resource={resource}
+                          skillId={data.id}
+                          skillName={data.name}
+                          className="min-w-0 break-all text-xs text-primary underline-offset-4 hover:underline"
+                        >
+                          {resource.path}
+                        </ResourceHoverLink>
+                        <Badge variant="outline" className="shrink-0 text-[10px]">
+                          {resource.kind}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Panel>
+          </div>
+
+          {/* ---- Sidebar ---- */}
+          <aside className="hidden min-w-0 lg:block lg:h-full">
+            <div className="flex h-full flex-col gap-6">
+              {/* Skill details panel */}
+              <Panel
+                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                title="Details"
+                className="shrink-0"
+              >
+                <div className="px-5 py-4">
+                  <dl className="space-y-2.5 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Slug</dt>
+                      <dd className="truncate text-right text-foreground">{data.slug}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Created</dt>
+                      <dd className="text-foreground">{formatDate(data.createdAt)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Updated</dt>
+                      <dd className="text-foreground">{formatDate(data.updatedAt)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </Panel>
+
+              {/* Graph panel -- fills remaining space */}
+              <Panel
+                icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                title="Skill Graph"
+                trailing={
+                  graphQuery.data && graphQuery.data.nodes.length > 0 ? (
+                    <span className="text-[10px] text-muted-foreground">
+                      {graphQuery.data.nodes.filter((n) => n.type === "skill").length} skill
+                      {graphQuery.data.nodes.filter((n) => n.type === "skill").length !== 1
+                        ? "s"
+                        : ""}
+                    </span>
+                  ) : null
+                }
+                className="sticky top-[68px] flex h-[calc(100dvh-92px)] min-h-0 flex-col"
+              >
+                <div className="relative min-h-0 flex-1 overflow-hidden">
+                  {graphQuery.isLoading && (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2
+                        className="size-4 animate-spin text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
+                  {graphQuery.isError && (
+                    <div className="flex h-full items-center justify-center">
+                      <p className="text-xs text-muted-foreground">Failed to load graph</p>
+                    </div>
+                  )}
+                  {graphQuery.data && <GraphFill data={graphQuery.data} focusNodeId={id} />}
+                </div>
+              </Panel>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* ---- Dialogs ---- */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Skill</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{data.name}&rdquo;? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate({ id: data.id })}
+            >
+              {deleteMutation.isPending ? "Deleting\u2026" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AddSkillModal
+        key={selectedSkill?.id ?? "none"}
+        open={modalOpen}
+        onClose={closeAddSkillFlow}
+        initialSkill={selectedSkill}
+      />
+    </main>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  GraphFill                                                          */
+/*  Renders ForceGraph filling its parent container via ResizeObserver  */
+/* ------------------------------------------------------------------ */
+function GraphFill({
+  data,
+  focusNodeId,
+}: {
+  data: import("@/components/graph/force-graph").GraphData;
+  focusNodeId?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(400);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => setHeight(Math.max(el.clientHeight, 200));
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="absolute inset-0">
+      <ForceGraph data={data} focusNodeId={focusNodeId} height={height} />
+    </div>
+  );
+}

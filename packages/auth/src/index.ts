@@ -67,6 +67,11 @@ export const auth = betterAuth({
       trustedProviders: ["google", "github"],
     },
   },
+  user: {
+    deleteUser: {
+      enabled: true,
+    },
+  },
   advanced: {
     ...(crossSubDomainCookieDomain
       ? {

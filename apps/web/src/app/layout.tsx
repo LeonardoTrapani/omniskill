@@ -4,6 +4,8 @@ import { Fira_Mono, Geist_Mono, Google_Sans_Code } from "next/font/google";
 
 import "./globals.css";
 import Providers from "@/components/providers";
+import Navbar from "@/components/navbar";
+import { getSkillCount } from "@/lib/get-skill-count";
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -27,17 +29,22 @@ export const metadata: Metadata = {
     "Omniskill lets you build, share, and manage a graph of reusable skills for your AI agents. Connect your CLI and web app to a powerful skill marketplace.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const skillCount = await getSkillCount();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistMono.variable} ${googleSansCode.variable} ${firaMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar skillCount={skillCount} />
+          {children}
+        </Providers>
       </body>
     </html>
   );

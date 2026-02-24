@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { X, Menu, LogOut } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
 import BrandMark from "@/components/brand-mark";
 import UserMenu from "@/components/user-menu";
 import { SkillCommandTrigger, SkillCommandPalette } from "@/components/skill-command-palette";
+import { trpc } from "@/utils/trpc";
 
 const publicNav = [
   { label: "Skills", href: "/skills" },
@@ -25,14 +27,26 @@ const appNav = [
 export default function Navbar({ skillCount }: { skillCount?: number }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdInitialSearch, setCmdInitialSearch] = useState("");
-  const [resolvedSkillCount, setResolvedSkillCount] = useState<number>(skillCount ?? 0);
   const { data: session, isPending } = authClient.useSession();
 
-  const navItems = session ? appNav : publicNav;
+  const { data: skillCountData } = useQuery({
+    ...trpc.skills.count.queryOptions(),
+    enabled: typeof skillCount !== "number",
+  });
+
+  const resolvedSkillCount =
+    typeof skillCount === "number" ? skillCount : (skillCountData?.count ?? 0);
+
+  const navItems = mounted && session ? appNav : publicNav;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -46,35 +60,6 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
-
-  useEffect(() => {
-    if (typeof skillCount === "number") {
-      setResolvedSkillCount(skillCount);
-      return;
-    }
-
-    let cancelled = false;
-
-    void fetch("/trpc/skills.count")
-      .then(async (response) => {
-        if (!response.ok) return;
-        const json = (await response.json()) as { result?: { data?: { count?: number } } };
-        const count = json.result?.data?.count;
-
-        if (!cancelled && typeof count === "number") {
-          setResolvedSkillCount(count);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setResolvedSkillCount(0);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [skillCount]);
 
   // read ?q= param to auto-open palette
   useEffect(() => {
@@ -133,7 +118,8 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            {!isPending &&
+            {mounted &&
+              !isPending &&
               (session ? (
                 <>
                   <SkillCommandTrigger onOpen={openCmd} />
@@ -150,7 +136,7 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
           </div>
 
           <div className="flex lg:hidden items-center gap-3">
-            {!isPending && session && <SkillCommandTrigger onOpen={openCmd} />}
+            {mounted && !isPending && session && <SkillCommandTrigger onOpen={openCmd} />}
             <button
               className="text-foreground"
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -200,7 +186,8 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
               </div>
 
               <div className="flex flex-col gap-2">
-                {!isPending &&
+                {mounted &&
+                  !isPending &&
                   (session ? (
                     <button
                       className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors"
@@ -232,7 +219,7 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
       )}
 
       {/* single palette instance */}
-      {!isPending && session && (
+      {mounted && !isPending && session && (
         <SkillCommandPalette
           open={cmdOpen}
           onOpenChange={(next) => {

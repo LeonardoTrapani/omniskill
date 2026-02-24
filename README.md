@@ -30,10 +30,19 @@ bun install
 
 This project uses PostgreSQL with Drizzle ORM.
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+1. Start a local Postgres instance (for example with Homebrew):
 
-3. Apply the schema to your database:
+```bash
+brew services start postgresql@17
+```
+
+2. Sync your connected Neon database into local Postgres:
+
+```bash
+bash scripts/sync-neon-to-local.sh
+```
+
+3. Apply the schema to your local database:
 
 ```bash
 bun run db:push
