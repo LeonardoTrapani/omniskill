@@ -1,0 +1,65 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "NEON_PROJECT_ID",
+    "PGDATABASE",
+    "DATABASE_URL_UNPOOLED",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_HOST",
+    "POSTGRES_URL_NO_SSL",
+    "PGUSER",
+    "POSTGRES_URL",
+    "POSTGRES_URL_NON_POOLING",
+    "PGPASSWORD",
+    "DATABASE_URL",
+    "POSTGRES_USER",
+    "PGHOST_UNPOOLED",
+    "POSTGRES_PRISMA_URL",
+    "PGHOST",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "REGOLO_API_KEY",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "CORS_ORIGIN",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "POSTGRES_DATABASE"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "scrape:ingest": { "cache": false },
+    "scrape:import-missing": { "cache": false },
+    "scrape:resolve-refs": { "cache": false },
+    "scrape:sync-links": { "cache": false },
+    "scrape:pipeline": { "cache": false }
+  }
+}

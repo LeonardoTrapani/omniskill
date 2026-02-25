@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "ROOT=.; [ -f turbo.json ] || ROOT=../..; bun install --cwd \"$ROOT\" --frozen-lockfile",
+  "buildCommand": "ROOT=.; [ -f turbo.json ] || ROOT=../..; bun run --cwd \"$ROOT\" build --filter=web"
+}
