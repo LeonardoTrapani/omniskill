@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseMentions, remapMentionTargetIds } from "./mentions";
+import { findInvalidMentionTokens, parseMentions, remapMentionTargetIds } from "./mentions";
 
 describe("parseMentions", () => {
   const SKILL_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
@@ -73,6 +73,21 @@ describe("parseMentions", () => {
     expect(parseMentions("[[skill:not-a-uuid]]")).toEqual([]);
     expect(parseMentions("[[skill:12345]]")).toEqual([]);
     expect(parseMentions("[[resource:abc]]")).toEqual([]);
+  });
+
+  test("finds malformed mention targets", () => {
+    const md = "See [[skill:my-slug]] and [[resource:references/guide.md]]";
+
+    expect(findInvalidMentionTokens(md)).toEqual([
+      { type: "skill", target: "my-slug" },
+      { type: "resource", target: "references/guide.md" },
+    ]);
+  });
+
+  test("does not flag valid uuid mention targets", () => {
+    const md = `See [[skill:${SKILL_ID}]] and [[resource:${RESOURCE_ID}]]`;
+
+    expect(findInvalidMentionTokens(md)).toEqual([]);
   });
 
   test("ignores unclosed brackets", () => {

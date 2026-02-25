@@ -10,6 +10,7 @@ import { loginCommand } from "./commands/login";
 import { logoutCommand } from "./commands/logout";
 import { searchCommand } from "./commands/search";
 import { syncCommand } from "./commands/sync";
+import { updateCommand } from "./commands/update";
 import { whoamiCommand } from "./commands/whoami";
 import { getCliVersion } from "./lib/version";
 
@@ -33,6 +34,7 @@ function printUsage() {
   p.log.info("  omniskill get <slug-or-uuid>");
   p.log.info("  omniskill config");
   p.log.info("  omniskill create --from <dir> [--slug <s>] [--public]");
+  p.log.info("  omniskill update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]");
   p.log.info("  omniskill delete <uuid>");
   p.log.info("  omniskill import <slug-or-uuid> [--slug <new-slug>]");
 }
@@ -81,6 +83,9 @@ async function run(args: string[]) {
       return;
     case "create":
       await createCommand();
+      return;
+    case "update":
+      await updateCommand();
       return;
     case "delete":
       await deleteCommand();

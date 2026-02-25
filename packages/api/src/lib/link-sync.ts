@@ -4,46 +4,80 @@ import { sql } from "drizzle-orm";
 import { db } from "@omniskill/db";
 import { skill, skillLink, skillResource } from "@omniskill/db/schema/skills";
 
-import { parseMentions } from "./mentions";
+import { findInvalidMentionTokens, parseMentions, type Mention } from "./mentions";
 
-/**
- * Replace all auto-generated skill_link edges for a source skill
- * with the current set of [[...]] mentions found in the markdown.
- * Manual links (without origin: "markdown-auto") are left untouched.
- *
- * Same-owner constraint: only mentions whose target belongs to the
- * same owner as the source skill produce link edges. Cross-owner
- * mentions are silently skipped (consistent with non-existent targets).
- *
- * The delete + insert runs sequentially. If the insert fails the
- * auto-links are re-synced on the next edit, so the atomicity
- * trade-off is acceptable.
- */
-export async function syncAutoLinks(
-  sourceSkillId: string,
-  markdown: string,
-  userId: string,
+export interface MentionSyntaxIssue {
+  type: "skill" | "resource";
+  target: string;
+}
+
+export interface MentionValidationIssue {
+  type: "skill" | "resource";
+  targetId: string;
+  reason: "target_not_found" | "target_not_owned";
+}
+
+interface MentionValidationOptions {
+  allowSkillIds?: ReadonlySet<string>;
+  allowResourceIds?: ReadonlySet<string>;
+}
+
+function formatMentionSyntaxMessage(issues: MentionSyntaxIssue[]): string {
+  const details = issues
+    .map((issue) => `[[${issue.type}:${issue.target}]] target must be a uuid`)
+    .join("; ");
+
+  return `Invalid mention syntax: ${details}`;
+}
+
+export class MentionSyntaxError extends Error {
+  constructor(public readonly issues: MentionSyntaxIssue[]) {
+    super(formatMentionSyntaxMessage(issues));
+    this.name = "MentionSyntaxError";
+  }
+}
+
+function formatMentionValidationMessage(issues: MentionValidationIssue[]): string {
+  const details = issues
+    .map((issue) => {
+      const token = `[[${issue.type}:${issue.targetId}]]`;
+      if (issue.reason === "target_not_owned") {
+        return `${token} belongs to another owner`;
+      }
+      return `${token} not found`;
+    })
+    .join("; ");
+
+  return `Invalid mention targets: ${details}`;
+}
+
+export class MentionValidationError extends Error {
+  constructor(public readonly issues: MentionValidationIssue[]) {
+    super(formatMentionValidationMessage(issues));
+    this.name = "MentionValidationError";
+  }
+}
+
+async function validateMentionTargetsFromMentions(
+  mentions: Mention[],
+  sourceOwner: string | null,
+  options?: MentionValidationOptions,
 ): Promise<void> {
-  const mentions = parseMentions(markdown);
+  if (mentions.length === 0) {
+    return;
+  }
 
-  // resolve the source skill's owner
-  const sourceSkillRows = await db
-    .select({ ownerUserId: skill.ownerUserId })
-    .from(skill)
-    .where(eq(skill.id, sourceSkillId))
-    .limit(1)
-    .execute();
+  const allowedSkillIds = options?.allowSkillIds;
+  const allowedResourceIds = options?.allowResourceIds;
 
-  const sourceSkill = sourceSkillRows[0];
+  const skillMentionIds = mentions
+    .filter((mention) => mention.type === "skill" && !allowedSkillIds?.has(mention.targetId))
+    .map((mention) => mention.targetId);
 
-  if (!sourceSkill) return;
+  const resourceMentionIds = mentions
+    .filter((mention) => mention.type === "resource" && !allowedResourceIds?.has(mention.targetId))
+    .map((mention) => mention.targetId);
 
-  const sourceOwner = sourceSkill.ownerUserId;
-
-  const skillMentionIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
-  const resourceMentionIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
-
-  // fetch mentioned skills with their owner
   const existingSkills = new Map<string, string | null>();
   if (skillMentionIds.length > 0) {
     const rows = await db
@@ -57,7 +91,6 @@ export async function syncAutoLinks(
     }
   }
 
-  // fetch mentioned resources with their parent skill's owner
   const existingResources = new Map<string, string | null>();
   if (resourceMentionIds.length > 0) {
     const rows = await db
@@ -75,15 +108,108 @@ export async function syncAutoLinks(
     }
   }
 
-  // keep only mentions that exist AND belong to the same owner
-  const validMentions = mentions.filter((mention) => {
+  const issues: MentionValidationIssue[] = [];
+
+  for (const mention of mentions) {
     if (mention.type === "skill") {
+      if (allowedSkillIds?.has(mention.targetId)) {
+        continue;
+      }
+
       const targetOwner = existingSkills.get(mention.targetId);
-      return targetOwner !== undefined && targetOwner === sourceOwner;
+      if (targetOwner === undefined) {
+        issues.push({
+          type: "skill",
+          targetId: mention.targetId,
+          reason: "target_not_found",
+        });
+        continue;
+      }
+
+      if (targetOwner !== sourceOwner) {
+        issues.push({
+          type: "skill",
+          targetId: mention.targetId,
+          reason: "target_not_owned",
+        });
+      }
+      continue;
     }
+
+    if (allowedResourceIds?.has(mention.targetId)) {
+      continue;
+    }
+
     const targetOwner = existingResources.get(mention.targetId);
-    return targetOwner !== undefined && targetOwner === sourceOwner;
-  });
+    if (targetOwner === undefined) {
+      issues.push({
+        type: "resource",
+        targetId: mention.targetId,
+        reason: "target_not_found",
+      });
+      continue;
+    }
+
+    if (targetOwner !== sourceOwner) {
+      issues.push({
+        type: "resource",
+        targetId: mention.targetId,
+        reason: "target_not_owned",
+      });
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new MentionValidationError(issues);
+  }
+}
+
+export async function validateMentionTargets(
+  markdown: string,
+  sourceOwner: string | null,
+  options?: MentionValidationOptions,
+): Promise<void> {
+  const invalidTokens = findInvalidMentionTokens(markdown);
+  if (invalidTokens.length > 0) {
+    throw new MentionSyntaxError(invalidTokens);
+  }
+
+  const mentions = parseMentions(markdown);
+  await validateMentionTargetsFromMentions(mentions, sourceOwner, options);
+}
+
+/**
+ * Replace all auto-generated skill_link edges for a source skill
+ * with the current set of [[...]] mentions found in the markdown.
+ * Manual links (without origin: "markdown-auto") are left untouched.
+ *
+ * Same-owner constraint: all mentions must point to existing targets
+ * with the same owner as the source skill. Missing or cross-owner
+ * targets raise MentionValidationError.
+ *
+ * The delete + insert runs sequentially. If the insert fails the
+ * auto-links are re-synced on the next edit, so the atomicity
+ * trade-off is acceptable.
+ */
+export async function syncAutoLinks(
+  sourceSkillId: string,
+  markdown: string,
+  userId: string,
+): Promise<void> {
+  // resolve the source skill's owner
+  const sourceSkillRows = await db
+    .select({ ownerUserId: skill.ownerUserId })
+    .from(skill)
+    .where(eq(skill.id, sourceSkillId))
+    .limit(1)
+    .execute();
+
+  const sourceSkill = sourceSkillRows[0];
+
+  if (!sourceSkill) return;
+
+  await validateMentionTargets(markdown, sourceSkill.ownerUserId);
+  const mentions = parseMentions(markdown);
 
   // delete existing auto-links, then insert current ones
   await db
@@ -96,9 +222,9 @@ export async function syncAutoLinks(
     )
     .execute();
 
-  if (validMentions.length === 0) return;
+  if (mentions.length === 0) return;
 
-  const values = validMentions.map((m) => ({
+  const values = mentions.map((m) => ({
     sourceSkillId,
     sourceResourceId: null,
     targetSkillId: m.type === "skill" ? m.targetId : null,

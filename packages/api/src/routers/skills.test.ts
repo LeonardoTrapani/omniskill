@@ -390,10 +390,15 @@ function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
       const tableName = getTableName(table);
       let whereCondition: Condition | undefined;
       let orderBy: unknown[] = [];
+      let joinedRows: Record<string, unknown>[] | null = null;
+
+      const getRows = () => {
+        if (joinedRows) return joinedRows;
+        return getStore(tableName) as Record<string, unknown>[];
+      };
 
       const mkResult = () => {
-        const store = getStore(tableName);
-        const filtered = filterRows(store as Record<string, unknown>[], whereCondition);
+        const filtered = filterRows(getRows(), whereCondition);
         const ordered = applyOrder(filtered, orderBy);
         return projectFields(ordered, fieldMap);
       };
@@ -402,13 +407,47 @@ function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
         orderBy = clauses;
         return {
           limit: (n: number) => Promise.resolve(mkResult().slice(0, n)),
+          execute: () => Promise.resolve(mkResult()),
           then: (resolve: (v: unknown) => void) => resolve(mkResult()),
         };
       };
 
+      const limitResult = (n: number) => ({
+        execute: () => Promise.resolve(mkResult().slice(0, n)),
+        then: (resolve: (v: unknown) => void) => resolve(mkResult().slice(0, n)),
+      });
+
       const afterWhere = {
         orderBy: orderByResult,
+        limit: limitResult,
+        execute: () => Promise.resolve(mkResult()),
         then: (resolve: (v: unknown) => void) => resolve(mkResult()),
+      };
+
+      const withJoin = (joinTable: unknown) => {
+        const joinTableName = getTableName(joinTable);
+        if (tableName === "skill_resource" && joinTableName === "skill") {
+          const resourceRows = getStore("skill_resource") as Record<string, unknown>[];
+          const skillRows = getStore("skill") as Record<string, unknown>[];
+
+          joinedRows = resourceRows.flatMap((resourceRow) => {
+            const matched = skillRows.filter((skillRow) => skillRow.id === resourceRow.skillId);
+            return matched.map((skillRow) => ({ ...skillRow, ...resourceRow }));
+          });
+        } else {
+          joinedRows = getRows();
+        }
+
+        return {
+          where: (condition?: Condition) => {
+            whereCondition = condition;
+            return afterWhere;
+          },
+          orderBy: orderByResult,
+          limit: limitResult,
+          execute: () => Promise.resolve(mkResult()),
+          then: (resolve: (v: unknown) => void) => resolve(mkResult()),
+        };
       };
 
       return {
@@ -416,7 +455,10 @@ function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
           whereCondition = condition;
           return afterWhere;
         },
+        innerJoin: (joinTable: unknown, _condition: unknown) => withJoin(joinTable),
         orderBy: orderByResult,
+        limit: limitResult,
+        execute: () => Promise.resolve(mkResult()),
         then: (resolve: (v: unknown) => void) => resolve(mkResult()),
       };
     },
@@ -446,6 +488,7 @@ const mockDb = {
         }
         return {
           returning: () => Promise.resolve(created),
+          execute: () => Promise.resolve(created),
           then: (resolve: (v: unknown) => void) => resolve(undefined),
         };
       },
@@ -478,16 +521,28 @@ const mockDb = {
     const tableName = getTableName(table);
     return {
       where: (condition?: Condition) => {
-        const store = getStore(tableName);
-        const toKeep: Record<string, unknown>[] = [];
-        for (const row of store) {
-          if (condition && !evalCondition(row, condition)) {
-            toKeep.push(row);
+        const runDelete = () => {
+          const store = getStore(tableName);
+          const toKeep: Record<string, unknown>[] = [];
+          for (const row of store) {
+            if (condition && !evalCondition(row, condition)) {
+              toKeep.push(row);
+            }
           }
-        }
-        store.length = 0;
-        store.push(...toKeep);
-        return Promise.resolve();
+          store.length = 0;
+          store.push(...toKeep);
+        };
+
+        return {
+          execute: () => {
+            runDelete();
+            return Promise.resolve();
+          },
+          then: (resolve: (v: unknown) => void) => {
+            runDelete();
+            resolve(undefined);
+          },
+        };
       },
     };
   },
@@ -875,6 +930,59 @@ describe("skills.create", () => {
     expect(result.resources.map((r) => r.path).sort()).toEqual(["lib/helper.ts", "readme.md"]);
   });
 
+  test("create keeps local markdown links as-is", async () => {
+    const result = await authedCaller(USER_A).skills.create({
+      slug: "local-resource-links",
+      name: "Local Resource Links",
+      description: "preserve markdown links",
+      skillMarkdown: "See [Guide](references/guide.md)",
+      resources: [{ path: "references/guide.md", content: "# Guide" }],
+    });
+
+    expect(result.originalMarkdown).toBe("See [Guide](references/guide.md)");
+
+    const autoLinks = links.filter(
+      (link) =>
+        link.sourceSkillId === result.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+    expect(autoLinks).toHaveLength(0);
+  });
+
+  test("create rejects non-uuid mention tokens", async () => {
+    try {
+      await authedCaller(USER_A).skills.create({
+        slug: "bad-mention-token",
+        name: "Bad Mention Token",
+        description: "should fail",
+        skillMarkdown: "See [[resource:references/missing.md]]",
+      });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("BAD_REQUEST");
+    }
+
+    expect(skills).toHaveLength(0);
+  });
+
+  test("create rejects missing mention targets instead of skipping", async () => {
+    const unknownSkill = randomUUID();
+
+    try {
+      await authedCaller(USER_A).skills.create({
+        slug: "missing-target",
+        name: "Missing Target",
+        description: "should fail",
+        skillMarkdown: `See [[skill:${unknownSkill}]]`,
+      });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("BAD_REQUEST");
+    }
+
+    expect(skills).toHaveLength(0);
+  });
+
   test("create returns both originalMarkdown and renderedMarkdown", async () => {
     const result = await authedCaller(USER_A).skills.create({
       slug: "md",
@@ -948,6 +1056,42 @@ describe("skills.update", () => {
 
     const result = await authedCaller(USER_A).skills.update({ id: s.id, name: "Updated Name" });
     expect(result.name).toBe("Updated Name");
+  });
+
+  test("update rejects non-uuid resource mention tokens", async () => {
+    const source = seedSkill({ ownerUserId: USER_A, skillMarkdown: "# Start" });
+
+    try {
+      await authedCaller(USER_A).skills.update({
+        id: source.id,
+        skillMarkdown: "See [[resource:references/new-guide.md]]",
+        resources: [{ path: "references/new-guide.md", content: "new guide" }],
+      });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("BAD_REQUEST");
+    }
+
+    const persisted = skills.find((row) => row.id === source.id);
+    expect(persisted?.skillMarkdown).toBe("# Start");
+  });
+
+  test("update rejects invalid mention targets before persisting markdown", async () => {
+    const source = seedSkill({ ownerUserId: USER_A, skillMarkdown: "# Original" });
+    const unknownSkill = randomUUID();
+
+    try {
+      await authedCaller(USER_A).skills.update({
+        id: source.id,
+        skillMarkdown: `See [[skill:${unknownSkill}]]`,
+      });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("BAD_REQUEST");
+    }
+
+    const persisted = skills.find((row) => row.id === source.id);
+    expect(persisted?.skillMarkdown).toBe("# Original");
   });
 
   test("update nonexistent skill returns NOT_FOUND", async () => {

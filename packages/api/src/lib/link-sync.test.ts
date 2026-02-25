@@ -25,6 +25,9 @@ mock.module("@omniskill/db", () => {
       return {
         where: (condition: unknown) => {
           op.where = String(condition);
+          return {
+            execute: async () => undefined,
+          };
         },
       };
     };
@@ -34,38 +37,52 @@ mock.module("@omniskill/db", () => {
       return {
         values: (v: unknown[]) => {
           op.values = v;
+          return {
+            execute: async () => undefined,
+          };
         },
       };
     };
+
+    const queryResult = <T>(rows: T[]) => ({
+      limit: (n: number) => ({
+        execute: async () => rows.slice(0, n),
+      }),
+      execute: async () => rows,
+    });
+
     chain.select = (_fields?: unknown) => ({
       from: (table: unknown) => {
         const tableName = getTableName(table);
+        const getRows = () => {
+          if (tableName === "skill") {
+            // first call is the source skill lookup (returns ownerUserId)
+            // subsequent calls are target skill lookups
+            return [...skillOwners.entries()].map(([id, ownerUserId]) => ({
+              id,
+              ownerUserId,
+            }));
+          }
+          if (tableName === "skill_resource") {
+            return [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
+              id,
+              ownerUserId,
+            }));
+          }
+          return [];
+        };
+
         const queryChain = {
-          where: async (_condition?: unknown) => {
-            if (tableName === "skill") {
-              // first call is the source skill lookup (returns ownerUserId)
-              // subsequent calls are target skill lookups
-              return [...skillOwners.entries()].map(([id, ownerUserId]) => ({
-                id,
-                ownerUserId,
-              }));
-            }
-            if (tableName === "skill_resource") {
-              return [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
-                id,
-                ownerUserId,
-              }));
-            }
-            return [];
-          },
+          where: (_condition?: unknown) => queryResult(getRows()),
           innerJoin: (_joinTable: unknown, _condition: unknown) => ({
-            where: async (_condition?: unknown) => {
+            where: (_condition?: unknown) =>
               // resource join query — returns resources with parent skill owner
-              return [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
-                id,
-                ownerUserId,
-              }));
-            },
+              queryResult(
+                [...resourceOwners.entries()].map(([id, ownerUserId]) => ({
+                  id,
+                  ownerUserId,
+                })),
+              ),
           }),
         };
         return queryChain;
@@ -82,7 +99,7 @@ mock.module("@omniskill/db", () => {
 });
 
 // must import after mock setup
-const { syncAutoLinks } = await import("./link-sync");
+const { MentionSyntaxError, MentionValidationError, syncAutoLinks } = await import("./link-sync");
 
 describe("syncAutoLinks", () => {
   const SKILL_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
@@ -144,17 +161,26 @@ describe("syncAutoLinks", () => {
     expect(insertCalls).toHaveLength(0);
   });
 
-  test("ignores mentions that point to missing targets", async () => {
+  test("throws when mentions point to missing targets", async () => {
     const unknownSkill = "d4e5f6a7-b8c9-0123-def1-234567890123";
     const unknownResource = "e5f6a7b8-c9d0-1234-ef12-345678901234";
     const md = `[[skill:${TARGET_SKILL}]] [[skill:${unknownSkill}]] [[resource:${unknownResource}]]`;
 
-    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
+      MentionValidationError,
+    );
 
-    expect(deleteCalls).toHaveLength(1);
-    expect(insertCalls).toHaveLength(1);
-    // only the known TARGET_SKILL gets a link; unknownSkill and unknownResource are skipped
-    expect(insertCalls[0]!.values).toHaveLength(1);
+    expect(deleteCalls).toHaveLength(0);
+    expect(insertCalls).toHaveLength(0);
+  });
+
+  test("throws on mention tokens with non-uuid targets", async () => {
+    const md = "See [[resource:references/guide.md]]";
+
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(MentionSyntaxError);
+
+    expect(deleteCalls).toHaveLength(0);
+    expect(insertCalls).toHaveLength(0);
   });
 
   test("tags all links with origin markdown-auto", async () => {
@@ -179,35 +205,32 @@ describe("syncAutoLinks", () => {
     }
   });
 
-  test("silently skips cross-owner skill mentions instead of throwing", async () => {
+  test("throws on cross-owner skill mentions", async () => {
     const foreignSkill = "f6a7b8c9-d0e1-2345-6789-abcdef012345";
     // add a skill owned by someone else
     skillOwners.set(foreignSkill, "other-owner");
 
     const md = `[[skill:${TARGET_SKILL}]] [[skill:${foreignSkill}]]`;
 
-    // should not throw — just skips the foreign mention
-    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
+      MentionValidationError,
+    );
 
-    expect(deleteCalls).toHaveLength(1);
-    expect(insertCalls).toHaveLength(1);
-    // only the same-owner TARGET_SKILL gets a link
-    expect(insertCalls[0]!.values).toHaveLength(1);
-    const values = insertCalls[0]!.values as Array<{ targetSkillId: string | null }>;
-    expect(values[0]!.targetSkillId).toBe(TARGET_SKILL);
+    expect(deleteCalls).toHaveLength(0);
+    expect(insertCalls).toHaveLength(0);
   });
 
-  test("silently skips cross-owner resource mentions", async () => {
+  test("throws on cross-owner resource mentions", async () => {
     const foreignResource = "a7b8c9d0-e1f2-3456-789a-bcdef0123456";
     resourceOwners.set(foreignResource, "other-owner");
 
     const md = `[[resource:${TARGET_RESOURCE}]] [[resource:${foreignResource}]]`;
 
-    await syncAutoLinks(SKILL_UUID, md, USER_ID);
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
+      MentionValidationError,
+    );
 
-    expect(insertCalls).toHaveLength(1);
-    expect(insertCalls[0]!.values).toHaveLength(1);
-    const values = insertCalls[0]!.values as Array<{ targetResourceId: string | null }>;
-    expect(values[0]!.targetResourceId).toBe(TARGET_RESOURCE);
+    expect(deleteCalls).toHaveLength(0);
+    expect(insertCalls).toHaveLength(0);
   });
 });

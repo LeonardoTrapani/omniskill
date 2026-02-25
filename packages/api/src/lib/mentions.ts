@@ -1,5 +1,6 @@
 // UUID v4 pattern (lowercase hex, 8-4-4-4-12)
 const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const UUID_VALUE_RE = new RegExp(`^${UUID_RE}$`, "i");
 
 // matches [[skill:<uuid>]] / [[resource:<uuid>]] and escaped variants
 // (e.g. \[\[resource:<uuid>\]\]) produced by some markdown editors.
@@ -8,11 +9,21 @@ const MENTION_RE = new RegExp(
   "gi",
 );
 
+const MENTION_TOKEN_RE = new RegExp(
+  String.raw`\\?\[\\?\[(skill|resource):([^\]\n]+)\\?\]\\?\]`,
+  "gi",
+);
+
 export type MentionType = "skill" | "resource";
 
 export interface Mention {
   type: MentionType;
   targetId: string;
+}
+
+export interface InvalidMentionToken {
+  type: MentionType;
+  target: string;
 }
 
 /**
@@ -55,6 +66,38 @@ export function parseMentions(markdown: string): Mention[] {
         seen.add(key);
         result.push({ type, targetId });
       }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Extract mention-like tokens whose target is not a UUID.
+ */
+export function findInvalidMentionTokens(markdown: string): InvalidMentionToken[] {
+  const seen = new Set<string>();
+  const result: InvalidMentionToken[] = [];
+
+  for (const line of markdown.split("\n")) {
+    let match: RegExpExecArray | null;
+    MENTION_TOKEN_RE.lastIndex = 0;
+
+    while ((match = MENTION_TOKEN_RE.exec(line)) !== null) {
+      const type = match[1]!.toLowerCase() as MentionType;
+      const target = match[2]!.trim();
+
+      if (UUID_VALUE_RE.test(target)) {
+        continue;
+      }
+
+      const key = `${type}:${target.toLowerCase()}`;
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      result.push({ type, target });
     }
   }
 

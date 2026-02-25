@@ -13,6 +13,8 @@ import {
   stripNewResourceMentionsForCreate,
 } from "../lib/new-resource-mentions";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const RESOURCE_DIRS: Record<string, "reference" | "script" | "asset"> = {
   references: "reference",
   scripts: "script",
@@ -25,13 +27,6 @@ type ResourceInput = {
   content: string;
   metadata: Record<string, unknown>;
 };
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function readErrorMessage(error: unknown): string {
   if (typeof error === "object" && error !== null) {
@@ -56,22 +51,41 @@ function readErrorMessage(error: unknown): string {
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(3);
+  let identifier: string | undefined;
   let from: string | undefined;
   let slug: string | undefined;
-  let isPublic = false;
+  let visibility: "public" | "private" | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
-    if (arg === "--public") {
-      isPublic = true;
-    } else if (arg === "--from" && args[i + 1]) {
+
+    if (!arg.startsWith("--") && !identifier) {
+      identifier = arg;
+      continue;
+    }
+
+    if (arg === "--from" && args[i + 1]) {
       from = args[++i];
-    } else if (arg === "--slug" && args[i + 1]) {
+      continue;
+    }
+
+    if (arg === "--slug" && args[i + 1]) {
       slug = args[++i];
+      continue;
+    }
+
+    if (arg === "--public") {
+      visibility = "public";
+      continue;
+    }
+
+    if (arg === "--private") {
+      visibility = "private";
+      continue;
     }
   }
 
-  return { from, slug, isPublic };
+  return { identifier, from, slug, visibility };
 }
 
 async function scanResources(baseDir: string): Promise<ResourceInput[]> {
@@ -104,15 +118,16 @@ async function scanResources(baseDir: string): Promise<ResourceInput[]> {
   return resources;
 }
 
-export async function createCommand() {
-  const { from, slug: slugOverride, isPublic } = parseArgs(process.argv);
+export async function updateCommand() {
+  const { identifier, from, slug, visibility: visibilityOverride } = parseArgs(process.argv);
 
-  if (!from) {
-    p.log.error("usage: omniskill create --from <dir> [--slug <s>] [--public]");
+  if (!identifier || !from) {
+    p.log.error(
+      "usage: omniskill update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
+    );
     process.exit(1);
   }
 
-  // validate directory exists and has SKILL.md
   try {
     const dirStat = await stat(from);
     if (!dirStat.isDirectory()) {
@@ -150,17 +165,10 @@ export async function createCommand() {
     process.exit(1);
   }
 
-  const slug =
-    slugOverride ||
-    (typeof frontmatter.slug === "string" ? frontmatter.slug : null) ||
-    slugify(name);
-  const visibility = isPublic ? ("public" as const) : ("private" as const);
-
   const s = p.spinner();
+
   s.start("reading resources");
-
   const resources = await scanResources(from);
-
   s.stop(pc.dim(`found ${resources.length} resource(s)`));
 
   const originalMarkdown = markdownBody.trim();
@@ -183,31 +191,98 @@ export async function createCommand() {
     }
   }
 
-  const markdownForCreate =
+  const markdownForUpdate =
     newResourcePaths.length > 0
       ? stripNewResourceMentionsForCreate(originalMarkdown)
       : originalMarkdown;
 
-  s.start("creating skill");
+  s.start("loading skill");
 
-  let createdSkill: Awaited<ReturnType<typeof trpc.skills.create.mutate>> | null = null;
+  let targetSkill: Awaited<ReturnType<typeof trpc.skills.getById.query>>;
+  try {
+    targetSkill = UUID_RE.test(identifier)
+      ? await trpc.skills.getById.query({ id: identifier, linkMentions: false })
+      : await trpc.skills.getBySlug.query({ slug: identifier, linkMentions: false });
+    s.stop(pc.dim(`loaded ${targetSkill.slug}`));
+  } catch (error) {
+    s.stop(pc.red("load failed"));
+    p.log.error(readErrorMessage(error));
+    process.exit(1);
+  }
+
+  const visibility = visibilityOverride ?? targetSkill.visibility;
+
+  const existingResourceByPath = new Map(
+    targetSkill.resources.map((resource) => [normalizeResourcePath(resource.path), resource]),
+  );
+  const localResourceByPath = new Map(
+    resources.map((resource) => [normalizeResourcePath(resource.path), resource]),
+  );
+
+  const resourcesPayload: Array<{
+    id?: string;
+    delete?: boolean;
+    path: string;
+    kind: "reference" | "script" | "asset" | "other";
+    content: string;
+    metadata: Record<string, unknown>;
+  }> = [];
+
+  for (const [path, existingResource] of existingResourceByPath) {
+    if (!localResourceByPath.has(path)) {
+      resourcesPayload.push({
+        id: existingResource.id,
+        delete: true,
+        path: existingResource.path,
+        kind: existingResource.kind,
+        content: existingResource.content,
+        metadata: existingResource.metadata,
+      });
+    }
+  }
+
+  for (const [path, localResource] of localResourceByPath) {
+    const existingResource = existingResourceByPath.get(path);
+    if (existingResource) {
+      resourcesPayload.push({
+        id: existingResource.id,
+        path: localResource.path,
+        kind: localResource.kind,
+        content: localResource.content,
+        metadata: localResource.metadata,
+      });
+      continue;
+    }
+
+    resourcesPayload.push({
+      path: localResource.path,
+      kind: localResource.kind,
+      content: localResource.content,
+      metadata: localResource.metadata,
+    });
+  }
+
+  s.start("updating skill");
+
+  let updatedSkill: Awaited<ReturnType<typeof trpc.skills.update.mutate>> | null = null;
 
   try {
-    createdSkill = await trpc.skills.create.mutate({
+    updatedSkill = await trpc.skills.update.mutate({
+      id: targetSkill.id,
       slug,
       name,
       description,
-      skillMarkdown: markdownForCreate,
+      skillMarkdown: markdownForUpdate,
       visibility,
       frontmatter: frontmatter as Record<string, unknown>,
-      resources,
+      resources: resourcesPayload,
     });
 
     if (newResourcePaths.length > 0) {
       s.message("resolving local new resource mentions");
 
       const resourceIdByPath = new Map(
-        createdSkill.resources.map((resource) => [
+        updatedSkill.resources.map((resource) => [
           normalizeResourcePath(resource.path),
           resource.id,
         ]),
@@ -218,36 +293,35 @@ export async function createCommand() {
       if (resolved.missingPaths.length > 0) {
         throw new Error(
           [
-            "failed to resolve new resource mention path(s) after create:",
+            "failed to resolve new resource mention path(s) after update:",
             ...resolved.missingPaths.map((path) => `  - ${path}`),
           ].join("\n"),
         );
       }
 
-      if (resolved.markdown !== markdownForCreate) {
-        createdSkill = await trpc.skills.update.mutate({
-          id: createdSkill.id,
+      if (resolved.markdown !== markdownForUpdate) {
+        updatedSkill = await trpc.skills.update.mutate({
+          id: updatedSkill.id,
           skillMarkdown: resolved.markdown,
         });
       }
     }
 
-    s.stop(pc.green("skill created"));
+    s.stop(pc.green("skill updated"));
 
-    // structured output for agents
     console.log(
       JSON.stringify({
-        id: createdSkill.id,
-        slug: createdSkill.slug,
-        name: createdSkill.name,
-        visibility: createdSkill.visibility,
+        id: updatedSkill.id,
+        slug: updatedSkill.slug,
+        name: updatedSkill.name,
+        visibility: updatedSkill.visibility,
       }),
     );
   } catch (error) {
-    s.stop(pc.red("creation failed"));
+    s.stop(pc.red("update failed"));
 
-    if (createdSkill) {
-      p.log.error(`skill was created but finalization failed: ${createdSkill.id}`);
+    if (updatedSkill) {
+      p.log.error(`skill was updated but finalization failed: ${updatedSkill.id}`);
     }
 
     p.log.error(readErrorMessage(error));

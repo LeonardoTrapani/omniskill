@@ -6,7 +6,12 @@ import { db } from "@omniskill/db";
 import { skill, skillLink, skillResource } from "@omniskill/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../trpc";
-import { syncAutoLinks } from "../lib/link-sync";
+import {
+  MentionSyntaxError,
+  MentionValidationError,
+  syncAutoLinks,
+  validateMentionTargets,
+} from "../lib/link-sync";
 import { remapMentionTargetIds } from "../lib/mentions";
 import { renderMentions } from "../lib/render-mentions";
 
@@ -86,6 +91,14 @@ function visibilityFilter(session: Session | null) {
     );
   }
   return eq(skill.visibility, "public");
+}
+
+function throwMentionValidationError(error: unknown): never {
+  if (error instanceof MentionSyntaxError || error instanceof MentionValidationError) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: error.message, cause: error });
+  }
+
+  throw error;
 }
 
 // -- graph helpers --
@@ -786,6 +799,12 @@ export const skillsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      try {
+        await validateMentionTargets(input.skillMarkdown, userId);
+      } catch (error) {
+        throwMentionValidationError(error);
+      }
+
       const [created] = await db
         .insert(skill)
         .values({
@@ -812,18 +831,26 @@ export const skillsRouter = router({
         resources = await db
           .insert(skillResource)
           .values(
-            input.resources.map((r) => ({
+            input.resources.map((resource) => ({
               skillId: created.id,
-              path: r.path,
-              kind: r.kind,
-              content: r.content,
-              metadata: r.metadata,
+              path: resource.path,
+              kind: resource.kind,
+              content: resource.content,
+              metadata: resource.metadata,
             })),
           )
           .returning();
       }
 
-      await syncAutoLinks(created.id, input.skillMarkdown, userId);
+      try {
+        await syncAutoLinks(created.id, input.skillMarkdown, userId);
+      } catch (error) {
+        if (error instanceof MentionSyntaxError || error instanceof MentionValidationError) {
+          await db.delete(skill).where(eq(skill.id, created.id));
+          throwMentionValidationError(error);
+        }
+        throw error;
+      }
 
       return await toSkillOutput(created, resources);
     }),
@@ -866,6 +893,14 @@ export const skillsRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Not the skill owner" });
       }
 
+      if (input.skillMarkdown !== undefined) {
+        try {
+          await validateMentionTargets(input.skillMarkdown, existing.ownerUserId);
+        } catch (error) {
+          throwMentionValidationError(error);
+        }
+      }
+
       // build partial update set
       const updates: Partial<typeof skill.$inferInsert> = {};
       if (input.slug !== undefined) updates.slug = input.slug;
@@ -888,15 +923,23 @@ export const skillsRouter = router({
 
       // handle resource mutations when provided
       if (input.resources) {
-        const toDelete = input.resources.filter((r) => r.delete && r.id).map((r) => r.id!);
+        const toDelete = input.resources.filter((resource) => resource.delete && resource.id);
+        const toUpdate = input.resources.filter((resource) => resource.id && !resource.delete);
+        const toInsert = input.resources.filter((resource) => !resource.id && !resource.delete);
 
         if (toDelete.length > 0) {
-          await db
-            .delete(skillResource)
-            .where(and(eq(skillResource.skillId, input.id), inArray(skillResource.id, toDelete)));
+          await db.delete(skillResource).where(
+            and(
+              eq(skillResource.skillId, input.id),
+              inArray(
+                skillResource.id,
+                toDelete.map((resource) => resource.id!),
+              ),
+            ),
+          );
         }
 
-        for (const r of input.resources.filter((r) => r.id && !r.delete)) {
+        for (const r of toUpdate) {
           await db
             .update(skillResource)
             .set({
@@ -908,7 +951,6 @@ export const skillsRouter = router({
             .where(and(eq(skillResource.id, r.id!), eq(skillResource.skillId, input.id)));
         }
 
-        const toInsert = input.resources.filter((r) => !r.id && !r.delete);
         if (toInsert.length > 0) {
           await db.insert(skillResource).values(
             toInsert.map((r) => ({
@@ -924,7 +966,11 @@ export const skillsRouter = router({
 
       // sync auto-generated links when markdown changed
       if (input.skillMarkdown !== undefined) {
-        await syncAutoLinks(input.id, input.skillMarkdown, userId);
+        try {
+          await syncAutoLinks(input.id, input.skillMarkdown, userId);
+        } catch (error) {
+          throwMentionValidationError(error);
+        }
       }
 
       // fetch final resources state
@@ -1165,7 +1211,11 @@ export const skillsRouter = router({
         }
       }
 
-      await syncAutoLinks(createdSkill.id, remappedMarkdown, userId);
+      try {
+        await syncAutoLinks(createdSkill.id, remappedMarkdown, userId);
+      } catch (error) {
+        throwMentionValidationError(error);
+      }
 
       return await toSkillOutput(createdSkill, resources);
     }),
