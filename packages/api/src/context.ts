@@ -1,6 +1,6 @@
 import type { Context as HonoContext } from "hono";
 
-import { auth } from "@omniscient/auth";
+import { auth } from "@omniskill/auth";
 
 export type CreateContextOptions = {
   context: HonoContext;

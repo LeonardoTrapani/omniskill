@@ -1,5 +1,5 @@
-import { appRouter, createContext } from "@omniscient/api";
-import { env } from "@omniscient/env/server";
+import { appRouter, createContext } from "@omniskill/api";
+import { env } from "@omniskill/env/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import type { Context as HonoContext } from "hono";
@@ -135,9 +135,9 @@ function buildSystemPrompt({ selectedSkill }: { selectedSkill: SelectedSkill | n
     : "";
 
   return [
-    "You are Omniscient's skill architect assistant.",
+    "You are Omniskill's skill architect assistant.",
     "",
-    "Follow the Skill Creator and Omniscient workflow:",
+    "Follow the Skill Creator and Omniskill workflow:",
     "1) discover -> search existing skills first",
     "2) decide with user -> import, link, or new",
     "3) draft -> show the proposed skill structure and markdown",

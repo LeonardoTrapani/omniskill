@@ -1,5 +1,5 @@
 {
-  "name": "@omniscient/api",
+  "name": "@omniskill/api",
   "type": "module",
   "exports": {
     ".": {
@@ -15,9 +15,9 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
   },
   "dependencies": {
-    "@omniscient/auth": "workspace:*",
-    "@omniscient/db": "workspace:*",
-    "@omniscient/env": "workspace:*",
+    "@omniskill/auth": "workspace:*",
+    "@omniskill/db": "workspace:*",
+    "@omniskill/env": "workspace:*",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "dotenv": "catalog:",
@@ -25,7 +25,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniscient/config": "workspace:*",
+    "@omniskill/config": "workspace:*",
     "hono": "catalog:",
     "typescript": "catalog:"
   }

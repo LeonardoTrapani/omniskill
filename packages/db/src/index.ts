@@ -1,4 +1,4 @@
-import { env } from "@omniscient/env/server";
+import { env } from "@omniskill/env/server";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 

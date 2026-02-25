@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
-import { env } from "@omniscient/env/cli";
+import { env } from "@omniskill/env/cli";
 import { clearSession, readSessionSync } from "../lib/session";
 
 export async function logoutCommand() {

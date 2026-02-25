@@ -1,5 +1,5 @@
 {
-  "name": "@omniscient/auth",
+  "name": "@omniskill/auth",
   "type": "module",
   "exports": {
     ".": {
@@ -15,14 +15,14 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
   },
   "dependencies": {
-    "@omniscient/db": "workspace:*",
-    "@omniscient/env": "workspace:*",
+    "@omniskill/db": "workspace:*",
+    "@omniskill/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniscient/config": "workspace:*",
+    "@omniskill/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

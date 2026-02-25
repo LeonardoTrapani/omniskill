@@ -17,7 +17,7 @@ let queryCount = 0;
 
 const drizzleNameSym = Symbol.for("drizzle:Name");
 
-mock.module("@omniscient/db", () => {
+mock.module("@omniskill/db", () => {
   const makeSelectChain = () => ({
     from: (table: unknown) => ({
       where: (_condition: unknown) => {

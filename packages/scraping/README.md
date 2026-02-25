@@ -1,10 +1,10 @@
 # Scraping Algorithm — Skill Ingestion & Resource Resolution Pipeline
 
-Pipeline deterministica per importare skill dal formato pubblico (skills.sh) nel database Omniscient, risolvere tutti i cross-reference tra skill e tra skill-risorse, e generare il grafo di link (`skill_link`).
+Pipeline deterministica per importare skill dal formato pubblico (skills.sh) nel database Omniskill, risolvere tutti i cross-reference tra skill e tra skill-risorse, e generare il grafo di link (`skill_link`).
 
 ## Panoramica
 
-Il problema: le skill provengono da una directory `parsed-skills/` con file markdown e risorse locali. Il markdown contiene centinaia di riferimenti testuali (path relativi, URL, slug) che devono essere convertiti in token UUID-based (`[[skill:<uuid>]]`, `[[resource:<uuid>]]`) per il sistema di mentions di Omniscient.
+Il problema: le skill provengono da una directory `parsed-skills/` con file markdown e risorse locali. Il markdown contiene centinaia di riferimenti testuali (path relativi, URL, slug) che devono essere convertiti in token UUID-based (`[[skill:<uuid>]]`, `[[resource:<uuid>]]`) per il sistema di mentions di Omniskill.
 
 La pipeline si compone di **4 script** eseguiti in sequenza:
 
@@ -373,7 +373,7 @@ Check constraint: esattamente uno tra `target_skill_id` e `target_resource_id` d
 
 ```bash
 # Prerequisiti
-cd omniscient
+cd omniskill
 bun install  # assicurarsi che gray-matter e @neondatabase/serverless siano installati
 
 # Step 1: Ingest skill + risorse + cross-ref skill-to-skill

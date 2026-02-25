@@ -1,5 +1,5 @@
 {
-  "name": "@omniscient/env",
+  "name": "@omniskill/env",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -27,7 +27,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniscient/config": "workspace:*",
+    "@omniskill/config": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

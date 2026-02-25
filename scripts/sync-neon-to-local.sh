@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="$ROOT_DIR/apps/server/.env"
 DUMP_FILE="$ROOT_DIR/tmp/neon.dump"
-LOCAL_URL="postgresql://omniscient:omniscient@localhost:5432/omniscient"
+LOCAL_URL="postgresql://omniskill:omniskill@localhost:5432/omniskill"
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Missing env file: $ENV_FILE"
@@ -47,9 +47,9 @@ echo "Dumping Neon database..."
 pg_dump --no-owner --no-privileges --format=custom --file "$DUMP_FILE" "$REMOTE_URL"
 
 echo "Recreating local database..."
-psql postgres -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'omniscient') THEN CREATE ROLE omniscient WITH LOGIN PASSWORD 'omniscient'; END IF; END \$\$;"
-psql postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS omniscient;"
-psql postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE omniscient OWNER omniscient;"
+psql postgres -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'omniskill') THEN CREATE ROLE omniskill WITH LOGIN PASSWORD 'omniskill'; END IF; END \$\$;"
+psql postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS omniskill;"
+psql postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE omniskill OWNER omniskill;"
 
 echo "Restoring dump into local database..."
 pg_restore --no-owner --no-privileges --clean --if-exists --dbname "$LOCAL_URL" "$DUMP_FILE"

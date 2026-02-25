@@ -16,10 +16,10 @@ type StoredConfig = {
 function getConfigDir() {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME;
   if (xdgConfigHome) {
-    return join(xdgConfigHome, "omniscient");
+    return join(xdgConfigHome, "omniskill");
   }
 
-  return join(homedir(), ".config", "omniscient");
+  return join(homedir(), ".config", "omniskill");
 }
 
 export function getConfigFilePath() {

@@ -1,6 +1,6 @@
 # Skills Schema
 
-This document explains how Omniscient stores skills as a graph in Postgres with Drizzle.
+This document explains how Omniskill stores skills as a graph in Postgres with Drizzle.
 
 ## Goal
 

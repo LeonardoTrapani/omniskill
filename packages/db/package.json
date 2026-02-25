@@ -1,5 +1,5 @@
 {
-  "name": "@omniscient/db",
+  "name": "@omniskill/db",
   "type": "module",
   "exports": {
     ".": {
@@ -19,14 +19,14 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "@omniscient/env": "workspace:*",
+    "@omniskill/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.7",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniscient/config": "workspace:*",
+    "@omniskill/config": "workspace:*",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"
   }

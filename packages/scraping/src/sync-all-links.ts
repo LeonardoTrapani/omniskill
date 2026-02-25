@@ -10,8 +10,8 @@ import { parseArgs } from "node:util";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 import { sql as dsql } from "drizzle-orm";
 
-import { db } from "@omniscient/db/script";
-import { skill, skillResource, skillLink } from "@omniscient/db/schema/skills";
+import { db } from "@omniskill/db/script";
+import { skill, skillResource, skillLink } from "@omniskill/db/schema/skills";
 
 const { values } = parseArgs({
   options: {

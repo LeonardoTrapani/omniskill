@@ -1,6 +1,6 @@
 # cli
 
-Omniscient command-line interface built with `@clack/prompts` and connected to the API via tRPC.
+Omniskill command-line interface built with `@clack/prompts` and connected to the API via tRPC.
 
 ## Setup
 

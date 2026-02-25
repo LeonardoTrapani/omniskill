@@ -22,23 +22,23 @@ class UsageError extends Error {
 
 function printUsage() {
   p.log.info("usage:");
-  p.log.info("  omniscient --version");
-  p.log.info("  omniscient --help");
-  p.log.info("  omniscient health");
-  p.log.info("  omniscient login");
-  p.log.info("  omniscient logout");
-  p.log.info("  omniscient whoami");
-  p.log.info("  omniscient sync");
-  p.log.info("  omniscient search <query> [--public] [--limit N]");
-  p.log.info("  omniscient get <slug-or-uuid>");
-  p.log.info("  omniscient config");
-  p.log.info("  omniscient create --from <dir> [--slug <s>] [--public]");
-  p.log.info("  omniscient delete <uuid>");
-  p.log.info("  omniscient import <slug-or-uuid> [--slug <new-slug>]");
+  p.log.info("  omniskill --version");
+  p.log.info("  omniskill --help");
+  p.log.info("  omniskill health");
+  p.log.info("  omniskill login");
+  p.log.info("  omniskill logout");
+  p.log.info("  omniskill whoami");
+  p.log.info("  omniskill sync");
+  p.log.info("  omniskill search <query> [--public] [--limit N]");
+  p.log.info("  omniskill get <slug-or-uuid>");
+  p.log.info("  omniskill config");
+  p.log.info("  omniskill create --from <dir> [--slug <s>] [--public]");
+  p.log.info("  omniskill delete <uuid>");
+  p.log.info("  omniskill import <slug-or-uuid> [--slug <new-slug>]");
 }
 
 function printVersion() {
-  p.log.info(`omniscient ${getCliVersion()}`);
+  p.log.info(`omniskill ${getCliVersion()}`);
 }
 
 async function run(args: string[]) {

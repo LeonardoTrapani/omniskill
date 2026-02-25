@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 
-import { db } from "@omniscient/db";
-import { skill, skillResource } from "@omniscient/db/schema/skills";
+import { db } from "@omniskill/db";
+import { skill, skillResource } from "@omniskill/db/schema/skills";
 
 import { parseMentions } from "./mentions";
 

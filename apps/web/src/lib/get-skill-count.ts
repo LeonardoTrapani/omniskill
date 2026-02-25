@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { env } from "@omniscient/env/web";
+import { env } from "@omniskill/env/web";
 
 export const getSkillCount = unstable_cache(
   async () => {

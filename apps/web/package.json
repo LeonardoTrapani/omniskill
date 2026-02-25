@@ -10,9 +10,9 @@
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@mdxeditor/editor": "^3.52.4",
-    "@omniscient/api": "workspace:*",
-    "@omniscient/auth": "workspace:*",
-    "@omniscient/env": "workspace:*",
+    "@omniskill/api": "workspace:*",
+    "@omniskill/auth": "workspace:*",
+    "@omniskill/env": "workspace:*",
     "@tanstack/react-query": "^5.90.12",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
@@ -39,7 +39,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniscient/config": "workspace:*",
+    "@omniskill/config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@types/d3": "^7.4.3",

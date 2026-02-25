@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO="${OMNISKILL_REPO:-LeonardoTrapani/omniskill}"
 INSTALL_DIR="${OMNISKILL_INSTALL_DIR:-$HOME/.local/bin}"
-DEFAULT_SERVER_URL="${OMNISKILL_SERVER_URL:-https://server.omniskill.sh}"
+DEFAULT_SERVER_URL="${OMNISKILL_SERVER_URL:-https://server.omniskill.dev}"
 VERSION="latest"
 BIN_NAME="omniskill"
 

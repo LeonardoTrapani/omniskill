@@ -17,7 +17,7 @@ export async function searchCommand() {
   const query = queryArgs.join(" ");
 
   if (!query) {
-    p.log.error("usage: omniscient search <query> [--public] [--limit N]");
+    p.log.error("usage: omniskill search <query> [--public] [--limit N]");
     process.exit(1);
   }
 

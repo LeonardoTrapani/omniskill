@@ -76,7 +76,7 @@ export async function syncCommand() {
     await trpc.privateData.query();
     authSpinner.stop(pc.green("authenticated"));
   } catch {
-    authSpinner.stop(pc.red("not authenticated - run omniscient login"));
+    authSpinner.stop(pc.red("not authenticated - run omniskill login"));
     return;
   }
 

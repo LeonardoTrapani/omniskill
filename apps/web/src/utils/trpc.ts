@@ -1,6 +1,6 @@
-import type { AppRouter } from "@omniscient/api/routers/index";
+import type { AppRouter } from "@omniskill/api/routers/index";
 
-import { env } from "@omniscient/env/web";
+import { env } from "@omniskill/env/web";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";

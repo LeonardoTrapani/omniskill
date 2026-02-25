@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This package is the Hono backend for Omniscient. It hosts Better Auth and tRPC endpoints used by the web app and CLI.
+This package is the Hono backend for Omniskill. It hosts Better Auth and tRPC endpoints used by the web app and CLI.
 
 ## Local defaults
 
@@ -8,7 +8,7 @@ This package is the Hono backend for Omniscient. It hosts Better Auth and tRPC e
 - Keep transport concerns here (routing, middleware, adapters); keep domain procedures in `packages/api`.
 - Preserve endpoint boundaries: `/api/auth/*` for Better Auth and `/trpc/*` for tRPC.
 - Preserve credentialed CORS behavior when changing auth or origin logic.
-- Use `@omniscient/env/server` for runtime config validation instead of ad-hoc `process.env` reads.
+- Use `@omniskill/env/server` for runtime config validation instead of ad-hoc `process.env` reads.
 - Use `bun run compile` in this workspace only when you need the Bun single-binary output.
 
 ## Validation

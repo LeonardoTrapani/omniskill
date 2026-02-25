@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Omniscient is an agent second brain: authenticated users manage a graph of reusable skills from a CLI and a web app, backed by a Hono API.
+Omniskill is an agent second brain: authenticated users manage a graph of reusable skills from a CLI and a web app, backed by a Hono API.
 
 ## Essentials
 

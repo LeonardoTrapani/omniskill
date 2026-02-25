@@ -2,7 +2,7 @@
 /**
  * Skill Ingestion Script
  *
- * Reads parsed skill directories and populates the Omniscient DB.
+ * Reads parsed skill directories and populates the Omniskill DB.
  * Two-pass approach:
  *   Pass 1: Import all skills (upsert) with resources
  *   Pass 2: Resolve cross-references (text → [[skill:uuid]])
@@ -16,8 +16,8 @@ import { parseArgs } from "node:util";
 
 import { eq, and, isNull } from "drizzle-orm";
 
-import { db } from "@omniscient/db/script";
-import { skill, skillResource } from "@omniscient/db/schema/skills";
+import { db } from "@omniskill/db/script";
+import { skill, skillResource } from "@omniskill/db/schema/skills";
 
 import { parseSkillMd } from "./lib/parse-skill-md";
 import { scanResources } from "./lib/scan-resources";

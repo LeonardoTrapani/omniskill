@@ -1,6 +1,6 @@
-import { db } from "@omniscient/db";
-import * as schema from "@omniscient/db/schema/auth";
-import { env } from "@omniscient/env/server";
+import { db } from "@omniskill/db";
+import * as schema from "@omniskill/db/schema/auth";
+import { env } from "@omniskill/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins/bearer";
@@ -91,7 +91,7 @@ export const auth = betterAuth({
     bearer(),
     deviceAuthorization({
       verificationUri: `${env.CORS_ORIGIN}/device`,
-      validateClient: async (clientId) => clientId === "omniscient-cli",
+      validateClient: async (clientId) => clientId === "omniskill-cli",
     }),
   ],
 });
