@@ -4,7 +4,7 @@ import type { MouseEvent, ReactNode } from "react";
 
 import { NodePreviewCard } from "@/features/skills/components/graph/node-preview-card";
 import { canRenderResourceAsMarkdown } from "@/features/skills/components/resource-file";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/shared/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import {
   buildResourceHref,
   type SkillResourceReference,

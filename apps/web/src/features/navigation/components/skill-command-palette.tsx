@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { Search, Loader2, ArrowRight } from "lucide-react";
 
 import { useSkillSearch } from "@/features/skills/hooks/use-skill-search";
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/dialog";
+} from "@/components/ui/dialog";
 
 /** Trigger button — render in as many places as needed, all point to the same palette */
 export function SkillCommandTrigger({ onOpen }: { onOpen: () => void }) {

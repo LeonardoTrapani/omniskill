@@ -12,7 +12,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/shared/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import type { SelectedSkill } from "@/features/dashboard/hooks";
 import { invalidateSkillCollectionQueries } from "@/features/skills/lib/invalidate-skill-queries";
 import { buildSkillHref, dashboardRoute } from "@/features/skills/lib/routes";

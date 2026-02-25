@@ -2,8 +2,8 @@
 
 import { X } from "lucide-react";
 
-import { AlertDialog, AlertDialogContent, AlertDialogTitle } from "@/shared/ui/alert-dialog";
-import { Button } from "@/shared/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import AddOptionsView from "@/features/dashboard/components/modal-views/add-options-view";
 import BrowseSkillsView from "@/features/dashboard/components/modal-views/browse-skills-view";
 import ChoiceView from "@/features/dashboard/components/modal-views/choice-view";

@@ -17,10 +17,10 @@ import {
   getResourceMimeType,
 } from "@/features/skills/components/resource-file";
 import { ResourceHoverLink } from "@/features/skills/components/resource-link";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
-import { Separator } from "@/shared/ui/separator";
-import { Skeleton } from "@/shared/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GraphFill } from "@/features/skills/components/graph-fill";
 import { SkillPanel } from "@/features/skills/components/skill-panel";
 import { createResourceHrefResolver } from "@/features/skills/lib/resource-links";

@@ -2,7 +2,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 
 import { ResourceHoverLink } from "@/features/skills/components/resource-link";
-import { Separator } from "@/shared/ui/separator";
+import { Separator } from "@/components/ui/separator";
 import type { SkillResourceReference } from "@/features/skills/lib/resource-links";
 import { buildSkillHref } from "@/features/skills/lib/routes";
 

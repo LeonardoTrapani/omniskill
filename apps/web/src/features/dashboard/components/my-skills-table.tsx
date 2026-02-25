@@ -11,8 +11,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
-import { Button } from "@/shared/ui/button";
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { buildSkillEditHref, buildSkillHref } from "@/features/skills/lib/routes";
 import { trpc } from "@/shared/api/trpc";
 import { cn } from "@/shared/lib/utils";

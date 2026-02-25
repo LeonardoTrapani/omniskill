@@ -2,7 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { markdownUrlTransform } from "@/features/skills/components/markdown-url-transform";
-import { Badge } from "@/shared/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { formatDisplayDate } from "@/shared/lib/format-display-date";
 import { cn } from "@/shared/lib/utils";
 

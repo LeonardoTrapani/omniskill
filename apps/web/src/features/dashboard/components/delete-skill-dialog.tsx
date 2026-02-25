@@ -12,7 +12,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/shared/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { invalidateSkillCollectionQueries } from "@/features/skills/lib/invalidate-skill-queries";
 import { trpc } from "@/shared/api/trpc";
 

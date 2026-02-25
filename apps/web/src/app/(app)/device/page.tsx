@@ -6,9 +6,9 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { buildDeviceAuthorizationHref, buildLoginHref } from "@/features/skills/lib/routes";
 import { authClient } from "@/shared/auth/auth-client";
 import Loader from "@/shared/components/loader";
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 function normalizeUserCode(input: string | null | undefined) {
   return (input ?? "").trim().replaceAll("-", "").toUpperCase();

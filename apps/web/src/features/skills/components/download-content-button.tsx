@@ -3,7 +3,7 @@
 import type { MouseEvent } from "react";
 import { Download } from "lucide-react";
 
-import { Button } from "@/shared/ui/button";
+import { Button } from "@/components/ui/button";
 
 type DownloadContentButtonProps = {
   content: string;
