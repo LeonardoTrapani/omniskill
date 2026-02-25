@@ -60,6 +60,13 @@ describe("renderMentions", () => {
     expect(result).toBe(`Check out \`typescript-basics\` for more info.`);
   });
 
+  test("replaces escaped mention tokens", async () => {
+    const md = String.raw`Check \[\[resource:${RESOURCE_ID}\]\] and \[\[skill:${SKILL_A_ID}\]\].`;
+    const result = await renderMentions(md);
+    expect(result).toContain(`resource://${RESOURCE_ID}`);
+    expect(result).toContain("`typescript-basics`");
+  });
+
   test("replaces resource mention with resolved name and parent skill", async () => {
     const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
     const result = await renderMentions(md);

@@ -16,6 +16,14 @@ describe("parseMentions", () => {
     expect(parseMentions(md)).toEqual([{ type: "resource", targetId: RESOURCE_ID }]);
   });
 
+  test("extracts escaped mention tokens", () => {
+    const md = String.raw`Check \[\[resource:${RESOURCE_ID}\]\] and \[\[skill:${SKILL_ID}\]\]`;
+    expect(parseMentions(md)).toEqual([
+      { type: "resource", targetId: RESOURCE_ID },
+      { type: "skill", targetId: SKILL_ID },
+    ]);
+  });
+
   test("extracts multiple mentions from mixed text", () => {
     const md = [
       "# My Skill",

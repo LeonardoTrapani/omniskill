@@ -379,6 +379,107 @@ export const skillsRouter = router({
       return { items, total };
     }),
 
+  searchMentions: protectedProcedure
+    .input(
+      z.object({
+        query: z.string(),
+        skillId: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(10).default(6),
+      }),
+    )
+    .output(
+      z.object({
+        items: z.array(
+          z.object({
+            type: z.enum(["skill", "resource"]),
+            id: z.string().uuid(),
+            label: z.string(),
+            subtitle: z.string().nullable(),
+            parentSkillId: z.string().uuid().nullable(),
+          }),
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const { query, skillId, limit } = input;
+
+      const halfLimit = Math.max(Math.ceil(limit / 2), 2);
+
+      type MentionItem = {
+        type: "skill" | "resource";
+        id: string;
+        label: string;
+        subtitle: string | null;
+        parentSkillId: string | null;
+      };
+
+      const items: MentionItem[] = [];
+
+      // --- skill results ---
+      const skillConditions = [eq(skill.ownerUserId, userId)];
+      if (query.length > 0) {
+        const pattern = `%${query}%`;
+        skillConditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
+      }
+      if (skillId) {
+        // exclude the skill being edited from its own mentions
+        skillConditions.push(sql`${skill.id} != ${skillId}`);
+      }
+
+      const skillRows = await db
+        .select({ id: skill.id, name: skill.name, slug: skill.slug })
+        .from(skill)
+        .where(and(...skillConditions))
+        .orderBy(skill.name)
+        .limit(halfLimit);
+
+      for (const row of skillRows) {
+        items.push({
+          type: "skill",
+          id: row.id,
+          label: row.name,
+          subtitle: row.slug,
+          parentSkillId: null,
+        });
+      }
+
+      // --- resource results ---
+      const resourceConditions = [eq(skill.ownerUserId, userId)];
+      if (query.length > 0) {
+        const pattern = `%${query}%`;
+        resourceConditions.push(
+          or(ilike(skillResource.path, pattern), ilike(skill.name, pattern))!,
+        );
+      }
+
+      const resourceRows = await db
+        .select({
+          id: skillResource.id,
+          path: skillResource.path,
+          skillId: skillResource.skillId,
+          skillName: skill.name,
+        })
+        .from(skillResource)
+        .innerJoin(skill, eq(skillResource.skillId, skill.id))
+        .where(and(...resourceConditions))
+        .orderBy(skillResource.path)
+        .limit(halfLimit);
+
+      for (const row of resourceRows) {
+        items.push({
+          type: "resource",
+          id: row.id,
+          label: row.path,
+          subtitle: row.skillName,
+          parentSkillId: row.skillId,
+        });
+      }
+
+      // trim to requested limit
+      return { items: items.slice(0, limit) };
+    }),
+
   list: publicProcedure
     .input(
       cursorPaginationInput.extend({

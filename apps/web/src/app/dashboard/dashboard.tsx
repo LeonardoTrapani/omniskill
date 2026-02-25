@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import PageHeroCard from "@/components/page-hero-card";
 
 import DeleteSkillDialog from "./_components/delete-skill-dialog";
 import MyOmniTable from "./_components/my-omni-table";
@@ -10,6 +9,8 @@ import SkillGraph from "./_components/skill-graph";
 export default function Dashboard() {
   const [mobileTab, setMobileTab] = useState<"graph" | "vault">("graph");
   const [panelHeight, setPanelHeight] = useState(620);
+  const [backgroundHeight, setBackgroundHeight] = useState(680);
+  const dashboardRef = useRef<HTMLDivElement>(null);
   const panelsGridRef = useRef<HTMLDivElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
@@ -21,12 +22,15 @@ export default function Dashboard() {
       const isDesktop = window.innerWidth >= 1280;
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
 
+      const dashboardTop = dashboardRef.current?.getBoundingClientRect().top ?? 0;
       const panelsTop = panelsGridRef.current?.getBoundingClientRect().top ?? 0;
       const bottomPadding = isDesktop ? 20 : 12;
       const minHeight = isDesktop ? 520 : 360;
       const nextHeight = Math.floor(viewportHeight - panelsTop - bottomPadding);
+      const nextBackgroundHeight = Math.floor(viewportHeight - dashboardTop);
 
       setPanelHeight(Math.max(minHeight, nextHeight));
+      setBackgroundHeight(Math.max(240, nextBackgroundHeight));
     };
 
     const frameId = window.requestAnimationFrame(updatePanelHeight);
@@ -45,11 +49,19 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative overflow-hidden px-4 py-6 sm:px-6 lg:px-48">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_36%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
+    <div ref={dashboardRef} className="relative overflow-hidden">
+      {/* <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,color-mix(in_oklab,var(--primary)_10%,transparent),transparent_36%)]" /> */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-20" />
 
-      <div className="relative max-w-7xl lg:max-w-full mx-auto space-y-6">
+      <div
+        className="absolute inset-0 hidden lg:block"
+        style={{ height: backgroundHeight }}
+        aria-hidden
+      >
+        <SkillGraph height={backgroundHeight} variant="background" />
+      </div>
+
+      <div className="relative z-10 mx-auto space-y-6 p-6 lg:pointer-events-none">
         {/*<PageHeroCard
           eyebrow="Workspace"
           title="Skill Graph & Vault"
@@ -57,7 +69,7 @@ export default function Dashboard() {
         />*/}
 
         <div
-          className="mb-0 grid grid-cols-2 border-x border-t border-border bg-background/80 xl:hidden"
+          className="mb-0 grid grid-cols-2 border-x border-t border-border bg-background/80 lg:hidden"
           role="tablist"
           aria-label="Dashboard content tabs"
         >
@@ -93,30 +105,41 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div
-          ref={panelsGridRef}
-          className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-stretch"
-        >
-          <div
-            id="dashboard-content-panel-graph"
-            role="tabpanel"
-            aria-labelledby="dashboard-content-tab-graph"
-            className={mobileTab === "graph" ? "" : "hidden xl:block"}
-          >
-            <SkillGraph height={panelHeight} />
-          </div>
+        <div ref={panelsGridRef} className="relative">
+          <div className="lg:hidden space-y-6 lg:pointer-events-auto">
+            <div
+              id="dashboard-content-panel-graph"
+              role="tabpanel"
+              aria-labelledby="dashboard-content-tab-graph"
+              className={mobileTab === "graph" ? "" : "hidden"}
+            >
+              <SkillGraph height={panelHeight} />
+            </div>
 
-          <div className={mobileTab === "graph" ? "hidden xl:block" : ""}>
             <div
               id="dashboard-content-panel-vault"
               role="tabpanel"
               aria-labelledby="dashboard-content-tab-vault"
-              className={mobileTab === "vault" ? "" : "hidden xl:block"}
+              className={mobileTab === "vault" ? "" : "hidden"}
             >
               <MyOmniTable
                 height={panelHeight}
                 onDelete={(skillId, skillName) => setDeleteTarget({ id: skillId, name: skillName })}
               />
+            </div>
+          </div>
+
+          <div className="hidden lg:block" style={{ height: panelHeight }}>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[min(380px)]">
+              <div className="pointer-events-auto h-full">
+                <MyOmniTable
+                  height={panelHeight}
+                  className="h-full shadow-[0_20px_45px_color-mix(in_oklab,var(--background)_45%,transparent)]"
+                  onDelete={(skillId, skillName) =>
+                    setDeleteTarget({ id: skillId, name: skillName })
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -1,8 +1,12 @@
 // UUID v4 pattern (lowercase hex, 8-4-4-4-12)
 const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
-// matches [[skill:<uuid>]] or [[resource:<uuid>]] within a single line
-const MENTION_RE = new RegExp(`\\[\\[(skill|resource):(${UUID_RE})\\]\\]`, "gi");
+// matches [[skill:<uuid>]] / [[resource:<uuid>]] and escaped variants
+// (e.g. \[\[resource:<uuid>\]\]) produced by some markdown editors.
+const MENTION_RE = new RegExp(
+  `\\\\?\\[\\\\?\\[(skill|resource):(${UUID_RE})\\\\?\\]\\\\?\\]`,
+  "gi",
+);
 
 export type MentionType = "skill" | "resource";
 

@@ -56,6 +56,8 @@ export function SkillCommandPalette({
   const [search, setSearch] = useState(initialSearch ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
   const resultItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // sync initialSearch when it changes (e.g. from ?q= param)
   useEffect(() => {
@@ -99,6 +101,29 @@ export function SkillCommandPalette({
     if (selectedIndex < 0) return;
     resultItemRefs.current[selectedIndex]?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
+
+  // Infinite scrolling for mouse/touch scrolling in the results list
+  useEffect(() => {
+    if (!open || !hasQuery) return;
+    const root = listRef.current;
+    const sentinel = sentinelRef.current;
+    if (!root || !sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && canLoadMore && !isFetching) {
+          loadMore();
+        }
+      },
+      {
+        root,
+        rootMargin: "80px",
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [open, hasQuery, canLoadMore, isFetching, loadMore, suggestions.length]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -203,6 +228,7 @@ export function SkillCommandPalette({
 
           {showSuggestions && (
             <div
+              ref={listRef}
               className="max-h-[205px] overflow-y-auto border-t border-border"
               onScroll={(e) => {
                 const element = e.currentTarget;
@@ -238,6 +264,14 @@ export function SkillCommandPalette({
                   {skill.name}
                 </button>
               ))}
+
+              <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+
+              {isFetching && suggestions.length > 0 && (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

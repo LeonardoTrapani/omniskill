@@ -37,9 +37,16 @@ interface ForceGraphProps {
   height?: number;
   focusNodeId?: string;
   className?: string;
+  centerXBias?: number;
 }
 
-export function ForceGraph({ data, height = 450, focusNodeId, className }: ForceGraphProps) {
+export function ForceGraph({
+  data,
+  height = 450,
+  focusNodeId,
+  className,
+  centerXBias = 0,
+}: ForceGraphProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(null);
@@ -65,6 +72,9 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
       d3.select(container).select("svg").remove();
 
       const width = container.clientWidth;
+      const clampedCenterXBias = Math.max(-0.3, Math.min(0.3, centerXBias));
+      const centerX = width * (0.5 + clampedCenterXBias);
+      const centerY = height / 2;
       const nodes: GraphNode[] = data.nodes.map((n) => ({ ...n }));
       const edges: GraphEdge[] = data.edges.map((e) => ({ ...e }));
 
@@ -84,10 +94,10 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
 
       svg.call(zoomBehavior);
 
-      // default zoom slightly in, centered
-      const initialScale = 1.4;
+      // default zoom near 1:1 to show more of the graph
+      const initialScale = 1.1;
       const initialTransform = d3.zoomIdentity
-        .translate((width / 2) * (1 - initialScale), (height / 2) * (1 - initialScale))
+        .translate(centerX * (1 - initialScale), centerY * (1 - initialScale))
         .scale(initialScale);
       svg.call(zoomBehavior.transform, initialTransform);
 
@@ -191,9 +201,9 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
           "charge",
           d3.forceManyBody<GraphNode>().strength((d) => (d.type === "skill" ? -120 : -30)),
         )
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("x", d3.forceX<GraphNode>(width / 2).strength(0.05))
-        .force("y", d3.forceY<GraphNode>(height / 2).strength(0.05))
+        .force("center", d3.forceCenter(centerX, centerY))
+        .force("x", d3.forceX<GraphNode>(centerX).strength(0.05))
+        .force("y", d3.forceY<GraphNode>(centerY).strength(0.05))
         .force(
           "collide",
           d3.forceCollide<GraphNode>().radius((d) => (d.type === "skill" ? 30 : 12)),
@@ -209,7 +219,7 @@ export function ForceGraph({ data, height = 450, focusNodeId, className }: Force
 
       simulationRef.current = simulation;
     },
-    [data, height, focusNodeId, router],
+    [data, height, focusNodeId, router, centerXBias],
   );
 
   useEffect(() => {

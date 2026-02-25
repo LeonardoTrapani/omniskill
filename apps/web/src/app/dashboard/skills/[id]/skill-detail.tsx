@@ -26,6 +26,7 @@ import { createMarkdownComponents } from "@/components/skills/markdown-component
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
 
 import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
+import { useClampedDescription } from "@/hooks/use-clamped-description";
 import { ResourceHoverLink } from "@/components/skills/resource-link";
 import {
   AlertDialog,
@@ -146,8 +147,13 @@ export default function SkillDetail({ id }: { id: string }) {
     useAddSkillFlow({ loginNext: `/dashboard/skills/${id}` });
   const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId: id }));
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const {
+    contentRef: descriptionRef,
+    expanded: descriptionExpanded,
+    setExpanded: setDescriptionExpanded,
+    hasOverflow: hasDescriptionOverflow,
+  } = useClampedDescription(data?.description);
 
   const deleteMutation = useMutation(
     trpc.skills.delete.mutationOptions({
@@ -331,6 +337,7 @@ export default function SkillDetail({ id }: { id: string }) {
             {data.description && (
               <div>
                 <p
+                  ref={descriptionRef}
                   className={[
                     "text-sm leading-relaxed text-muted-foreground break-words text-pretty",
                     descriptionExpanded
@@ -342,7 +349,7 @@ export default function SkillDetail({ id }: { id: string }) {
                 >
                   {data.description}
                 </p>
-                {data.description.length > 200 && (
+                {hasDescriptionOverflow && (
                   <button
                     type="button"
                     className="mt-1 text-[11px] text-primary transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"

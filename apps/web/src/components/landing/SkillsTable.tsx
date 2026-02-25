@@ -11,6 +11,31 @@ import { useSkillSearch } from "@/hooks/use-skill-search";
 import AddSkillModal from "@/app/dashboard/_components/add-skill-modal";
 import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
 
+/* ── Row reveal animation ──────────────────────────────────────────── */
+const ROW_ANIMATION_STYLE = `
+@keyframes skillRowIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+` as const;
+
+/** Max items that get an incremental stagger per batch — the rest appear at the same time */
+const MAX_STAGGER_INDEX = 20;
+/** Delay between each row within a batch */
+const STAGGER_DELAY_MS = 35;
+/** Duration of each row's fade-in */
+const ANIMATION_DURATION_MS = 300;
+/** Extra base delay for the very first batch so the table shell animates in first (matches the container motion duration) */
+const INITIAL_BASE_DELAY_MS = 400;
+
+/**
+ * Module-level set of skill IDs that have already been animated.
+ * Survives React re-mounts (e.g. back-navigation) so rows don't re-animate.
+ * Cleared when the search query changes.
+ */
+let animatedIds = new Set<string>();
+let lastSearchKey = "";
+
 interface SkillsTableProps {
   limit?: number;
   showSearch?: boolean;
@@ -124,6 +149,38 @@ export default function SkillsTable({
     setSearch(initialSearch);
   }, [initialSearch]);
 
+  // ── Determine which rows are new (need animation) vs already-seen ───
+  const searchKey = hasSearchQuery ? debouncedQuery : "__browse__";
+  const isFirstBatchRef = useRef(true);
+
+  // Reset the animated set when the data source changes
+  if (searchKey !== lastSearchKey) {
+    animatedIds = new Set<string>();
+    lastSearchKey = searchKey;
+    isFirstBatchRef.current = true;
+  }
+
+  // Build the list of new (un-animated) IDs for this render in order
+  const newIds: string[] = [];
+  for (const skill of skills) {
+    if (!animatedIds.has(skill.id)) {
+      newIds.push(skill.id);
+    }
+  }
+
+  // After layout, mark them as animated so future renders skip them
+  useEffect(() => {
+    if (!tableLoading && !tableError && newIds.length > 0) {
+      for (const id of newIds) {
+        animatedIds.add(id);
+      }
+      // After the first batch has been committed, clear the flag
+      if (isFirstBatchRef.current) {
+        isFirstBatchRef.current = false;
+      }
+    }
+  });
+
   const getDescription = (skill: (typeof skills)[number]) => {
     if ("snippet" in skill && skill.snippet) {
       return skill.snippet;
@@ -132,8 +189,30 @@ export default function SkillsTable({
     return skill.description;
   };
 
+  /**
+   * For each row:
+   * - Already animated on a previous render → no animation, renders instantly.
+   * - New row → fade-in with a stagger delay relative to its position within
+   *   the new batch (not the global list index). Capped so large loads stay fast.
+   * - First batch adds a base delay so the table shell can animate in first.
+   */
+  const getRowStyle = (skillId: string): React.CSSProperties => {
+    const batchIndex = newIds.indexOf(skillId);
+    // Already seen — render instantly
+    if (batchIndex === -1) return {};
+    const clampedIndex = Math.min(batchIndex, MAX_STAGGER_INDEX);
+    const baseDelay = isFirstBatchRef.current ? INITIAL_BASE_DELAY_MS : 0;
+    return {
+      animation: `skillRowIn ${ANIMATION_DURATION_MS}ms ease-out both`,
+      animationDelay: `${baseDelay + clampedIndex * STAGGER_DELAY_MS}ms`,
+    };
+  };
+
   return (
     <section id="skills">
+      {/* Inject keyframes once */}
+      <style dangerouslySetInnerHTML={{ __html: ROW_ANIMATION_STYLE }} />
+
       <div className="mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -174,7 +253,9 @@ export default function SkillsTable({
             <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">
               SKILL
             </span>
-            <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em] text-right" />
+            <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em] text-right">
+              ACTIONS
+            </span>
           </div>
 
           {/* Loading */}
@@ -202,11 +283,8 @@ export default function SkillsTable({
                   className="text-sm font-semibold text-foreground group transition-colors"
                   key={skill.id}
                 >
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.3, delay: 0.03 * index }}
+                  <div
+                    style={getRowStyle(skill.id)}
                     className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group-hover:text-primary"
                   >
                     {/* Rank */}
@@ -233,7 +311,7 @@ export default function SkillsTable({
                         <span className="hidden sm:inline">Add</span>
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 </Link>
               );
             })}

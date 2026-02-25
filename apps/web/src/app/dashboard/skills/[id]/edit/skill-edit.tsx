@@ -2,106 +2,261 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bot, FileText, MessageSquare } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Check, FileText, Info, Loader2, Paperclip } from "lucide-react";
+import { toast } from "sonner";
 
-import { createMarkdownComponents } from "@/components/skills/markdown-components";
-import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+import MarkdownEditorLazy from "@/components/skills/markdown-editor-lazy";
+import MentionPopover from "@/components/skills/mention-popover";
+import {
+  editorMarkdownToStorageMarkdown,
+  storageMarkdownToEditorMarkdown,
+} from "@/components/skills/mention-markdown";
+import type { MDXEditorMethods } from "@mdxeditor/editor";
+import { useClampedDescription } from "@/hooks/use-clamped-description";
+import { useMentionAutocomplete, type MentionItem } from "@/hooks/use-mention-autocomplete";
+import { ResourceHoverLink } from "@/components/skills/resource-link";
 import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { trpc } from "@/utils/trpc";
+import { queryClient, trpc } from "@/utils/trpc";
 
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+function formatDate(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function replaceLastOccurrence(input: string, search: string, replacement: string) {
+  const index = input.lastIndexOf(search);
+  if (index === -1) return input;
+  return `${input.slice(0, index)}${replacement}${input.slice(index + search.length)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Panel                                                              */
+/*  Reusable bordered panel matching the skill-detail design           */
+/* ------------------------------------------------------------------ */
+function Panel({
+  icon,
+  title,
+  trailing,
+  children,
+  className,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  trailing?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
+            {title}
+          </h2>
+        </div>
+        {trailing && <div className="flex items-center gap-2">{trailing}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
 export default function SkillEdit({ id }: { id: string }) {
   const { data: session } = authClient.useSession();
   const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
 
-  const resources = data?.resources ?? [];
-  const resourcesById = useMemo(
-    () => new Map(resources.map((resource) => [resource.id, resource])),
-    [resources],
-  );
-  const resourcesByPath = useMemo(
-    () => new Map(resources.map((resource) => [resource.path, resource])),
-    [resources],
-  );
+  const editorRef = useRef<MDXEditorMethods>(null);
+  const hasMountedRef = useRef(false);
+  const initialMarkdownRef = useRef("");
+  const [hasChanges, setHasChanges] = useState(false);
+  const {
+    contentRef: descriptionRef,
+    expanded: descriptionExpanded,
+    setExpanded: setDescriptionExpanded,
+    hasOverflow: hasDescriptionOverflow,
+  } = useClampedDescription(data?.description);
 
-  const findResourceByHref = (href: string) => {
-    let decodedHref = href;
-    try {
-      decodedHref = decodeURIComponent(href);
-    } catch {}
-
-    if (decodedHref.startsWith("resource://")) {
-      const byId = resourcesById.get(decodedHref.replace("resource://", ""));
-      if (byId) return byId;
-    }
-
-    if (resourcesByPath.has(decodedHref)) {
-      return resourcesByPath.get(decodedHref)!;
-    }
-
-    const match = resources.find(
-      (resource) =>
-        decodedHref.endsWith(resource.path) || decodedHref.endsWith(`/${resource.path}`),
-    );
-
-    return match ?? null;
-  };
-
-  const skillId = data?.id ?? id;
-  const markdownComponents = useMemo(
+  const editorMarkdown = useMemo(
     () =>
-      createMarkdownComponents({
-        skillId,
-        skillName: data?.name,
-        findResourceByHref,
-      }),
-    [data?.name, skillId, resourcesById, resourcesByPath],
+      data
+        ? storageMarkdownToEditorMarkdown({
+            originalMarkdown: data.originalMarkdown || "",
+            renderedMarkdown: data.renderedMarkdown,
+          })
+        : "",
+    [data],
   );
 
+  useEffect(() => {
+    hasMountedRef.current = true;
+    return () => {
+      hasMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!data) return;
+    initialMarkdownRef.current = editorMarkdown;
+    setHasChanges(false);
+  }, [data, editorMarkdown]);
+
+  const saveMutation = useMutation(
+    trpc.skills.update.mutationOptions({
+      onSuccess: () => {
+        const currentMarkdown = editorRef.current?.getMarkdown();
+        if (currentMarkdown != null) {
+          initialMarkdownRef.current = currentMarkdown;
+        }
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.getById.queryKey({ id }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.listByOwner.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.graph.queryKey(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: trpc.skills.graphForSkill.queryKey(),
+        });
+        setHasChanges(false);
+        toast.success("Skill saved successfully");
+      },
+      onError: (error) => {
+        toast.error(`Failed to save: ${error.message}`);
+      },
+    }),
+  );
+
+  const handleSave = useCallback(() => {
+    const markdown = editorRef.current?.getMarkdown();
+    if (markdown == null) return;
+    saveMutation.mutate({
+      id,
+      skillMarkdown: editorMarkdownToStorageMarkdown(markdown),
+    });
+  }, [id, saveMutation]);
+
+  const handleChange = useCallback(() => {
+    if (!hasMountedRef.current) return;
+    const currentMarkdown = editorRef.current?.getMarkdown();
+    if (currentMarkdown == null) return;
+    setHasChanges(currentMarkdown !== initialMarkdownRef.current);
+  }, []);
+
+  /* ---- Mention autocomplete ---- */
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleMentionInsert = useCallback(
+    (item: MentionItem, mentionRange: Range, query: string) => {
+      // Build a friendly markdown link for display in the editor
+      const linkText =
+        item.type === "skill"
+          ? `[${item.label}](skill://${item.id})`
+          : `[${item.label}](resource://${item.id})`;
+
+      const currentMarkdown = editorRef.current?.getMarkdown();
+      if (currentMarkdown == null) return;
+
+      const rawTrigger = `[[${query}`;
+      const escapedTrigger = `\\[\\[${query}`;
+
+      // Replace the active mention trigger in markdown directly so the editor
+      // immediately shows the final link without leaving `[[query` behind.
+      let updatedMarkdown = replaceLastOccurrence(currentMarkdown, escapedTrigger, linkText);
+      if (updatedMarkdown === currentMarkdown) {
+        updatedMarkdown = replaceLastOccurrence(currentMarkdown, rawTrigger, linkText);
+      }
+
+      if (updatedMarkdown !== currentMarkdown) {
+        editorRef.current?.setMarkdown(updatedMarkdown);
+        setHasChanges(updatedMarkdown !== initialMarkdownRef.current);
+        return;
+      }
+
+      editorRef.current?.focus(undefined, { preventScroll: true });
+
+      // Restore selection to the full `[[query` range and let MDXEditor
+      // replace it through its public API (Lexical-safe update).
+      const selection = window.getSelection();
+      if (selection) {
+        try {
+          selection.removeAllRanges();
+          selection.addRange(mentionRange);
+        } catch {
+          // If the DOM range became stale, fall back to current caret insertion.
+        }
+      }
+
+      editorRef.current?.insertMarkdown(linkText);
+
+      const afterInsertMarkdown = editorRef.current?.getMarkdown();
+      if (afterInsertMarkdown != null) {
+        setHasChanges(afterInsertMarkdown !== initialMarkdownRef.current);
+      }
+    },
+    [],
+  );
+
+  const mention = useMentionAutocomplete({
+    skillId: data?.id ?? id,
+    editorContainerRef,
+    onInsert: handleMentionInsert,
+  });
+
+  /* ---- Loading ---- */
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
-        <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-8">
-            <Skeleton className="h-36 w-full" />
-            <Skeleton className="h-96 w-full" />
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-4 w-[560px]" />
           </div>
-          <div className="space-y-6 lg:col-span-4">
-            <Skeleton className="h-[560px] w-full" />
+          <Separator />
+          <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+            <Skeleton className="h-[600px] w-full" />
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
           </div>
         </div>
       </main>
     );
   }
 
+  /* ---- Error ---- */
   if (isError || !data) {
     return (
-      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
-        <div className="mx-auto w-full max-w-4xl">
-          <Card>
-            <CardHeader>
-              <CardTitle>Skill Not Found</CardTitle>
-              <CardDescription>
-                The requested skill is not accessible or does not exist.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href={"/dashboard" as Route}>
-                <Button variant="outline">
-                  <ArrowLeft />
-                  Back to Skills
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 py-32">
+          <p className="text-sm text-muted-foreground">
+            The requested skill is not accessible or does not exist.
+          </p>
+          <Link href={"/dashboard" as Route}>
+            <Button variant="outline" size="sm">
+              Back to Skills
+            </Button>
+          </Link>
         </div>
       </main>
     );
@@ -110,122 +265,243 @@ export default function SkillEdit({ id }: { id: string }) {
   const isOwnedByViewer = data.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const canEditSkill = data.visibility === "private" && isOwnedByViewer;
 
+  /* ---- Not editable ---- */
   if (!canEditSkill) {
     return (
-      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
-        <div className="mx-auto w-full max-w-4xl">
-          <Card>
-            <CardHeader>
-              <CardTitle>Editing is only available for your private skills</CardTitle>
-              <CardDescription>
-                Import this skill into your vault first, then open edit mode from your private copy.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              <Link href={`/dashboard/skills/${data.id}` as Route}>
-                <Button variant="outline">
-                  <ArrowLeft />
-                  Back to Skill
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+      <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 py-32">
+          <p className="text-sm text-muted-foreground">
+            Editing is only available for your private skills. Import this skill into your vault
+            first.
+          </p>
+          <Link href={`/dashboard/skills/${data.id}` as Route}>
+            <Button variant="outline" size="sm">
+              Back to Skill
+            </Button>
+          </Link>
         </div>
       </main>
     );
   }
 
+  const markdownContent = editorMarkdown;
+
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 md:px-10">
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="mb-4">
-          <Link href={`/dashboard/skills/${data.id}` as Route}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft />
-              Back to Skill
-            </Button>
-          </Link>
-        </div>
+    <main className="relative min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
+      {/* Decorative background - matches skill detail */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
 
-        <div className="grid gap-6 lg:grid-cols-12">
-          <section className="min-w-0 space-y-6 lg:col-span-8">
-            <Card>
-              <CardHeader>
-                <CardDescription>editing / {data.slug}</CardDescription>
-                <CardTitle className="text-2xl leading-tight text-primary sm:text-3xl break-words">
-                  {data.name}
-                </CardTitle>
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <Badge variant="outline">private</Badge>
-                  <Badge variant="secondary">{data.resources.length} resources</Badge>
-                </div>
-              </CardHeader>
-            </Card>
+      <div className="relative mx-auto max-w-7xl">
+        {/* ============================================================ */}
+        {/*  HEADER                                                       */}
+        {/* ============================================================ */}
+        <header className="space-y-5 pb-8">
+          {/* Top bar: nav + actions */}
+          <div className="flex items-center justify-between gap-4">
+            <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Link
+                href={"/dashboard" as Route}
+                className="transition-colors duration-150 hover:text-foreground"
+              >
+                skills
+              </Link>
+              <span className="text-border">/</span>
+              <Link
+                href={`/dashboard/skills/${data.id}` as Route}
+                className="transition-colors duration-150 hover:text-foreground"
+              >
+                {data.slug}
+              </Link>
+              <span className="text-border">/</span>
+              <span className="text-foreground">edit</span>
+            </nav>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <FileText className="size-4" aria-hidden="true" />
-                  SKILL.md
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="min-w-0 overflow-hidden">
-                <article className="min-w-0 break-words">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={markdownComponents}
-                    urlTransform={markdownUrlTransform}
+            <div className="flex shrink-0 items-center gap-2">
+              <Link href={`/dashboard/skills/${data.id}` as Route}>
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="size-3.5" aria-hidden="true" />
+                  Back
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                disabled={!hasChanges || saveMutation.isPending}
+                onClick={handleSave}
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Check className="size-3.5" aria-hidden="true" />
+                )}
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Title + description */}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold leading-tight text-foreground text-balance break-words sm:text-3xl">
+              {data.name}
+            </h1>
+            {data.description && (
+              <div>
+                <p
+                  ref={descriptionRef}
+                  className={[
+                    "text-sm leading-relaxed text-muted-foreground break-words text-pretty",
+                    descriptionExpanded
+                      ? ""
+                      : "[display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {data.description}
+                </p>
+                {hasDescriptionOverflow && (
+                  <button
+                    type="button"
+                    className="mt-1 text-[11px] text-primary transition-colors duration-150 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    onClick={() => setDescriptionExpanded((prev) => !prev)}
+                    aria-label={descriptionExpanded ? "Collapse description" : "Expand description"}
                   >
-                    {data.renderedMarkdown || data.originalMarkdown}
-                  </ReactMarkdown>
-                </article>
-              </CardContent>
-            </Card>
-          </section>
+                    {descriptionExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
-          <aside className="min-w-0 space-y-6 lg:col-span-4">
-            <Card className="lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-92px)]">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MessageSquare className="size-4" aria-hidden="true" />
-                  AI Skill Editor
-                </CardTitle>
-                <CardDescription>
-                  This panel will let you chat with an AI agent to edit this skill.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="min-h-0">
-                <div className="flex h-[60vh] flex-col gap-3">
-                  <div className="flex items-center gap-2 border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                    <Bot className="size-3.5" aria-hidden="true" />
-                    AI editing agent is not available yet.
-                  </div>
+          {/* Metadata row */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block size-1.5 bg-amber-500" aria-hidden="true" />
+              private
+            </span>
+            <span className="text-border">|</span>
+            <span>
+              {data.resources.length} resource
+              {data.resources.length !== 1 ? "s" : ""}
+            </span>
+            <span className="text-border">|</span>
+            <span>Updated {formatDate(data.updatedAt)}</span>
+            {hasChanges && (
+              <>
+                <span className="text-border">|</span>
+                <span className="text-amber-500">Unsaved changes</span>
+              </>
+            )}
+          </div>
+        </header>
 
-                  <div className="flex-1 overflow-y-auto border border-border bg-background px-3 py-3">
-                    <div className="mr-8 border border-border bg-secondary/50 px-3 py-2">
-                      <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                        AI
-                      </p>
-                      <p className="text-sm text-foreground">
-                        Soon you will be able to ask me to edit this skill and apply changes
-                        directly.
-                      </p>
+        <Separator className="mb-8" />
+
+        {/* ============================================================ */}
+        {/*  BODY: editor + sidebar                                       */}
+        {/* ============================================================ */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+          {/* ---- Main column: editor ---- */}
+          <div className="min-w-0 space-y-6">
+            <Panel
+              icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+              title="SKILL.md"
+              trailing={<span className="text-[10px] text-muted-foreground">markdown</span>}
+            >
+              <div ref={editorContainerRef} className="mdx-editor-wrapper relative">
+                <MarkdownEditorLazy
+                  editorRef={editorRef}
+                  markdown={markdownContent}
+                  onChange={handleChange}
+                />
+                <MentionPopover
+                  open={mention.open}
+                  anchor={mention.anchor}
+                  items={mention.items}
+                  selectedIndex={mention.selectedIndex}
+                  isLoading={mention.isLoading}
+                  query={mention.query}
+                  onSelect={(index) => mention.insertSelected(index)}
+                  onHover={(index) => mention.setSelectedIndex(index)}
+                />
+              </div>
+            </Panel>
+          </div>
+
+          {/* ---- Sidebar ---- */}
+          <aside className="hidden min-w-0 lg:block lg:h-full">
+            <div className="flex h-full flex-col gap-6">
+              {/* Skill details */}
+              <Panel
+                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                title="Details"
+                className="shrink-0"
+              >
+                <div className="px-5 py-4">
+                  <dl className="space-y-2.5 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Slug</dt>
+                      <dd className="truncate text-right text-foreground">{data.slug}</dd>
                     </div>
-                  </div>
-
-                  <div className="space-y-2 border-t border-border pt-3">
-                    <Textarea
-                      disabled
-                      placeholder="AI editing will be available soon..."
-                      className="min-h-20"
-                    />
-                    <Button disabled className="w-full" variant="outline">
-                      Send (coming soon)
-                    </Button>
-                  </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Created</dt>
+                      <dd className="text-foreground">{formatDate(data.createdAt)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Updated</dt>
+                      <dd className="text-foreground">{formatDate(data.updatedAt)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Visibility</dt>
+                      <dd className="text-foreground">{data.visibility}</dd>
+                    </div>
+                  </dl>
                 </div>
-              </CardContent>
-            </Card>
+              </Panel>
+
+              {/* Resources panel */}
+              <Panel
+                icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                title="Resources"
+                trailing={
+                  <span className="text-[10px] text-muted-foreground">
+                    {data.resources.length} file
+                    {data.resources.length !== 1 ? "s" : ""}
+                  </span>
+                }
+                className="shrink-0"
+              >
+                <div>
+                  {data.resources.length === 0 ? (
+                    <p className="px-5 py-4 text-xs text-muted-foreground">
+                      No resources attached.
+                    </p>
+                  ) : (
+                    <div>
+                      {data.resources.map((resource, idx) => (
+                        <div
+                          key={resource.id}
+                          className={`flex items-center justify-between gap-3 px-5 py-2.5 ${
+                            idx < data.resources.length - 1 ? "border-b border-border/40" : ""
+                          }`}
+                        >
+                          <ResourceHoverLink
+                            resource={resource}
+                            skillId={data.id}
+                            skillName={data.name}
+                            className="min-w-0 break-all text-xs text-primary underline-offset-4 hover:underline"
+                          >
+                            {resource.path}
+                          </ResourceHoverLink>
+                          <Badge variant="outline" className="shrink-0 text-[10px]">
+                            {resource.kind}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Panel>
+            </div>
           </aside>
         </div>
       </div>

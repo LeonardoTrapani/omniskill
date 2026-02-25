@@ -20,7 +20,7 @@ const publicNav = [
 ];
 
 const appNav = [
-  { label: "Dashboard", href: "/dashboard" },
+  { label: "Vault", href: "/dashboard" },
   { label: "Explore", href: "/skills" },
 ];
 

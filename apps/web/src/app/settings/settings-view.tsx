@@ -37,7 +37,7 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-4 md:grid-cols-[280px_1fr] md:gap-8">
+    <div className="grid gap-4 pl-4 md:grid-cols-[280px_1fr] md:gap-8">
       <div className="min-w-0">
         <h2 className="text-sm font-medium text-foreground">{title}</h2>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground text-pretty">
@@ -124,8 +124,6 @@ export default function SettingsView() {
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-0">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-35" />
-
       <div className="relative mx-auto max-w-5xl space-y-8">
         <PageHeroCard
           eyebrow="Workspace Preferences"
@@ -170,43 +168,6 @@ export default function SettingsView() {
                 Sign Out
               </Button>
             </div>
-          </div>
-        </SettingRow>
-
-        <Separator />
-
-        {/* ---- Appearance ---- */}
-        <SettingRow
-          title="Appearance"
-          description="Choose how the interface renders on this device."
-        >
-          <div className="grid gap-2 sm:grid-cols-3">
-            {THEME_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isActive = mounted && activeTheme === option.value;
-
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setTheme(option.value)}
-                  className={`border px-4 py-3 text-left transition-colors duration-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-                    isActive
-                      ? "border-primary/50 bg-primary/10"
-                      : "border-border bg-card hover:border-primary/30 hover:bg-secondary/60"
-                  }`}
-                  aria-label={`Use ${option.label} theme`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-foreground">{option.label}</span>
-                    <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                  </div>
-                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                    {option.description}
-                  </p>
-                </button>
-              );
-            })}
           </div>
         </SettingRow>
 

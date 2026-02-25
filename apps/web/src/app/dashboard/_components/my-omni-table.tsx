@@ -38,23 +38,14 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
   return (
     <div
       className={cn(
-        "border border-border bg-background/90 backdrop-blur-sm flex flex-col min-h-0",
+        "border border-border bg-background/90 backdrop-blur-sm flex flex-col min-h-0 overflow-hidden",
         className,
       )}
       style={height ? { height } : undefined}
     >
-      <div className="px-6 md:px-8 pt-7 pb-4 border-b border-border/70 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
-          MY VAULT
-        </h2>
-        <span className="text-xs text-muted-foreground">
-          {skills.length} skill{skills.length !== 1 ? "s" : ""}
-        </span>
-      </div>
-
       {/* Search */}
-      <div className="px-6 md:px-8 pt-5 pb-6">
-        <div className="flex items-center gap-3 border border-border bg-background px-4 py-3 focus-within:border-primary/50 transition-colors">
+      <div className="px-6 py-6 border-b border-border">
+        <div className="flex items-center gap-2 bg-background focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
@@ -69,16 +60,17 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
         </div>
       </div>
 
-      {/* Table Header */}
-      <div className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-3">
-        <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">#</span>
-        <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">SKILL</span>
-        <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em] text-right">
-          ACTIONS
-        </span>
-      </div>
-
-      <div className={cn("min-h-0", height ? "flex-1 overflow-y-auto" : "")}>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Table Header */}
+        <div className="grid grid-cols-[40px_1fr_56px] px-6 py-3">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">#</span>
+          <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em]">
+            SKILL
+          </span>
+          <span className="text-[11px] text-muted-foreground uppercase tracking-[0.06em] text-right">
+            ACTIONS
+          </span>
+        </div>
         {/* Loading */}
         {isLoading && (
           <div className="border-t border-border px-6 md:px-8 py-16 text-center">
@@ -109,9 +101,8 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                   router.push(`/dashboard/skills/${skill.id}` as Route);
                 }
               }}
-              className="grid grid-cols-[48px_1fr_80px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
+              className="grid grid-cols-[40px_1fr_56px] border-t border-border px-6 py-4 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
             >
-              {/* Rank */}
               <span className="text-sm text-muted-foreground tabular-nums">{index + 1}</span>
 
               {/* Skill name + slug */}
@@ -120,11 +111,10 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                   <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                     {skill.name}
                   </span>
-                  <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
+                {/* <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
                   {skill.description}
-                </p>
+                </p> */}
               </div>
 
               {/* Actions */}
@@ -175,14 +165,6 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
             </p>
           </div>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-border px-6 md:px-8 py-4">
-        <span className="text-xs text-muted-foreground">
-          {skills.length} skill{skills.length !== 1 ? "s" : ""}
-          {data?.nextCursor ? "+" : ""}
-        </span>
       </div>
     </div>
   );

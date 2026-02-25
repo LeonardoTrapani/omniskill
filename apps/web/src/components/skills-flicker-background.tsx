@@ -68,8 +68,8 @@ export default function SkillsFlickerBackground() {
 
         const char = CHARSET[charSeed % CHARSET.length] ?? "#";
         const isAccent = toneSeed % 7 === 0;
-        const lowOpacity = 0.07 + (toneSeed % 5) * 0.005;
-        const highOpacity = lowOpacity + (isAccent ? 0.1 : 0.05);
+        const lowOpacity = 0.07 + (toneSeed % 5) * 0.007;
+        const highOpacity = lowOpacity + (isAccent ? 0.1 : 0.007);
         const duration = 1.1 + (timingSeed % 14) * 0.08;
         const phaseOffset = ((timingSeed % 36) * 0.11) / duration;
 
@@ -200,7 +200,6 @@ export default function SkillsFlickerBackground() {
     >
       <span ref={normalColorRef} className="sr-only text-foreground/80" aria-hidden="true" />
       <span ref={accentColorRef} className="sr-only text-primary/90" aria-hidden="true" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_62%)]" />
       <canvas ref={canvasRef} className="absolute inset-0" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_58%,var(--background)_98%)]" />
     </div>

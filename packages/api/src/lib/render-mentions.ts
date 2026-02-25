@@ -56,7 +56,10 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
   }
 
   const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-  const MENTION_RE = new RegExp(`\\[\\[(skill|resource):(${UUID_RE})\\]\\]`, "gi");
+  const MENTION_RE = new RegExp(
+    `\\\\?\\[\\\\?\\[(skill|resource):(${UUID_RE})\\\\?\\]\\\\?\\]`,
+    "gi",
+  );
 
   return markdown.replace(MENTION_RE, (_match, type: string, targetId: string) => {
     const normalizedType = type.toLowerCase();
