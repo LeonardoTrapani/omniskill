@@ -11,7 +11,7 @@ interface MentionTarget {
 }
 
 function getMentionTokenRegex() {
-  return new RegExp(`\\\\?\\[\\\\?\\[(skill|resource):(${UUID_RE})\\\\?\\]\\\\?\\]`, "gi");
+  return new RegExp(String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`, "gi");
 }
 
 function decodeMaybe(value: string) {

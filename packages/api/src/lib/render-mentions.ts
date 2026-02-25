@@ -7,6 +7,20 @@ import { parseMentions } from "./mentions";
 
 const SKILL_FALLBACK = "`(unknown skill)`";
 const RESOURCE_FALLBACK = "`(unknown resource)`";
+const ESCAPED_MENTION_RE = new RegExp(String.raw`\\(\[\[(skill|resource):[^\]\n]+\]\])`, "gi");
+const BRACKET_ESCAPED_MENTION_RE = new RegExp(
+  String.raw`\\\[\\\[(skill|resource):([^\n]+?)\\\]\\\]`,
+  "gi",
+);
+
+function unescapeEscapedMentions(markdown: string): string {
+  const withBracketEscapesRemoved = markdown.replace(
+    BRACKET_ESCAPED_MENTION_RE,
+    (_match, type: string, target: string) => `[[${type}:${target}]]`,
+  );
+
+  return withBracketEscapesRemoved.replace(ESCAPED_MENTION_RE, (_match, token: string) => token);
+}
 
 function buildMentionQuery(type: "skill" | "resource", id: string) {
   const params = new URLSearchParams({ mention: `${type}:${id}` });
@@ -37,7 +51,7 @@ export async function renderMentions(
   const { currentSkillId, linkMentions = false } = options ?? {};
 
   const mentions = parseMentions(markdown);
-  if (mentions.length === 0) return markdown;
+  if (mentions.length === 0) return unescapeEscapedMentions(markdown);
 
   const skillIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
   const resourceIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
@@ -83,12 +97,9 @@ export async function renderMentions(
   }
 
   const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-  const MENTION_RE = new RegExp(
-    `\\\\?\\[\\\\?\\[(skill|resource):(${UUID_RE})\\\\?\\]\\\\?\\]`,
-    "gi",
-  );
+  const MENTION_RE = new RegExp(String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`, "gi");
 
-  return markdown.replace(MENTION_RE, (_match, type: string, targetId: string) => {
+  const rendered = markdown.replace(MENTION_RE, (_match, type: string, targetId: string) => {
     const normalizedType = type.toLowerCase();
     const normalizedId = targetId.toLowerCase();
 
@@ -121,4 +132,6 @@ export async function renderMentions(
 
     return _match;
   });
+
+  return unescapeEscapedMentions(rendered);
 }

@@ -18,12 +18,9 @@ describe("parseMentions", () => {
     expect(parseMentions(md)).toEqual([{ type: "resource", targetId: RESOURCE_ID }]);
   });
 
-  test("extracts escaped mention tokens", () => {
-    const md = String.raw`Check \[\[resource:${RESOURCE_ID}\]\] and \[\[skill:${SKILL_ID}\]\]`;
-    expect(parseMentions(md)).toEqual([
-      { type: "resource", targetId: RESOURCE_ID },
-      { type: "skill", targetId: SKILL_ID },
-    ]);
+  test("ignores escaped mention tokens", () => {
+    const md = `Check \\[[resource:${RESOURCE_ID}]] and \\[[skill:${SKILL_ID}]]`;
+    expect(parseMentions(md)).toEqual([]);
   });
 
   test("extracts multiple mentions from mixed text", () => {
@@ -84,6 +81,35 @@ describe("parseMentions", () => {
     ]);
   });
 
+  test("ignores escaped malformed mention targets", () => {
+    const md = "See \\[[skill:my-slug]] and \\[[resource:references/guide.md]]";
+
+    expect(findInvalidMentionTokens(md)).toEqual([]);
+  });
+
+  test("ignores mention tokens inside inline code", () => {
+    const md = [
+      `Inline code: \`[[skill:${SKILL_ID}]]\``,
+      `Outside code: [[resource:${RESOURCE_ID}]]`,
+    ].join("\n");
+
+    expect(parseMentions(md)).toEqual([{ type: "resource", targetId: RESOURCE_ID }]);
+    expect(findInvalidMentionTokens("`[[skill:not-a-uuid]]` and text")).toEqual([]);
+  });
+
+  test("ignores mention tokens inside fenced code blocks", () => {
+    const md = [
+      "```md",
+      `[[skill:${SKILL_ID}]]`,
+      "[[resource:not-a-uuid]]",
+      "```",
+      `Outside code [[resource:${RESOURCE_ID}]]`,
+    ].join("\n");
+
+    expect(parseMentions(md)).toEqual([{ type: "resource", targetId: RESOURCE_ID }]);
+    expect(findInvalidMentionTokens(md)).toEqual([]);
+  });
+
   test("does not flag valid uuid mention targets", () => {
     const md = `See [[skill:${SKILL_ID}]] and [[resource:${RESOURCE_ID}]]`;
 
@@ -139,8 +165,8 @@ describe("parseMentions", () => {
     expect(remapped).toBe(`See [[skill:${NEW_SKILL_ID}]] and [[resource:${NEW_RESOURCE_ID}]]`);
   });
 
-  test("remaps escaped mention tokens without changing formatting", () => {
-    const md = String.raw`Check \[\[Skill:${SKILL_ID}\]\] and \[\[resource:${RESOURCE_ID}\]\]`;
+  test("does not remap escaped mention tokens", () => {
+    const md = `Check \\[[Skill:${SKILL_ID}]] and \\[[resource:${RESOURCE_ID}]]`;
     const remapped = remapMentionTargetIds(
       md,
       new Map([
@@ -149,9 +175,7 @@ describe("parseMentions", () => {
       ]),
     );
 
-    expect(remapped).toBe(
-      String.raw`Check \[\[Skill:${NEW_SKILL_ID}\]\] and \[\[resource:${NEW_RESOURCE_ID}\]\]`,
-    );
+    expect(remapped).toBe(md);
   });
 
   test("leaves mentions untouched when id is not in remap map", () => {
@@ -159,5 +183,27 @@ describe("parseMentions", () => {
     const md = `See [[skill:${unknown}]]`;
 
     expect(remapMentionTargetIds(md, new Map([[SKILL_ID, NEW_SKILL_ID]]))).toBe(md);
+  });
+
+  test("does not remap mention tokens inside code blocks", () => {
+    const md = [
+      `Inline: \`[[skill:${SKILL_ID}]]\``,
+      "```md",
+      `[[resource:${RESOURCE_ID}]]`,
+      "```",
+      `Outside [[skill:${SKILL_ID}]]`,
+    ].join("\n");
+
+    const remapped = remapMentionTargetIds(
+      md,
+      new Map([
+        [SKILL_ID, NEW_SKILL_ID],
+        [RESOURCE_ID, NEW_RESOURCE_ID],
+      ]),
+    );
+
+    expect(remapped).toContain(`Inline: \`[[skill:${SKILL_ID}]]\``);
+    expect(remapped).toContain(`[[resource:${RESOURCE_ID}]]`);
+    expect(remapped).toContain(`Outside [[skill:${NEW_SKILL_ID}]]`);
   });
 });

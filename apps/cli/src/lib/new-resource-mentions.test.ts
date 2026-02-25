@@ -54,4 +54,43 @@ describe("new resource mentions", () => {
     expect(result.markdown).toBe(markdown);
     expect(result.missingPaths).toEqual(["references/missing.md"]);
   });
+
+  test("ignores new mention examples in inline code", () => {
+    const markdown = [
+      "Example: `[[resource:new:references/example.md]]`",
+      "Actual: [[resource:new:references/real.md]]",
+    ].join("\n");
+
+    expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
+  });
+
+  test("ignores new mention examples in fenced code blocks", () => {
+    const markdown = [
+      "```md",
+      "[[skill:new:references/example.md]]",
+      "```",
+      "Actual: [[skill:new:references/real.md]]",
+    ].join("\n");
+
+    expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
+  });
+
+  test("ignores escaped new mention tokens", () => {
+    const markdown = String.raw`Literal \[[resource:new:references/example.md]] and active [[resource:new:references/real.md]]`;
+
+    expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
+  });
+
+  test("does not replace escaped new mention tokens", () => {
+    const markdown = String.raw`Literal \[[skill:new:references/example.md]] and active [[skill:new:references/real.md]]`;
+    const result = resolveNewResourceMentionsToUuids(
+      markdown,
+      new Map([["references/real.md", "c3d4e5f6-a7b8-9012-cdef-123456789012"]]),
+    );
+
+    expect(result.markdown).toBe(
+      String.raw`Literal \[[skill:new:references/example.md]] and active [[resource:c3d4e5f6-a7b8-9012-cdef-123456789012]]`,
+    );
+    expect(result.missingPaths).toEqual([]);
+  });
 });

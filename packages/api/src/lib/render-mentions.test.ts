@@ -18,20 +18,51 @@ let queryCount = 0;
 const drizzleNameSym = Symbol.for("drizzle:Name");
 
 mock.module("@omniskill/db", () => {
-  const makeSelectChain = () => ({
-    from: (table: unknown) => ({
-      where: (_condition: unknown) => {
-        queryCount++;
-        const tableName =
-          table && typeof table === "object" && drizzleNameSym in table
-            ? (table as Record<symbol, string>)[drizzleNameSym]
-            : "unknown";
+  const makeResult = (rows: unknown[]) => ({
+    execute: () => Promise.resolve(rows),
+  });
 
-        if (tableName === "skill") return Promise.resolve(mockSkills);
-        if (tableName === "skill_resource") return Promise.resolve(mockResources);
-        return Promise.resolve([]);
-      },
-    }),
+  const makeSelectChain = () => ({
+    from: (table: unknown) => {
+      const tableName =
+        table && typeof table === "object" && drizzleNameSym in table
+          ? (table as Record<symbol, string>)[drizzleNameSym]
+          : "unknown";
+
+      const rowsForBaseTable = () => {
+        if (tableName === "skill") {
+          return mockSkills;
+        }
+
+        if (tableName === "skill_resource") {
+          return mockResources;
+        }
+
+        return [];
+      };
+
+      return {
+        where: (_condition: unknown) => {
+          queryCount++;
+          return makeResult(rowsForBaseTable());
+        },
+        innerJoin: (_joinTable: unknown, _condition: unknown) => ({
+          where: (_where: unknown) => {
+            queryCount++;
+            const rows = mockResources.map((resource) => {
+              const parent = mockSkills.find((skill) => skill.id === resource.skillId);
+              return {
+                id: resource.id,
+                path: resource.path,
+                skillId: resource.skillId,
+                skillName: parent?.name ?? "",
+              };
+            });
+            return makeResult(rows);
+          },
+        }),
+      };
+    },
   });
 
   return {
@@ -60,17 +91,30 @@ describe("renderMentions", () => {
     expect(result).toBe(`Check out \`TypeScript Basics\` for more info.`);
   });
 
-  test("replaces escaped mention tokens", async () => {
-    const md = String.raw`Check \[\[resource:${RESOURCE_ID}\]\] and \[\[skill:${SKILL_A_ID}\]\].`;
+  test("keeps escaped mention tokens literal and removes escapes", async () => {
+    const md = `Check \\[[resource:${RESOURCE_ID}]] and \\[[skill:${SKILL_A_ID}]].`;
     const result = await renderMentions(md);
-    expect(result).toContain("`examples/hooks.ts for TypeScript Basics`");
-    expect(result).toContain("`TypeScript Basics`");
+    expect(result).toBe(`Check [[resource:${RESOURCE_ID}]] and [[skill:${SKILL_A_ID}]].`);
+  });
+
+  test("removes bracket-level escapes from literal mention tokens", async () => {
+    const md = String.raw`Check \[\[skill:${SKILL_A_ID}\]\]`;
+    const result = await renderMentions(md);
+    expect(result).toBe(`Check [[skill:${SKILL_A_ID}]]`);
   });
 
   test("replaces resource mention with resolved name and parent skill name", async () => {
     const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
     const result = await renderMentions(md);
     expect(result).toBe(`See \`examples/hooks.ts for TypeScript Basics\` for examples.`);
+  });
+
+  test("renders unescaped mention and preserves escaped literal mention", async () => {
+    const md = `Use [[skill:${SKILL_A_ID}]] and show \\[[skill:${SKILL_B_ID}]]`;
+    const result = await renderMentions(md);
+
+    expect(result).toContain("`TypeScript Basics`");
+    expect(result).toContain(`[[skill:${SKILL_B_ID}]]`);
   });
 
   test("replaces multiple mentions in same markdown", async () => {
@@ -122,6 +166,11 @@ describe("renderMentions", () => {
 
   test("does not query DB when no mentions present", async () => {
     await renderMentions("plain text");
+    expect(queryCount).toBe(0);
+  });
+
+  test("does not query DB for escaped mention tokens", async () => {
+    await renderMentions(`show \\[[skill:${SKILL_A_ID}]]`);
     expect(queryCount).toBe(0);
   });
 });

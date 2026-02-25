@@ -45,6 +45,7 @@ coverage
 
 # Misc
 *.tgz
+*.skill
 .cache
 tmp
 temp
