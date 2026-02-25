@@ -26,7 +26,7 @@ export async function importCommand() {
   const { identifier, slug: slugOverride } = parseArgs(process.argv);
 
   if (!identifier) {
-    p.log.error("usage: omniskill import <slug-or-uuid> [--slug <new-slug>]");
+    p.log.error("usage: better-skills import <slug-or-uuid> [--slug <new-slug>]");
     process.exit(1);
   }
 

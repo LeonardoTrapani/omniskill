@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Validate an Omniskill local skill folder before create/update.
+"""Validate a better-skills local skill folder before create/update.
 
 Checks:
 - SKILL.md exists

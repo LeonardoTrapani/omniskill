@@ -17,7 +17,7 @@ let queryCount = 0;
 
 const drizzleNameSym = Symbol.for("drizzle:Name");
 
-mock.module("@omniskill/db", () => {
+mock.module("@better-skills/db", () => {
   const makeResult = (rows: unknown[]) => ({
     execute: () => Promise.resolve(rows),
   });

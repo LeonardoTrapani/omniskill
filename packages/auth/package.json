@@ -1,5 +1,5 @@
 {
-  "name": "@omniskill/auth",
+  "name": "@better-skills/auth",
   "type": "module",
   "exports": {
     ".": {
@@ -15,8 +15,8 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
   },
   "dependencies": {
-    "@omniskill/db": "workspace:*",
-    "@omniskill/env": "workspace:*",
+    "@better-skills/db": "workspace:*",
+    "@better-skills/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
@@ -24,7 +24,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

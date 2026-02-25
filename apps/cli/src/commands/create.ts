@@ -108,7 +108,7 @@ export async function createCommand() {
   const { from, slug: slugOverride, isPublic } = parseArgs(process.argv);
 
   if (!from) {
-    p.log.error("usage: omniskill create --from <dir> [--slug <s>] [--public]");
+    p.log.error("usage: better-skills create --from <dir> [--slug <s>] [--public]");
     process.exit(1);
   }
 

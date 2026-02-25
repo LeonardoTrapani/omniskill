@@ -373,7 +373,7 @@ mock.module("postgres", () => ({
 }));
 
 // mock env
-mock.module("@omniskill/env/server", () => ({
+mock.module("@better-skills/env/server", () => ({
   env: {
     DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock",
     BETTER_AUTH_SECRET: "test-secret",
@@ -382,7 +382,7 @@ mock.module("@omniskill/env/server", () => ({
   },
 }));
 
-// -- mock @omniskill/db with our in-memory store --
+// -- mock @better-skills/db with our in-memory store --
 
 function makeFullSelectChain(fieldMap?: Record<string, unknown>) {
   return {
@@ -548,9 +548,9 @@ const mockDb = {
   },
 };
 
-mock.module("@omniskill/db", () => ({ db: mockDb }));
+mock.module("@better-skills/db", () => ({ db: mockDb }));
 
-mock.module("@omniskill/db/schema/skills", () => ({
+mock.module("@better-skills/db/schema/skills", () => ({
   skill: fakeSkill,
   skillResource: fakeSkillResource,
   skillLink: fakeSkillLink,
@@ -562,7 +562,7 @@ mock.module("@omniskill/db/schema/skills", () => ({
 }));
 
 // mock auth (used by context.ts)
-mock.module("@omniskill/auth", () => ({
+mock.module("@better-skills/auth", () => ({
   auth: {
     api: {
       getSession: async () => null,

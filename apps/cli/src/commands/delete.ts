@@ -9,7 +9,7 @@ export async function deleteCommand() {
   const id = process.argv[3];
 
   if (!id || !UUID_RE.test(id)) {
-    p.log.error("usage: omniskill delete <uuid>");
+    p.log.error("usage: better-skills delete <uuid>");
     process.exit(1);
   }
 

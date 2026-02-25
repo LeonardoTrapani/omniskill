@@ -10,18 +10,18 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
+    "@better-skills/api": "workspace:*",
+    "@better-skills/auth": "workspace:*",
+    "@better-skills/db": "workspace:*",
+    "@better-skills/env": "workspace:*",
     "@hono/trpc-server": "^0.4.0",
-    "@omniskill/api": "workspace:*",
-    "@omniskill/auth": "workspace:*",
-    "@omniskill/db": "workspace:*",
-    "@omniskill/env": "workspace:*",
     "@trpc/server": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "@types/bun": "catalog:",
     "tsdown": "^0.16.5",
     "typescript": "catalog:"

@@ -1,5 +1,5 @@
 {
-  "name": "@omniskill/api",
+  "name": "@better-skills/api",
   "type": "module",
   "exports": {
     ".": {
@@ -15,9 +15,9 @@
     "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
   },
   "dependencies": {
-    "@omniskill/auth": "workspace:*",
-    "@omniskill/db": "workspace:*",
-    "@omniskill/env": "workspace:*",
+    "@better-skills/auth": "workspace:*",
+    "@better-skills/db": "workspace:*",
+    "@better-skills/env": "workspace:*",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "dotenv": "catalog:",
@@ -25,7 +25,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "hono": "catalog:",
     "typescript": "catalog:"
   }

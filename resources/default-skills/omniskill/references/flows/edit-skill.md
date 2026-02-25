@@ -19,13 +19,13 @@ python scripts/validate_skill_folder.py <folder>
 2. Update skill:
 
 ```bash
-omniskill update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
+better-skills update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
 ```
 
 3. Confirm with:
 
 ```bash
-omniskill get <slug-or-uuid>
+better-skills get <slug-or-uuid>
 ```
 
 ## Behavior note

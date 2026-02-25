@@ -1,4 +1,4 @@
-import "@omniskill/env/web";
+import "@better-skills/env/web";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {

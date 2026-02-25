@@ -8,9 +8,9 @@
     "check-types": "tsc -b"
   },
   "dependencies": {
+    "@better-skills/api": "workspace:*",
+    "@better-skills/env": "workspace:*",
     "@clack/prompts": "^1.0.1",
-    "@omniskill/api": "workspace:*",
-    "@omniskill/env": "workspace:*",
     "@trpc/client": "catalog:",
     "better-auth": "^1.4.18",
     "dotenv": "catalog:",
@@ -19,7 +19,7 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

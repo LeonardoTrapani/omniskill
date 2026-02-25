@@ -1,4 +1,4 @@
-# omniskill
+# better-skills
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Hono, TRPC, and more.
 
@@ -65,7 +65,7 @@ The API is running at [http://localhost:3000](http://localhost:3000).
 ## Project Structure
 
 ```
-omniskill/
+better-skills/
 ├── apps/
 │   ├── web/         # Frontend application (Next.js)
 │   └── server/      # Backend API (Hono, TRPC)
@@ -90,8 +90,8 @@ omniskill/
 
 ## CLI distribution
 
-- Installer command used on the landing page: `curl -fsSL https://omniskill.sh/install | bash`
+- Installer command used on the landing page: `curl -fsSL https://better-skills.dev/install | bash`
 - Installer script source lives at `apps/web/public/install`
-- Installer default server URL is `https://server.omniskill.sh` (override with `--server-url` or `SERVER_URL`)
+- Installer default server URL is `https://server.better-skills.dev` (override with `--server-url` or `SERVER_URL`)
 - CLI binaries are published by GitHub Actions workflow `.github/workflows/release-cli.yml`
 - To publish a new CLI release, push a semver tag (for example: `git tag v0.1.0 && git push origin v0.1.0`)

@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 import matter from "gray-matter";
 
-import { db } from "@omniskill/db";
-import { skill, skillResource } from "@omniskill/db/schema/skills";
+import { db } from "@better-skills/db";
+import { skill, skillResource } from "@better-skills/db/schema/skills";
 
 type ResourceKind = (typeof skillResource.$inferInsert)["kind"];
 

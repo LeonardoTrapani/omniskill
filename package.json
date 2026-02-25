@@ -1,5 +1,5 @@
 {
-  "name": "omniskill",
+  "name": "better-skills",
   "private": true,
   "workspaces": {
     "packages": [
@@ -26,23 +26,23 @@
     "dev:cli": "turbo -F cli dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
-    "db:push": "turbo -F @omniskill/db db:push",
-    "db:studio": "turbo -F @omniskill/db db:studio",
-    "db:generate": "turbo -F @omniskill/db db:generate",
-    "db:migrate": "turbo -F @omniskill/db db:migrate",
-    "scrape:ingest": "turbo -F @omniskill/scraping scrape:ingest",
-    "scrape:pipeline": "turbo -F @omniskill/scraping scrape:pipeline",
+    "db:push": "turbo -F @better-skills/db db:push",
+    "db:studio": "turbo -F @better-skills/db db:studio",
+    "db:generate": "turbo -F @better-skills/db db:generate",
+    "db:migrate": "turbo -F @better-skills/db db:migrate",
+    "scrape:ingest": "turbo -F @better-skills/scraping scrape:ingest",
+    "scrape:pipeline": "turbo -F @better-skills/scraping scrape:pipeline",
     "check": "oxlint && oxfmt --write",
     "prepare": "husky"
   },
   "dependencies": {
-    "@omniskill/env": "workspace:*",
+    "@better-skills/env": "workspace:*",
     "dotenv": "catalog:",
     "motion": "^12.34.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "@types/bun": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",

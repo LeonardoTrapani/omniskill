@@ -9,8 +9,8 @@ Use this for auth, connectivity, discovery commands, import/delete, sync, and co
 ## Steps
 
 1. Preflight if API access is needed:
-   - `omniskill health`
-   - `omniskill whoami` (or `omniskill login`)
+   - `better-skills health`
+   - `better-skills whoami` (or `better-skills login`)
 2. Run requested command.
 3. Return concise result + any next action.
 

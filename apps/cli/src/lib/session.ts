@@ -16,10 +16,10 @@ type StoredSession = {
 function getConfigDir() {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME;
   if (xdgConfigHome) {
-    return join(xdgConfigHome, "omniskill");
+    return join(xdgConfigHome, "better-skills");
   }
 
-  return join(homedir(), ".config", "omniskill");
+  return join(homedir(), ".config", "better-skills");
 }
 
 export function getSessionFilePath() {

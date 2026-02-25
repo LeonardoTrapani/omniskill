@@ -1,5 +1,5 @@
 {
-  "name": "@omniskill/scraping",
+  "name": "@better-skills/scraping",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,12 +10,12 @@
     "scrape:pipeline": "bun run src/ingest-skills.ts --dir ./parsed-skills -v && bun run src/import-missing-resources.ts --dir ./parsed-skills -v && bun run src/resolve-resource-refs.ts -v && bun run src/sync-all-links.ts -v"
   },
   "dependencies": {
-    "@omniskill/db": "workspace:*",
+    "@better-skills/db": "workspace:*",
     "drizzle-orm": "^0.45.1",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

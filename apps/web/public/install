@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="${OMNISKILL_REPO:-LeonardoTrapani/omniskill}"
-INSTALL_DIR="${OMNISKILL_INSTALL_DIR:-$HOME/.local/bin}"
-DEFAULT_SERVER_URL="${OMNISKILL_SERVER_URL:-https://server.omniskill.dev}"
+REPO="${BETTER_SKILLS_REPO:-LeonardoTrapani/better-skills}"
+INSTALL_DIR="${BETTER_SKILLS_INSTALL_DIR:-$HOME/.local/bin}"
+DEFAULT_SERVER_URL="${BETTER_SKILLS_SERVER_URL:-https://server.better-skills.dev}"
 VERSION="latest"
-BIN_NAME="omniskill"
+BIN_NAME="better-skills"
 
 usage() {
   cat <<'EOF'
-install omniskill cli
+install better-skills cli
 
 usage:
-  curl -fsSL https://omniskill.sh/install | bash
-  curl -fsSL https://omniskill.sh/install | bash -s -- --version v0.1.0
+  curl -fsSL https://better-skills.dev/install | bash
+  curl -fsSL https://better-skills.dev/install | bash -s -- --version v0.1.0
 
 options:
   --version <tag>       install a specific release tag (default: latest)
@@ -139,7 +139,7 @@ mv "$tmp_binary" "$target_binary"
 cat >"$tmp_wrapper" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-SERVER_URL="\${SERVER_URL:-${DEFAULT_SERVER_URL}}" OMNISKILL_VERSION="${VERSION}" exec "${target_binary}" "\$@"
+SERVER_URL="\${SERVER_URL:-${DEFAULT_SERVER_URL}}" BETTER_SKILLS_VERSION="${VERSION}" exec "${target_binary}" "\$@"
 EOF
 
 chmod +x "$tmp_wrapper"

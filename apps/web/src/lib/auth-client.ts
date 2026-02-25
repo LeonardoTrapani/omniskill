@@ -1,4 +1,4 @@
-import { env } from "@omniskill/env/web";
+import { env } from "@better-skills/env/web";
 import { createAuthClient } from "better-auth/react";
 import { deviceAuthorizationClient } from "better-auth/client/plugins";
 

@@ -9,7 +9,7 @@ export async function getCommand() {
   const identifier = process.argv[3];
 
   if (!identifier) {
-    p.log.error("usage: omniskill get <slug-or-uuid>");
+    p.log.error("usage: better-skills get <slug-or-uuid>");
     process.exit(1);
   }
 

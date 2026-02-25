@@ -3,7 +3,7 @@
 ## Create
 
 ```bash
-omniskill create --from <dir> [--slug <slug>] [--public]
+better-skills create --from <dir> [--slug <slug>] [--public]
 ```
 
 Behavior:
@@ -17,7 +17,7 @@ Behavior:
 ## Update
 
 ```bash
-omniskill update <slug-or-uuid> --from <dir> [--slug <slug>] [--public|--private]
+better-skills update <slug-or-uuid> --from <dir> [--slug <slug>] [--public|--private]
 ```
 
 Behavior:

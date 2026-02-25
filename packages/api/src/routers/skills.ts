@@ -2,8 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, getTableColumns, gt, ilike, inArray, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@omniskill/db";
-import { skill, skillLink, skillResource } from "@omniskill/db/schema/skills";
+import { db } from "@better-skills/db";
+import { skill, skillLink, skillResource } from "@better-skills/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import {

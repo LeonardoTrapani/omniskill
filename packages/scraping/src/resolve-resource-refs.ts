@@ -15,8 +15,8 @@ import { parseArgs } from "node:util";
 
 import { eq, and, isNull } from "drizzle-orm";
 
-import { db } from "@omniskill/db/script";
-import { skill, skillResource } from "@omniskill/db/schema/skills";
+import { db } from "@better-skills/db/script";
+import { skill, skillResource } from "@better-skills/db/schema/skills";
 
 // ─── CLI args ────────────────────────────────────────────────────────────────
 

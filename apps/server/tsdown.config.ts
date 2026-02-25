@@ -7,5 +7,5 @@ export default defineConfig({
   format: "esm",
   outDir: "./dist",
   clean: true,
-  noExternal: [/@omniskill\/.*/],
+  noExternal: [/@better-skills\/.*/],
 });

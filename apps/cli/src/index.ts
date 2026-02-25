@@ -23,24 +23,26 @@ class UsageError extends Error {
 
 function printUsage() {
   p.log.info("usage:");
-  p.log.info("  omniskill --version");
-  p.log.info("  omniskill --help");
-  p.log.info("  omniskill health");
-  p.log.info("  omniskill login");
-  p.log.info("  omniskill logout");
-  p.log.info("  omniskill whoami");
-  p.log.info("  omniskill sync");
-  p.log.info("  omniskill search <query> [--public] [--limit N]");
-  p.log.info("  omniskill get <slug-or-uuid>");
-  p.log.info("  omniskill config");
-  p.log.info("  omniskill create --from <dir> [--slug <s>] [--public]");
-  p.log.info("  omniskill update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]");
-  p.log.info("  omniskill delete <uuid>");
-  p.log.info("  omniskill import <slug-or-uuid> [--slug <new-slug>]");
+  p.log.info("  better-skills --version");
+  p.log.info("  better-skills --help");
+  p.log.info("  better-skills health");
+  p.log.info("  better-skills login");
+  p.log.info("  better-skills logout");
+  p.log.info("  better-skills whoami");
+  p.log.info("  better-skills sync");
+  p.log.info("  better-skills search <query> [--public] [--limit N]");
+  p.log.info("  better-skills get <slug-or-uuid>");
+  p.log.info("  better-skills config");
+  p.log.info("  better-skills create --from <dir> [--slug <s>] [--public]");
+  p.log.info(
+    "  better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
+  );
+  p.log.info("  better-skills delete <uuid>");
+  p.log.info("  better-skills import <slug-or-uuid> [--slug <new-slug>]");
 }
 
 function printVersion() {
-  p.log.info(`omniskill ${getCliVersion()}`);
+  p.log.info(`better-skills ${getCliVersion()}`);
 }
 
 async function run(args: string[]) {

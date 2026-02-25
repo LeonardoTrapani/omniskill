@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This package owns Drizzle schema and migration workflows for Omniskill's Neon Postgres data model.
+This package owns Drizzle schema and migration workflows for better-skills's Neon Postgres data model.
 
 ## Local defaults
 

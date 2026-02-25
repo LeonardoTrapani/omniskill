@@ -16,7 +16,7 @@ function getTableName(table: unknown): string {
 }
 
 // mock the db module before importing link-sync
-mock.module("@omniskill/db", () => {
+mock.module("@better-skills/db", () => {
   const createChain = () => {
     const chain: Record<string, unknown> = {};
     chain.delete = (table: unknown) => {

@@ -13,7 +13,7 @@
   "$schema": "https://r2.better-t-stack.dev/schema.json",
   "version": "3.21.4",
   "createdAt": "2026-02-21T12:07:56.445Z",
-  "reproducibleCommand": "bun create better-t-stack@latest omniskill --frontend next --backend hono --runtime bun --database postgres --orm drizzle --api trpc --auth better-auth --payments none --addons husky opentui oxlint skills turborepo --examples none --db-setup neon --web-deploy none --server-deploy none --git --package-manager bun --install",
+  "reproducibleCommand": "bun create better-t-stack@latest better-skills --frontend next --backend hono --runtime bun --database postgres --orm drizzle --api trpc --auth better-auth --payments none --addons husky opentui oxlint skills turborepo --examples none --db-setup neon --web-deploy none --server-deploy none --git --package-manager bun --install",
   "database": "postgres",
   "orm": "drizzle",
   "backend": "hono",

@@ -5,13 +5,13 @@
     "": {
       "name": "omniscient",
       "dependencies": {
-        "@omniskill/env": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "dotenv": "catalog:",
         "motion": "^12.34.3",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@types/bun": "catalog:",
         "husky": "^9.1.7",
         "lint-staged": "^16.1.2",
@@ -24,9 +24,9 @@
     "apps/cli": {
       "name": "cli",
       "dependencies": {
+        "@better-skills/api": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "@clack/prompts": "^1.0.1",
-        "@omniskill/api": "workspace:*",
-        "@omniskill/env": "workspace:*",
         "@trpc/client": "catalog:",
         "better-auth": "^1.4.18",
         "dotenv": "catalog:",
@@ -35,7 +35,7 @@
         "picocolors": "^1.1.1",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
@@ -43,18 +43,18 @@
     "apps/server": {
       "name": "server",
       "dependencies": {
+        "@better-skills/api": "workspace:*",
+        "@better-skills/auth": "workspace:*",
+        "@better-skills/db": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "@hono/trpc-server": "^0.4.0",
-        "@omniskill/api": "workspace:*",
-        "@omniskill/auth": "workspace:*",
-        "@omniskill/db": "workspace:*",
-        "@omniskill/env": "workspace:*",
         "@trpc/server": "catalog:",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "hono": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@types/bun": "catalog:",
         "tsdown": "^0.16.5",
         "typescript": "catalog:",
@@ -65,10 +65,10 @@
       "version": "0.1.0",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
+        "@better-skills/api": "workspace:*",
+        "@better-skills/auth": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "@mdxeditor/editor": "^3.52.4",
-        "@omniskill/api": "workspace:*",
-        "@omniskill/auth": "workspace:*",
-        "@omniskill/env": "workspace:*",
         "@tanstack/react-query": "^5.90.12",
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
@@ -95,7 +95,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@tailwindcss/postcss": "^4.1.10",
         "@tanstack/react-query-devtools": "^5.91.1",
         "@types/d3": "^7.4.3",
@@ -107,11 +107,11 @@
       },
     },
     "packages/api": {
-      "name": "@omniskill/api",
+      "name": "@better-skills/api",
       "dependencies": {
-        "@omniskill/auth": "workspace:*",
-        "@omniskill/db": "workspace:*",
-        "@omniskill/env": "workspace:*",
+        "@better-skills/auth": "workspace:*",
+        "@better-skills/db": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
         "dotenv": "catalog:",
@@ -119,16 +119,16 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "hono": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/auth": {
-      "name": "@omniskill/auth",
+      "name": "@better-skills/auth",
       "dependencies": {
-        "@omniskill/db": "workspace:*",
-        "@omniskill/env": "workspace:*",
+        "@better-skills/db": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
@@ -136,31 +136,31 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
-      "name": "@omniskill/config",
+      "name": "@better-skills/config",
       "version": "0.0.0",
     },
     "packages/db": {
-      "name": "@omniskill/db",
+      "name": "@better-skills/db",
       "dependencies": {
-        "@omniskill/env": "workspace:*",
+        "@better-skills/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
         "postgres": "^3.4.7",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "drizzle-kit": "^0.31.8",
         "typescript": "catalog:",
       },
     },
     "packages/env": {
-      "name": "@omniskill/env",
+      "name": "@better-skills/env",
       "version": "0.0.0",
       "dependencies": {
         "@t3-oss/env-core": "^0.13.1",
@@ -169,20 +169,20 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/scraping": {
-      "name": "@omniskill/scraping",
+      "name": "@better-skills/scraping",
       "dependencies": {
-        "@omniskill/db": "workspace:*",
+        "@better-skills/db": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "gray-matter": "^4.0.3",
       },
       "devDependencies": {
-        "@omniskill/config": "workspace:*",
+        "@better-skills/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
@@ -272,6 +272,18 @@
     "@better-auth/utils": ["@better-auth/utils@0.3.0", "", {}, "sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw=="],
 
     "@better-fetch/fetch": ["@better-fetch/fetch@1.1.21", "", {}, "sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A=="],
+
+    "@better-skills/api": ["@better-skills/api@workspace:packages/api"],
+
+    "@better-skills/auth": ["@better-skills/auth@workspace:packages/auth"],
+
+    "@better-skills/config": ["@better-skills/config@workspace:packages/config"],
+
+    "@better-skills/db": ["@better-skills/db@workspace:packages/db"],
+
+    "@better-skills/env": ["@better-skills/env@workspace:packages/env"],
+
+    "@better-skills/scraping": ["@better-skills/scraping@workspace:packages/scraping"],
 
     "@clack/core": ["@clack/core@1.0.1", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-WKeyK3NOBwDOzagPR5H08rFk9D/WuN705yEbuZvKqlkmoLM2woKtXb10OO2k1NoSU4SFG947i2/SCYh+2u5e4g=="],
 
@@ -616,18 +628,6 @@
     "@nodelib/fs.stat": ["@nodelib/fs.stat@2.0.5", "", {}, "sha512-RkhPPp2zrqDAQA/2jNhnztcPAlv64XdhIp7a7454A5ovI7Bukxgt7MX7udwAu3zg1DcpPU0rz3VV1SeaqvY4+A=="],
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
-
-    "@omniskill/api": ["@omniskill/api@workspace:packages/api"],
-
-    "@omniskill/auth": ["@omniskill/auth@workspace:packages/auth"],
-
-    "@omniskill/config": ["@omniskill/config@workspace:packages/config"],
-
-    "@omniskill/db": ["@omniskill/db@workspace:packages/db"],
-
-    "@omniskill/env": ["@omniskill/env@workspace:packages/env"],
-
-    "@omniskill/scraping": ["@omniskill/scraping@workspace:packages/scraping"],
 
     "@open-draft/deferred-promise": ["@open-draft/deferred-promise@2.2.0", "", {}, "sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA=="],
 

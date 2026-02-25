@@ -12,19 +12,19 @@ Use this for discovery, recommendations, import proposals, and linking suggestio
 1. Search own/private first:
 
 ```bash
-omniskill search "<query>"
+better-skills search "<query>"
 ```
 
 2. Search public next:
 
 ```bash
-omniskill search "<query>" --public
+better-skills search "<query>" --public
 ```
 
 3. Inspect candidates:
 
 ```bash
-omniskill get <slug-or-uuid>
+better-skills get <slug-or-uuid>
 ```
 
 ## Proposal format
@@ -38,7 +38,7 @@ omniskill get <slug-or-uuid>
 ## Execute after approval
 
 ```bash
-omniskill import <slug-or-uuid> [--slug <new-slug>]
+better-skills import <slug-or-uuid> [--slug <new-slug>]
 ```
 
 For linking, update target markdown with valid UUID mentions using create/edit flows.

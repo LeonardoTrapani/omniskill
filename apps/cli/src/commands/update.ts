@@ -123,7 +123,7 @@ export async function updateCommand() {
 
   if (!identifier || !from) {
     p.log.error(
-      "usage: omniskill update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
+      "usage: better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
     );
     process.exit(1);
   }

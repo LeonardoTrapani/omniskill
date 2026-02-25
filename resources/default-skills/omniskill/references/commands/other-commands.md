@@ -3,31 +3,31 @@
 ## Auth and connectivity
 
 ```bash
-omniskill health
-omniskill login
-omniskill whoami
-omniskill logout
+better-skills health
+better-skills login
+better-skills whoami
+better-skills logout
 ```
 
 ## Discovery
 
 ```bash
-omniskill search "<query>" [--public] [--limit N]
-omniskill get <slug-or-uuid>
+better-skills search "<query>" [--public] [--limit N]
+better-skills get <slug-or-uuid>
 ```
 
 ## Import and delete
 
 ```bash
-omniskill import <slug-or-uuid> [--slug <new-slug>]
-omniskill delete <uuid>
+better-skills import <slug-or-uuid> [--slug <new-slug>]
+better-skills delete <uuid>
 ```
 
 ## Agent config and sync
 
 ```bash
-omniskill config
-omniskill sync
+better-skills config
+better-skills sync
 ```
 
 ## Automation notes

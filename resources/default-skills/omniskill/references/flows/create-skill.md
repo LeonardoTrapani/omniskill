@@ -19,13 +19,13 @@ python scripts/validate_skill_folder.py <folder>
 2. Create skill:
 
 ```bash
-omniskill create --from <folder> [--slug <slug>] [--public]
+better-skills create --from <folder> [--slug <slug>] [--public]
 ```
 
 3. Confirm with:
 
 ```bash
-omniskill get <slug-or-uuid>
+better-skills get <slug-or-uuid>
 ```
 
 ## Output expectation

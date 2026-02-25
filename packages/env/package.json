@@ -1,5 +1,5 @@
 {
-  "name": "@omniskill/env",
+  "name": "@better-skills/env",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -27,7 +27,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@omniskill/config": "workspace:*",
+    "@better-skills/config": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

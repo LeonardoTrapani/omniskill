@@ -1,7 +1,7 @@
 import { trpcServer } from "@hono/trpc-server";
-import { appRouter, createContext } from "@omniskill/api";
-import { auth } from "@omniskill/auth";
-import { env } from "@omniskill/env/server";
+import { appRouter, createContext } from "@better-skills/api";
+import { auth } from "@better-skills/auth";
+import { env } from "@better-skills/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";

@@ -4,14 +4,14 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 
 import matter from "gray-matter";
 
-import { env } from "@omniskill/env/cli";
+import { env } from "@better-skills/env/cli";
 
 import type { SupportedAgent } from "./agents";
 import { getAgentSkillDir } from "./agents";
 
-const OMNISKILL_SKILLS_DIR = join(homedir(), ".omniskill", "skills");
-const LOCK_FILE_PATH = join(OMNISKILL_SKILLS_DIR, "lock.json");
-const INSTALL_METADATA_FILE = ".omniskill-install.json";
+const BETTER_SKILLS_DIR = join(homedir(), ".better-skills", "skills");
+const LOCK_FILE_PATH = join(BETTER_SKILLS_DIR, "lock.json");
+const INSTALL_METADATA_FILE = ".better-skills-install.json";
 
 type SkillResourceInput = {
   path: string;
@@ -59,7 +59,7 @@ type InstallLockSkillEntry = {
   visibility: "public" | "private";
   canonicalPath: string;
   source: {
-    type: "omniskill-api";
+    type: "better-skills-api";
     serverUrl: string;
     sourceUrl: string | null;
     sourceIdentifier: string | null;
@@ -251,7 +251,7 @@ async function writeInstallLock(
     visibility: skill.visibility,
     canonicalPath: result.canonicalPath,
     source: {
-      type: "omniskill-api",
+      type: "better-skills-api",
       serverUrl: env.SERVER_URL,
       sourceUrl: skill.sourceUrl,
       sourceIdentifier: skill.sourceIdentifier,
@@ -260,7 +260,7 @@ async function writeInstallLock(
     targets,
   };
 
-  await mkdir(OMNISKILL_SKILLS_DIR, { recursive: true });
+  await mkdir(BETTER_SKILLS_DIR, { recursive: true });
   await writeFile(LOCK_FILE_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
 }
 
@@ -269,7 +269,7 @@ export async function uninstallSkill(skillFolder: string): Promise<void> {
   const entry = lock.skills[skillFolder];
 
   // remove canonical dir
-  const canonicalPath = entry?.canonicalPath ?? join(OMNISKILL_SKILLS_DIR, skillFolder);
+  const canonicalPath = entry?.canonicalPath ?? join(BETTER_SKILLS_DIR, skillFolder);
   await rm(canonicalPath, { recursive: true, force: true });
 
   // remove agent symlinks / copies
@@ -284,7 +284,7 @@ export async function uninstallSkill(skillFolder: string): Promise<void> {
   // remove from lock file
   delete lock.skills[skillFolder];
   lock.updatedAt = new Date().toISOString();
-  await mkdir(OMNISKILL_SKILLS_DIR, { recursive: true });
+  await mkdir(BETTER_SKILLS_DIR, { recursive: true });
   await writeFile(LOCK_FILE_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
 }
 
@@ -293,13 +293,13 @@ export async function installSkill(
   agents: SupportedAgent[],
 ): Promise<InstallSkillResult> {
   const skillFolder = sanitizeName(skill.slug);
-  const canonicalPath = join(OMNISKILL_SKILLS_DIR, skillFolder);
+  const canonicalPath = join(BETTER_SKILLS_DIR, skillFolder);
 
-  if (!isPathSafe(OMNISKILL_SKILLS_DIR, canonicalPath)) {
+  if (!isPathSafe(BETTER_SKILLS_DIR, canonicalPath)) {
     throw new Error("invalid skill slug");
   }
 
-  await mkdir(OMNISKILL_SKILLS_DIR, { recursive: true });
+  await mkdir(BETTER_SKILLS_DIR, { recursive: true });
   await cleanDirectory(canonicalPath);
   const canonicalWrite = await writeCanonicalSkill(skill, canonicalPath);
 

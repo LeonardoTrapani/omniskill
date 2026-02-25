@@ -76,7 +76,7 @@ export async function syncCommand() {
     await trpc.me.query();
     authSpinner.stop(pc.green("authenticated"));
   } catch {
-    authSpinner.stop(pc.red("not authenticated - run omniskill login"));
+    authSpinner.stop(pc.red("not authenticated - run better-skills login"));
     return;
   }
 

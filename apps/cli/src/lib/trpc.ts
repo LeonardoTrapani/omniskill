@@ -1,6 +1,6 @@
-import type { AppRouter } from "@omniskill/api/routers/index";
+import type { AppRouter } from "@better-skills/api/routers/index";
 
-import { env } from "@omniskill/env/cli";
+import { env } from "@better-skills/env/cli";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 
 import { readSessionSync } from "./session";
