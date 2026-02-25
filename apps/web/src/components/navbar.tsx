@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { X, Menu, LogOut } from "lucide-react";
+import { X, Menu, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
@@ -184,6 +184,21 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
                   </Link>
                 ))}
               </div>
+
+              {mounted && !isPending && session && (
+                <div className="border border-border mb-4">
+                  <Link
+                    href="/settings"
+                    className="flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Settings className="size-4" />
+                      Settings
+                    </span>
+                  </Link>
+                </div>
+              )}
 
               <div className="flex flex-col gap-2">
                 {mounted &&

@@ -38,6 +38,7 @@ interface ForceGraphProps {
   focusNodeId?: string;
   className?: string;
   centerXBias?: number;
+  mobileInitialScale?: number;
 }
 
 export function ForceGraph({
@@ -46,6 +47,7 @@ export function ForceGraph({
   focusNodeId,
   className,
   centerXBias = 0,
+  mobileInitialScale = 1,
 }: ForceGraphProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,8 +96,9 @@ export function ForceGraph({
 
       svg.call(zoomBehavior);
 
-      // default zoom near 1:1 to show more of the graph
-      const initialScale = 1.1;
+      // keep desktop zoom unchanged; allow mobile-only zoom-out
+      const isMobileViewport = window.innerWidth < 1024;
+      const initialScale = isMobileViewport ? mobileInitialScale : 1.1;
       const initialTransform = d3.zoomIdentity
         .translate(centerX * (1 - initialScale), centerY * (1 - initialScale))
         .scale(initialScale);
@@ -219,7 +222,7 @@ export function ForceGraph({
 
       simulationRef.current = simulation;
     },
-    [data, height, focusNodeId, router, centerXBias],
+    [data, height, focusNodeId, router, centerXBias, mobileInitialScale],
   );
 
   useEffect(() => {

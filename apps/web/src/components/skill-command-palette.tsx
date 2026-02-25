@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Copy, ArrowUp, Loader2 } from "lucide-react";
+import { Search, Copy, ArrowUp, Loader2, ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useSkillSearch } from "@/hooks/use-skill-search";
@@ -198,7 +198,11 @@ export function SkillCommandPalette({
           className="p-0 top-[30%] translate-y-0 sm:max-w-2xl gap-0 overflow-hidden"
           showCloseButton={false}
         >
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center gap-3 p-6 focus-within:border-primary/50 transition-colors"
+          >
+            <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -208,10 +212,10 @@ export function SkillCommandPalette({
               placeholder="Search skills…"
               name="command-search"
               autoComplete="off"
-              className="w-full bg-transparent px-1 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none"
+              className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground outline-none"
               aria-label="Search for a skill"
             />
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <Copy className="w-3 h-3" />
                 {skillCount > 0 && <span>{skillCount} skills in the registry</span>}
@@ -223,7 +227,7 @@ export function SkillCommandPalette({
                 Open
                 <ArrowUp className="w-2.5 h-2.5" />
               </button>
-            </div>
+            </div> */}
           </form>
 
           {showSuggestions && (
@@ -254,14 +258,16 @@ export function SkillCommandPalette({
                   onClick={() => openSkill(skill.id)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   className={cn(
-                    "flex items-center gap-3 w-full px-6 py-2.5 text-left text-sm text-muted-foreground transition-colors",
+                    "flex items-center gap-3 w-full px-6 py-3 text-left text-sm transition-colors justify-between",
                     selectedIndex === index
-                      ? "bg-secondary/50 text-foreground"
+                      ? "bg-secondary/50 text-primary"
                       : "hover:text-foreground hover:bg-secondary/50",
                   )}
                 >
-                  <Search className="size-3.5 flex-shrink-0 opacity-50" />
                   {skill.name}
+                  <div>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                  </div>
                 </button>
               ))}
 

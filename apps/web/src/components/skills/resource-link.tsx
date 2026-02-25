@@ -1,7 +1,7 @@
 "use client";
 
 import type { Route } from "next";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { NodePreviewCard } from "@/components/graph/node-preview-card";
 import { canRenderResourceAsMarkdown } from "@/components/skills/resource-file";
@@ -32,19 +32,23 @@ export function ResourceHoverLink({
   skillName,
   className,
   children,
+  onNavigate,
 }: {
   resource: ResourceLike;
   skillId: string;
   skillName?: string;
   className?: string;
   children?: ReactNode;
+  onNavigate?: (event: MouseEvent<HTMLElement>, href: Route) => void;
 }) {
   const previewUnavailable = !canRenderResourceAsMarkdown(resource.path, resource.kind);
+  const href = buildResourceHref(skillId, resource.path);
 
   return (
     <HoverCard>
       <HoverCardTrigger
-        href={buildResourceHref(skillId, resource.path)}
+        href={href}
+        onClick={(event) => onNavigate?.(event, href)}
         className={className ?? "text-primary underline underline-offset-4"}
       >
         {children ?? resource.path}

@@ -32,14 +32,19 @@ export default function AddSkillModal({ open, onClose, initialSkill }: AddSkillM
     onClose();
   };
 
+  if (isConfirmView && state.selectedSkill) {
+    return (
+      <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+        <AlertDialogContent size="sm">
+          <AddOptionsView skill={state.selectedSkill} onClose={handleClose} />
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <AlertDialogContent
-        size={isConfirmView ? "lg" : "lg"}
-        className={
-          isConfirmView ? "max-w-md overflow-hidden" : "flex max-h-[80vh] flex-col overflow-hidden"
-        }
-      >
+      <AlertDialogContent size="lg" className="flex max-h-[80vh] flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/70 pb-4">
           <AlertDialogTitle className="text-lg font-semibold tracking-tight">
@@ -51,12 +56,9 @@ export default function AddSkillModal({ open, onClose, initialSkill }: AddSkillM
         </div>
 
         {/* Content */}
-        <div className={isConfirmView ? "pt-2" : "flex-1 min-h-0 overflow-y-auto pt-3"}>
+        <div className="flex-1 min-h-0 overflow-y-auto pt-3">
           {state.view === "initial-choice" && <ChoiceView dispatch={dispatch} />}
           {state.view === "browse-existing" && <BrowseSkillsView dispatch={dispatch} />}
-          {state.view === "add-options" && state.selectedSkill && (
-            <AddOptionsView skill={state.selectedSkill} onClose={handleClose} />
-          )}
         </div>
       </AlertDialogContent>
     </AlertDialog>

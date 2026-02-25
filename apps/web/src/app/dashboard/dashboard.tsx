@@ -61,49 +61,12 @@ export default function Dashboard() {
         <SkillGraph height={backgroundHeight} variant="background" />
       </div>
 
-      <div className="relative z-10 mx-auto space-y-6 p-6 lg:pointer-events-none">
+      <div className="relative z-10 mx-auto space-y-6 pb-14 lg:pb-0 lg:pr-6 lg:pointer-events-none">
         {/*<PageHeroCard
           eyebrow="Workspace"
           title="Skill Graph & Vault"
           description="Explore your connected skills and manage your private vault in a single, synchronized workspace."
         />*/}
-
-        <div
-          className="mb-0 grid grid-cols-2 border-x border-t border-border bg-background/80 lg:hidden"
-          role="tablist"
-          aria-label="Dashboard content tabs"
-        >
-          <button
-            type="button"
-            id="dashboard-content-tab-graph"
-            role="tab"
-            aria-controls="dashboard-content-panel-graph"
-            aria-selected={mobileTab === "graph"}
-            className={`h-11 w-full border-r border-border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-              mobileTab === "graph"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            onClick={() => handleMobileTabChange("graph")}
-          >
-            Graph
-          </button>
-          <button
-            type="button"
-            id="dashboard-content-tab-vault"
-            role="tab"
-            aria-controls="dashboard-content-panel-vault"
-            aria-selected={mobileTab === "vault"}
-            className={`h-11 w-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-              mobileTab === "vault"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-            onClick={() => handleMobileTabChange("vault")}
-          >
-            My Vault
-          </button>
-        </div>
 
         <div ref={panelsGridRef} className="relative">
           <div className="lg:hidden space-y-6 lg:pointer-events-auto">
@@ -129,11 +92,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="hidden lg:block" style={{ height: panelHeight }}>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[min(380px)]">
-              <div className="pointer-events-auto h-full">
+          <div className="hidden lg:block" style={{ height: backgroundHeight }}>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-6">
+              <div className="pointer-events-auto h-[75svh] w-[min(380px,calc(100vw-3rem))]">
                 <MyOmniTable
-                  height={panelHeight}
                   className="h-full shadow-[0_20px_45px_color-mix(in_oklab,var(--background)_45%,transparent)]"
                   onDelete={(skillId, skillName) =>
                     setDeleteTarget({ id: skillId, name: skillName })
@@ -143,6 +105,43 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-border bg-background/90 backdrop-blur-sm lg:hidden"
+        role="tablist"
+        aria-label="Dashboard content tabs"
+      >
+        <button
+          type="button"
+          id="dashboard-content-tab-graph"
+          role="tab"
+          aria-controls="dashboard-content-panel-graph"
+          aria-selected={mobileTab === "graph"}
+          className={`h-12 w-full border-r border-border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+            mobileTab === "graph"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => handleMobileTabChange("graph")}
+        >
+          Graph
+        </button>
+        <button
+          type="button"
+          id="dashboard-content-tab-vault"
+          role="tab"
+          aria-controls="dashboard-content-panel-vault"
+          aria-selected={mobileTab === "vault"}
+          className={`h-12 w-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+            mobileTab === "vault"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => handleMobileTabChange("vault")}
+        >
+          My Vault
+        </button>
       </div>
 
       <DeleteSkillDialog

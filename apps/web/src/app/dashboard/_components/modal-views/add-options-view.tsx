@@ -1,10 +1,19 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import {
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { trpc, queryClient } from "@/utils/trpc";
 import type { SelectedSkill } from "../../_hooks/use-modal-machine";
 
@@ -14,6 +23,30 @@ interface AddOptionsViewProps {
 }
 
 export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) {
+  const router = useRouter();
+  const ownerSkillsQuery = useQuery(
+    trpc.skills.listByOwner.queryOptions({
+      search: skill.slug,
+      limit: 100,
+    }),
+  );
+
+  const existingVaultSkill = ownerSkillsQuery.data?.items.find((ownedSkill) => {
+    const importedFrom = ownedSkill.metadata.importedFrom;
+    if (
+      importedFrom &&
+      typeof importedFrom === "object" &&
+      "skillId" in importedFrom &&
+      importedFrom.skillId === skill.id
+    ) {
+      return true;
+    }
+
+    return ownedSkill.slug === skill.slug;
+  });
+
+  const alreadyInVault = Boolean(existingVaultSkill);
+
   const duplicateMutation = useMutation(
     trpc.skills.duplicate.mutationOptions({
       onSuccess: () => {
@@ -25,6 +58,7 @@ export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) 
         });
         toast.success(`"${skill.name}" added to your vault`);
         onClose();
+        router.push("/dashboard" as Route);
       },
       onError: (error) => {
         toast.error(`Failed to add skill: ${error.message}`);
@@ -32,38 +66,79 @@ export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) 
     }),
   );
 
-  const resourceCount = skill.resourceCount ?? 0;
+  /* ── Already in vault: visually distinct informational state ── */
+  if (alreadyInVault) {
+    return (
+      <>
+        <AlertDialogHeader className="sr-only">
+          <AlertDialogTitle>Already in Vault</AlertDialogTitle>
+        </AlertDialogHeader>
 
+        <div className="flex flex-col items-center justify-center gap-4">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+            <Check className="size-4 text-primary" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <p className="text-sm font-medium leading-tight text-foreground text-center">
+              Already in your vault
+            </p>
+            <p className="text-xs leading-relaxed text-muted-foreground text-center">
+              You added <span className="font-medium text-foreground">{skill.name}</span> to your
+              vault. You can open your personal copy to view or edit it.
+            </p>
+          </div>
+        </div>
+
+        <AlertDialogFooter className="pt-2">
+          <AlertDialogCancel onClick={onClose}>Close</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (!existingVaultSkill) return;
+              onClose();
+              router.push(`/dashboard/skills/${existingVaultSkill.id}` as Route);
+            }}
+          >
+            Open in Vault
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </>
+    );
+  }
+
+  /* ── Normal add-to-vault confirmation ── */
   return (
-    <div className="py-2">
-      <div className="space-y-4">
-        <p className="text-base text-muted-foreground">Confirm adding this skill to your vault:</p>
-        <p className="text-xl font-semibold text-foreground">{skill.name}</p>
-        {resourceCount > 0 && (
-          <p className="text-sm text-muted-foreground">
-            {resourceCount} linked resource{resourceCount !== 1 ? "s" : ""} will be imported
-          </p>
-        )}
-      </div>
-
-      <div className="mt-8 flex justify-end gap-3">
+    <>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Add to Vault</AlertDialogTitle>
+        <AlertDialogDescription>
+          Add &ldquo;{skill.name}&rdquo; to your vault? This will create a personal copy you can
+          edit.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
         <AlertDialogCancel onClick={onClose} disabled={duplicateMutation.isPending}>
           Cancel
         </AlertDialogCancel>
         <AlertDialogAction
-          disabled={duplicateMutation.isPending}
+          disabled={duplicateMutation.isPending || ownerSkillsQuery.isLoading}
           onClick={() => duplicateMutation.mutate({ id: skill.id })}
         >
           {duplicateMutation.isPending ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               Adding...
+            </>
+          ) : ownerSkillsQuery.isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Checking...
             </>
           ) : (
             "Add to Vault"
           )}
         </AlertDialogAction>
-      </div>
-    </div>
+      </AlertDialogFooter>
+    </>
   );
 }

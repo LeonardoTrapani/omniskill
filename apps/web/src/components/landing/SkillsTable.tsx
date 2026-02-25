@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Search, Plus, ArrowRight, Loader2 } from "lucide-react";
-import { motion } from "motion/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { trpc } from "@/utils/trpc";
@@ -214,13 +213,7 @@ export default function SkillsTable({
       <style dangerouslySetInnerHTML={{ __html: ROW_ANIMATION_STYLE }} />
 
       <div className="mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="border border-border bg-background/95 backdrop-blur-sm"
-        >
+        <div className="border border-border bg-background/95 backdrop-blur-sm">
           {/* Title */}
           <div className="px-6 md:px-8 pt-8 pb-6">
             <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
@@ -355,7 +348,7 @@ export default function SkillsTable({
               </Link>
             )}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <AddSkillModal

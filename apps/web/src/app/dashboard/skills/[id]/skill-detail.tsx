@@ -14,6 +14,7 @@ import {
   Network,
   Paperclip,
   Pencil,
+  Plus,
   Trash2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -301,10 +302,11 @@ export default function SkillDetail({ id }: { id: string }) {
               {canAddToVault && (
                 <Button
                   size="default"
-                  className="px-3.5 text-sm"
+                  className="hover:bg-primary/90"
                   onClick={() => openAddSkillFlow(data)}
                 >
                   Add to Vault
+                  <Plus className="size-3.5" />
                 </Button>
               )}
               {canManageSkill && (
@@ -443,7 +445,7 @@ export default function SkillDetail({ id }: { id: string }) {
               icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="SKILL.md"
             >
-              <div className="px-5 py-5">
+              <div className="md:p-8 p-6">
                 <article className="min-w-0 break-words">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -545,43 +547,11 @@ export default function SkillDetail({ id }: { id: string }) {
           <aside className="hidden min-w-0 lg:block lg:h-full">
             <div className="flex h-full flex-col gap-6">
               {/* Skill details panel */}
-              <Panel
-                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-                title="Details"
-                className="shrink-0"
-              >
-                <div className="px-5 py-4">
-                  <dl className="space-y-2.5 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Slug</dt>
-                      <dd className="truncate text-right text-foreground">{data.slug}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Created</dt>
-                      <dd className="text-foreground">{formatDate(data.createdAt)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Updated</dt>
-                      <dd className="text-foreground">{formatDate(data.updatedAt)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </Panel>
 
               {/* Graph panel -- fills remaining space */}
               <Panel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Skill Graph"
-                trailing={
-                  graphQuery.data && graphQuery.data.nodes.length > 0 ? (
-                    <span className="text-[10px] text-muted-foreground">
-                      {graphQuery.data.nodes.filter((n) => n.type === "skill").length} skill
-                      {graphQuery.data.nodes.filter((n) => n.type === "skill").length !== 1
-                        ? "s"
-                        : ""}
-                    </span>
-                  ) : null
-                }
                 className="sticky top-[68px] flex h-[calc(100dvh-92px)] min-h-0 flex-col"
               >
                 <div className="relative min-h-0 flex-1 overflow-hidden">

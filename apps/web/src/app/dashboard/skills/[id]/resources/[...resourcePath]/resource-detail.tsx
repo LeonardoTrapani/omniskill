@@ -432,41 +432,6 @@ export default function ResourceDetail({
           {/* ---- Sidebar ---- */}
           <aside className="hidden min-w-0 lg:block lg:h-full">
             <div className="flex h-full flex-col gap-6">
-              {/* Resource details panel */}
-              <Panel
-                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-                title="Details"
-                className="shrink-0"
-              >
-                <div className="px-5 py-4">
-                  <dl className="space-y-2.5 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Kind</dt>
-                      <dd className="text-foreground">{resource.kind}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Path</dt>
-                      <dd className="truncate text-right text-foreground">{resource.path}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Parent</dt>
-                      <dd className="truncate text-right">
-                        <Link
-                          href={`/dashboard/skills/${resource.skillId}` as Route}
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {parentSkillName}
-                        </Link>
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Updated</dt>
-                      <dd className="text-foreground">{formatDate(resource.updatedAt)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </Panel>
-
               {/* Graph panel -- sticky, fills remaining space */}
               <Panel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}

@@ -31,8 +31,6 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
             initialSearch={initialSearch}
             className="pt-8 pb-24 px-6 md:px-16"
           />
-
-          <Footer />
         </div>
       </div>
     </main>

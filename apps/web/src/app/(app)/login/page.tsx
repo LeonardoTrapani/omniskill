@@ -67,7 +67,6 @@ function LoginPageContent() {
 
   return (
     <main className="relative min-h-[calc(100vh-52px)] overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,color-mix(in_oklab,var(--primary)_14%,transparent),transparent_42%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-40" />
 
       <section className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-5xl items-center px-6 py-10 md:px-10">
@@ -81,19 +80,19 @@ function LoginPageContent() {
               Continue to your Omniskill workspace to manage reusable skills for your agents across
               CLI and web.
             </p>
-
+            {/*
             <div className="mt-7 border border-border bg-muted/20 p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                 Session Preview
               </p>
               <p className="mt-2 font-mono text-xs leading-6 text-foreground/90 break-words">
-                &gt; connect graph --workspace personal
+                &gt; omniskill login
                 <br />
-                &gt; fetch skills --source marketplace
+                &gt; omniskill config
                 <br />
-                &gt; status ready
+                &gt; omniskill sync
               </p>
-            </div>
+            </div> */}
           </div>
 
           <div className="p-6 sm:p-8 lg:p-10">

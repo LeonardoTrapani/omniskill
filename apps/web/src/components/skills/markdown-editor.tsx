@@ -21,15 +21,21 @@ import "@mdxeditor/editor/style.css";
 
 export interface MarkdownEditorProps extends Omit<MDXEditorProps, "plugins"> {
   editorRef?: ForwardedRef<MDXEditorMethods>;
+  overlayContainer?: HTMLElement | null;
 }
 
-export default function MarkdownEditor({ editorRef, ...props }: MarkdownEditorProps) {
+export default function MarkdownEditor({
+  editorRef,
+  overlayContainer,
+  ...props
+}: MarkdownEditorProps) {
   const { resolvedTheme } = useTheme();
 
   return (
     <MDXEditor
-      className={resolvedTheme === "dark" ? "dark-theme dark-editor px-5 py-5" : "px-5 py-5"}
+      className={resolvedTheme === "dark" ? "dark-theme dark-editor md:p-5 p-3" : "md:p-5 p-3"}
       contentEditableClassName="mdx-editor-content"
+      {...(overlayContainer ? { overlayContainer } : {})}
       plugins={[
         headingsPlugin(),
         listsPlugin(),

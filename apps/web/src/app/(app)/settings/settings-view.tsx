@@ -37,7 +37,7 @@ function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-4 pl-4 md:grid-cols-[280px_1fr] md:gap-8">
+    <div className="grid gap-4 pl-4 md:pr-0 pr-4 md:grid-cols-[280px_1fr] md:gap-8">
       <div className="min-w-0">
         <h2 className="text-sm font-medium text-foreground">{title}</h2>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground text-pretty">
