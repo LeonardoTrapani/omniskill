@@ -23,7 +23,6 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "CORS_ORIGIN",
-    "GOOGLE_GENERATIVE_AI_API_KEY",
     "POSTGRES_DATABASE"
   ],
   "tasks": {

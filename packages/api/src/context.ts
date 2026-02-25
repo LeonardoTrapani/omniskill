@@ -6,22 +6,13 @@ export type CreateContextOptions = {
   context: HonoContext;
 };
 
-type Session = {
-  user: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-  };
-} | null;
+type Session = typeof auth.$Infer.Session;
 
 export async function createContext({ context }: CreateContextOptions) {
-  const session = await (
-    auth.api as {
-      getSession: (input: { headers: Headers }) => Promise<Session>;
-    }
-  ).getSession({
+  const session = (await auth.api.getSession({
     headers: context.req.raw.headers,
-  });
+  })) as Session;
+
   return {
     session,
   };

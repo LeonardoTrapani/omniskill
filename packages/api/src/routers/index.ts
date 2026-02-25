@@ -5,10 +5,13 @@ export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
     return "OK";
   }),
-  privateData: protectedProcedure.query(({ ctx }) => {
+  me: protectedProcedure.query(({ ctx }) => {
     return {
-      message: "This is private",
-      user: ctx.session.user,
+      user: {
+        id: ctx.session.user.id,
+        name: ctx.session.user.name,
+        email: ctx.session.user.email,
+      },
     };
   }),
   skills: skillsRouter,

@@ -5,23 +5,20 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun run --hot src/index.ts",
+    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/runtime.ts --outfile server",
+    "dev": "bun run --hot src/runtime.ts",
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.30",
     "@hono/trpc-server": "^0.4.0",
     "@omniskill/api": "workspace:*",
     "@omniskill/auth": "workspace:*",
     "@omniskill/db": "workspace:*",
     "@omniskill/env": "workspace:*",
     "@trpc/server": "catalog:",
-    "ai": "^6.0.97",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "hono": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@omniskill/config": "workspace:*",

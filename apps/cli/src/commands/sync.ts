@@ -73,7 +73,7 @@ export async function syncCommand() {
   authSpinner.start("checking authentication");
 
   try {
-    await trpc.privateData.query();
+    await trpc.me.query();
     authSpinner.stop(pc.green("authenticated"));
   } catch {
     authSpinner.stop(pc.red("not authenticated - run omniskill login"));

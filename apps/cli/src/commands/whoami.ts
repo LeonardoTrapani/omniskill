@@ -14,7 +14,7 @@ export async function whoamiCommand() {
   s.start("fetching session");
 
   try {
-    const result = await trpc.privateData.query();
+    const result = await trpc.me.query();
     s.stop(pc.green(`logged in as ${result.user.name ?? result.user.email}`));
   } catch {
     s.stop(pc.yellow("session invalid or expired — run login again"));

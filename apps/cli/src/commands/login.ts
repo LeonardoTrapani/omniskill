@@ -108,7 +108,7 @@ export async function loginCommand() {
       pollingSpinner.stop(pc.green("login successful"));
 
       try {
-        const me = await trpc.privateData.query();
+        const me = await trpc.me.query();
         p.log.success(`logged in as ${me.user.name ?? me.user.email}`);
       } catch {
         p.log.info("session saved, but profile fetch failed");
