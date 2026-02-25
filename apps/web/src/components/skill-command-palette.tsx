@@ -8,12 +8,11 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import { Search, Copy, ArrowUp, Loader2, Plus } from "lucide-react";
-
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Search, Copy, ArrowUp, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { trpc } from "@/utils/trpc";
+import { useSkillSearch } from "@/hooks/use-skill-search";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,22 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import AddSkillModal from "@/app/(app)/dashboard/_components/add-skill-modal";
-import type { ModalView, SelectedSkill } from "@/app/(app)/dashboard/_hooks/use-modal-machine";
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
-
-type ModalTarget =
-  | { type: "skill"; skill: SelectedSkill }
-  | { type: "create"; prompt: string }
-  | null;
 
 /** Trigger button — render in as many places as needed, all point to the same palette */
 export function SkillCommandTrigger({ onOpen }: { onOpen: () => void }) {
@@ -57,7 +40,7 @@ export function SkillCommandTrigger({ onOpen }: { onOpen: () => void }) {
   );
 }
 
-/** Dialog + keyboard listener + modal — render once */
+/** Dialog + keyboard listener — render once */
 export function SkillCommandPalette({
   open,
   onOpenChange,
@@ -69,37 +52,39 @@ export function SkillCommandPalette({
   initialSearch?: string;
   skillCount?: number;
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState(initialSearch ?? "");
-  const [modalTarget, setModalTarget] = useState<ModalTarget>(null);
-  const [modalKey, setModalKey] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   // sync initialSearch when it changes (e.g. from ?q= param)
   useEffect(() => {
     if (initialSearch) setSearch(initialSearch);
   }, [initialSearch]);
 
-  const debouncedSearch = useDebounce(search, 300);
-  const hasQuery = debouncedSearch.trim().length > 0;
-
-  const { data, isLoading } = useQuery({
-    ...trpc.skills.search.queryOptions({
-      query: debouncedSearch.trim(),
-      scope: "all",
-      limit: 3,
-      visibility: "public",
-    }),
-    placeholderData: keepPreviousData,
-    enabled: open && hasQuery,
+  const {
+    items: suggestions,
+    isLoading,
+    isFetching,
+    hasQuery,
+    debouncedQuery,
+    canLoadMore,
+    loadMore,
+  } = useSkillSearch({
+    query: search,
+    enabled: open,
+    scope: "all",
+    visibility: "public",
+    initialLimit: 5,
+    limitStep: 5,
+    maxLimit: 50,
   });
-
-  const suggestions = data?.items ?? [];
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   // reset selection when suggestions change
   useEffect(() => {
     setSelectedIndex(-1);
-  }, [debouncedSearch]);
+  }, [debouncedQuery]);
 
   // focus input when dialog opens
   useEffect(() => {
@@ -110,6 +95,11 @@ export function SkillCommandPalette({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (selectedIndex < 0) return;
+    resultItemRefs.current[selectedIndex]?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
+
   const handleOpenChange = useCallback(
     (next: boolean) => {
       onOpenChange(next);
@@ -118,14 +108,12 @@ export function SkillCommandPalette({
     [onOpenChange],
   );
 
-  const openModal = useCallback(
-    (target: ModalTarget) => {
-      onOpenChange(false);
-      setSearch("");
-      setModalTarget(target);
-      setModalKey((k) => k + 1);
+  const openSkill = useCallback(
+    (skillId: string) => {
+      handleOpenChange(false);
+      router.push(`/dashboard/skills/${skillId}`);
     },
-    [onOpenChange],
+    [handleOpenChange, router],
   );
 
   const handleKeyDown = useCallback(
@@ -133,38 +121,44 @@ export function SkillCommandPalette({
       if (!suggestions.length) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((i) => (i < suggestions.length - 1 ? i + 1 : 0));
+        setSelectedIndex((i) => {
+          const next = i < 0 ? 0 : Math.min(i + 1, suggestions.length - 1);
+          if (next >= suggestions.length - 1 && canLoadMore && !isFetching) {
+            loadMore();
+          }
+          return next;
+        });
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((i) => (i > 0 ? i - 1 : suggestions.length - 1));
+        setSelectedIndex((i) => {
+          if (i < 0) return 0;
+          return Math.max(i - 1, 0);
+        });
       } else if (e.key === "Enter" && selectedIndex >= 0) {
         e.preventDefault();
         const skill = suggestions[selectedIndex];
         if (skill) {
-          openModal({
-            type: "skill",
-            skill: {
-              id: skill.id,
-              name: skill.name,
-              slug: skill.slug,
-              description: skill.description,
-            },
-          });
+          openSkill(skill.id);
         }
       }
     },
-    [suggestions, selectedIndex, openModal],
+    [suggestions, selectedIndex, openSkill, canLoadMore, isFetching, loadMore],
   );
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    openModal({ type: "create", prompt: search });
-  };
+    const query = search.trim();
+    if (!query) return;
 
-  const initialSkill = modalTarget?.type === "skill" ? modalTarget.skill : undefined;
-  const initialView: ModalView | undefined =
-    modalTarget?.type === "create" ? "chat-create" : undefined;
-  const initialPrompt = modalTarget?.type === "create" ? modalTarget.prompt : undefined;
+    const selected = selectedIndex >= 0 ? suggestions[selectedIndex] : suggestions[0];
+    if (selected) {
+      openSkill(selected.id);
+      return;
+    }
+
+    handleOpenChange(false);
+    router.push(`/skills?q=${encodeURIComponent(query)}`);
+  };
 
   const showSuggestions = hasQuery && (isLoading || suggestions.length > 0);
 
@@ -173,7 +167,7 @@ export function SkillCommandPalette({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogHeader className="sr-only">
           <DialogTitle>Search skills</DialogTitle>
-          <DialogDescription>Search for skills or create a new one with AI</DialogDescription>
+          <DialogDescription>Search for skills in the registry</DialogDescription>
         </DialogHeader>
         <DialogContent
           className="p-0 top-[30%] translate-y-0 sm:max-w-2xl gap-0 overflow-hidden"
@@ -186,9 +180,11 @@ export function SkillCommandPalette({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="I want my agent to know how to use..."
+              placeholder="Search skills…"
+              name="command-search"
+              autoComplete="off"
               className="w-full bg-transparent px-1 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none"
-              aria-label="Describe the skill you need"
+              aria-label="Search for a skill"
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -199,14 +195,23 @@ export function SkillCommandPalette({
                 type="submit"
                 className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors"
               >
-                Submit
+                Open
                 <ArrowUp className="w-2.5 h-2.5" />
               </button>
             </div>
           </form>
 
           {showSuggestions && (
-            <div className="border-t border-border">
+            <div
+              className="max-h-[205px] overflow-y-auto border-t border-border"
+              onScroll={(e) => {
+                const element = e.currentTarget;
+                const remaining = element.scrollHeight - element.scrollTop - element.clientHeight;
+                if (remaining < 16 && canLoadMore && !isFetching) {
+                  loadMore();
+                }
+              }}
+            >
               {isLoading && suggestions.length === 0 && (
                 <div className="flex items-center justify-center py-3">
                   <Loader2 className="size-4 animate-spin text-muted-foreground" />
@@ -217,17 +222,10 @@ export function SkillCommandPalette({
                 <button
                   key={skill.id}
                   type="button"
-                  onClick={() =>
-                    openModal({
-                      type: "skill",
-                      skill: {
-                        id: skill.id,
-                        name: skill.name,
-                        slug: skill.slug,
-                        description: skill.description,
-                      },
-                    })
-                  }
+                  ref={(element) => {
+                    resultItemRefs.current[index] = element;
+                  }}
+                  onClick={() => openSkill(skill.id)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   className={cn(
                     "flex items-center gap-3 w-full px-6 py-2.5 text-left text-sm text-muted-foreground transition-colors",
@@ -236,7 +234,7 @@ export function SkillCommandPalette({
                       : "hover:text-foreground hover:bg-secondary/50",
                   )}
                 >
-                  <Plus className="size-3.5 flex-shrink-0 opacity-50" />
+                  <Search className="size-3.5 flex-shrink-0 opacity-50" />
                   {skill.name}
                 </button>
               ))}
@@ -244,19 +242,6 @@ export function SkillCommandPalette({
           )}
         </DialogContent>
       </Dialog>
-
-      <AddSkillModal
-        key={modalKey}
-        open={modalTarget !== null}
-        onClose={() => setModalTarget(null)}
-        onBack={() => {
-          setModalTarget(null);
-          onOpenChange(true);
-        }}
-        initialSkill={initialSkill}
-        initialView={initialView}
-        initialPrompt={initialPrompt}
-      />
     </>
   );
 }

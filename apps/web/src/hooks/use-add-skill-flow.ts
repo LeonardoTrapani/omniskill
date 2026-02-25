@@ -5,7 +5,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
-import type { SelectedSkill } from "@/app/(app)/dashboard/_hooks/use-modal-machine";
+import type { SelectedSkill } from "@/app/dashboard/_hooks/use-modal-machine";
 
 interface UseAddSkillFlowOptions {
   loginNext: string;
@@ -16,6 +16,7 @@ interface AddableSkill {
   name: string;
   slug: string;
   description: string | null;
+  resources?: { length: number } | unknown[];
 }
 
 export function useAddSkillFlow({ loginNext }: UseAddSkillFlowOptions) {
@@ -30,11 +31,14 @@ export function useAddSkillFlow({ loginNext }: UseAddSkillFlowOptions) {
       return;
     }
 
+    const resourceCount = Array.isArray(skill.resources) ? skill.resources.length : 0;
+
     setSelectedSkill({
       id: skill.id,
       name: skill.name,
       slug: skill.slug,
       description: skill.description ?? "",
+      resourceCount,
     });
     setModalOpen(true);
   };

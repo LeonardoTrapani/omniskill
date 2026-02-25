@@ -8,8 +8,6 @@ import { authClient } from "@/lib/auth-client";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 
-const CANONICAL_APP_ORIGIN = "https://omniscient.sh";
-
 function GitHubIcon({ className, ...props }: ComponentProps<"svg">) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -63,7 +61,7 @@ function LoginPageContent() {
     setLoadingProvider(provider);
     authClient.signIn.social({
       provider,
-      callbackURL: `${CANONICAL_APP_ORIGIN}${callbackURL}`,
+      callbackURL: new URL(callbackURL, window.location.origin).toString(),
     });
   };
 
@@ -80,7 +78,7 @@ function LoginPageContent() {
               Sign In
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Continue to your Omniscient workspace to manage reusable skills for your agents across
+              Continue to your Omniskill workspace to manage reusable skills for your agents across
               CLI and web.
             </p>
 

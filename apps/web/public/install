@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="${OMNISCIENT_REPO:-LeonardoTrapani/omniscient}"
-INSTALL_DIR="${OMNISCIENT_INSTALL_DIR:-$HOME/.local/bin}"
-DEFAULT_SERVER_URL="${OMNISCIENT_SERVER_URL:-https://server.omniscient.sh}"
+REPO="${OMNISKILL_REPO:-LeonardoTrapani/omniskill}"
+INSTALL_DIR="${OMNISKILL_INSTALL_DIR:-$HOME/.local/bin}"
+DEFAULT_SERVER_URL="${OMNISKILL_SERVER_URL:-https://server.omniskill.sh}"
 VERSION="latest"
-BIN_NAME="omniscient"
+BIN_NAME="omniskill"
 
 usage() {
   cat <<'EOF'
-install omniscient cli
+install omniskill cli
 
 usage:
-  curl -fsSL https://omniscient.sh/install | bash
-  curl -fsSL https://omniscient.sh/install | bash -s -- --version v0.1.0
+  curl -fsSL https://omniskill.sh/install | bash
+  curl -fsSL https://omniskill.sh/install | bash -s -- --version v0.1.0
 
 options:
   --version <tag>       install a specific release tag (default: latest)
@@ -139,7 +139,7 @@ mv "$tmp_binary" "$target_binary"
 cat >"$tmp_wrapper" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-SERVER_URL="\${SERVER_URL:-${DEFAULT_SERVER_URL}}" OMNISCIENT_VERSION="${VERSION}" exec "${target_binary}" "\$@"
+SERVER_URL="\${SERVER_URL:-${DEFAULT_SERVER_URL}}" OMNISKILL_VERSION="${VERSION}" exec "${target_binary}" "\$@"
 EOF
 
 chmod +x "$tmp_wrapper"

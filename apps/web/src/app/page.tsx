@@ -1,4 +1,3 @@
-import Navbar from "@/components/navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import SkillsTable from "@/components/landing/SkillsTable";
 import Features from "@/components/landing/Features";
@@ -12,11 +11,12 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar skillCount={skillCount} />
       <HeroSection skillCount={skillCount} />
-      <SkillsTable limit={5} showSearch={false} />
-      <Features />
-      <Pricing />
+      <div className="py-6 max-w-7xl mx-auto">
+        <SkillsTable limit={5} showSearch />
+        <Features />
+        <Pricing />
+      </div>
       <CTA />
       <Footer />
     </main>

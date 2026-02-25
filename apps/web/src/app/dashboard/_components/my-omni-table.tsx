@@ -37,19 +37,34 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
 
   return (
     <div
-      className={cn("border border-border flex flex-col min-h-0", className)}
+      className={cn(
+        "border border-border bg-background/90 backdrop-blur-sm flex flex-col min-h-0",
+        className,
+      )}
       style={height ? { height } : undefined}
     >
+      <div className="px-6 md:px-8 pt-7 pb-4 border-b border-border/70 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
+          MY VAULT
+        </h2>
+        <span className="text-xs text-muted-foreground">
+          {skills.length} skill{skills.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
       {/* Search */}
-      <div className="px-6 md:px-8 pt-6 pb-6">
-        <div className="flex items-center gap-3 border border-border px-4 py-3 focus-within:border-primary/50 transition-colors">
+      <div className="px-6 md:px-8 pt-5 pb-6">
+        <div className="flex items-center gap-3 border border-border bg-background px-4 py-3 focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            placeholder="Search your skills ..."
+            placeholder="Search your skills…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            name="skills-search"
+            autoComplete="off"
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            aria-label="Search your skills"
           />
         </div>
       </div>
@@ -94,7 +109,7 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                   router.push(`/dashboard/skills/${skill.id}` as Route);
                 }
               }}
-              className="grid grid-cols-[48px_1fr_100px] md:grid-cols-[56px_1fr_120px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
+              className="grid grid-cols-[48px_1fr_80px] border-t border-border px-6 md:px-8 py-5 items-center hover:bg-secondary/50 transition-colors group cursor-pointer"
             >
               {/* Rank */}
               <span className="text-sm text-muted-foreground tabular-nums">{index + 1}</span>
@@ -106,11 +121,6 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
                     {skill.name}
                   </span>
                   <span className="text-xs text-muted-foreground truncate">{skill.slug}</span>
-                  {skill.visibility === "private" && (
-                    <span className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5">
-                      private
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 hidden md:block truncate">
                   {skill.description}
@@ -118,7 +128,6 @@ export default function MyOmniTable({ onDelete, height, className }: MyOmniTable
               </div>
 
               {/* Actions */}
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger

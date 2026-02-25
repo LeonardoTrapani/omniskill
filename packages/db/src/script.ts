@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { join } from "node:path";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
 // Carica .env dalla root del monorepo
@@ -13,5 +13,7 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const sql = neon(DATABASE_URL);
+const sql = postgres(DATABASE_URL, {
+  prepare: false,
+});
 export const db = drizzle(sql, { schema });

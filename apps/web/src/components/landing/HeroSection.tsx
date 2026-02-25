@@ -278,7 +278,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
 
   const handleInstallCommandCopy = async () => {
     try {
-      await navigator.clipboard.writeText("curl -fsSL https://omniscient.sh/install | bash");
+      await navigator.clipboard.writeText("curl -fsSL https://omniskill.sh/install | bash");
       setDidCopyInstallCommand(true);
       window.setTimeout(() => setDidCopyInstallCommand(false), 1500);
     } catch {
@@ -395,7 +395,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
-                curl -fsSL https://omniscient.sh/install | bash
+                curl -fsSL https://omniskill.sh/install | bash
                 {didCopyInstallCommand ? (
                   <span className="text-xs text-primary" aria-live="polite">
                     copied

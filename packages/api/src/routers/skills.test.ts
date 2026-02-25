@@ -360,13 +360,15 @@ mock.module("drizzle-orm/pg-core", () => ({
   check: () => ({}),
 }));
 
-// mock neon so the real db module doesn't try to connect
-mock.module("@neondatabase/serverless", () => ({
-  neon: () => () => Promise.resolve([]),
+// mock drizzle adapter so the real db module doesn't try to connect
+mock.module("drizzle-orm/postgres-js", () => ({
+  drizzle: () => ({}),
 }));
 
-mock.module("drizzle-orm/neon-http", () => ({
-  drizzle: () => ({}),
+mock.module("postgres", () => ({
+  default: () => ({
+    end: async () => undefined,
+  }),
 }));
 
 // mock env
