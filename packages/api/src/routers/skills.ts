@@ -60,6 +60,7 @@ const skillOutput = z.object({
   renderedMarkdown: z.string(),
   frontmatter: z.record(z.string(), z.unknown()),
   metadata: z.record(z.string(), z.unknown()),
+  isDefault: z.boolean(),
   sourceUrl: z.string().nullable(),
   sourceIdentifier: z.string().nullable(),
   resources: z.array(resourceOutput),
@@ -204,6 +205,7 @@ async function toSkillOutput(
     renderedMarkdown,
     frontmatter: row.frontmatter,
     metadata: row.metadata,
+    isDefault: row.isDefault,
     sourceUrl: row.sourceUrl,
     sourceIdentifier: row.sourceIdentifier,
     resources,
@@ -561,6 +563,7 @@ export const skillsRouter = router({
           description: row.description,
           frontmatter: row.frontmatter,
           metadata: row.metadata,
+          isDefault: row.isDefault,
           sourceUrl: row.sourceUrl,
           sourceIdentifier: row.sourceIdentifier,
           createdAt: row.createdAt,
@@ -627,6 +630,7 @@ export const skillsRouter = router({
           description: row.description,
           frontmatter: row.frontmatter,
           metadata: row.metadata,
+          isDefault: row.isDefault,
           sourceUrl: row.sourceUrl,
           sourceIdentifier: row.sourceIdentifier,
           createdAt: row.createdAt,
@@ -891,6 +895,9 @@ export const skillsRouter = router({
       }
       if (existing.ownerUserId !== userId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not the skill owner" });
+      }
+      if (existing.isDefault) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Default skills are read-only" });
       }
 
       if (input.skillMarkdown !== undefined) {
@@ -1227,7 +1234,7 @@ export const skillsRouter = router({
       const userId = ctx.session.user.id;
 
       const [existing] = await db
-        .select({ id: skill.id, ownerUserId: skill.ownerUserId })
+        .select({ id: skill.id, ownerUserId: skill.ownerUserId, isDefault: skill.isDefault })
         .from(skill)
         .where(eq(skill.id, input.id));
 
@@ -1236,6 +1243,9 @@ export const skillsRouter = router({
       }
       if (existing.ownerUserId !== userId) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not the skill owner" });
+      }
+      if (existing.isDefault) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Default skills cannot be deleted" });
       }
 
       // hard delete — FK cascades handle resources and links

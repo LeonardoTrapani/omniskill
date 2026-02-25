@@ -2,42 +2,55 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Check, FileText, Info, Loader2, Paperclip } from "lucide-react";
+import { ArrowLeft, Check, FileText, Loader2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
-import MarkdownEditorLazy from "@/components/skills/markdown-editor-lazy";
-import MentionPopover from "@/components/skills/mention-popover";
+import MarkdownEditorLazy from "@/features/skills/components/markdown-editor-lazy";
+import MentionPopover from "@/features/skills/components/mention-popover";
 import {
   buildResourceMentionHref,
   buildSkillMentionHref,
   editorMarkdownToStorageMarkdown,
   storageMarkdownToEditorMarkdown,
-} from "@/components/skills/mention-markdown";
+} from "@/features/skills/components/mention-markdown";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
-import { useClampedDescription } from "@/hooks/use-clamped-description";
-import { useMentionAutocomplete, type MentionItem } from "@/hooks/use-mention-autocomplete";
-import { ResourceHoverLink } from "@/components/skills/resource-link";
-import { authClient } from "@/lib/auth-client";
+import { SkillPanel } from "@/features/skills/components/skill-panel";
+import { useClampedDescription } from "@/features/skills/hooks/use-clamped-description";
+import {
+  useMentionAutocomplete,
+  type MentionItem,
+} from "@/features/skills/hooks/use-mention-autocomplete";
+import { invalidateSkillEditQueries } from "@/features/skills/lib/invalidate-skill-queries";
+import {
+  buildSkillHref,
+  dashboardRoute,
+  resolveEditorNavigationHref,
+} from "@/features/skills/lib/routes";
+import { ResourceHoverLink } from "@/features/skills/components/resource-link";
+import { authClient } from "@/shared/auth/auth-client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { queryClient, trpc } from "@/utils/trpc";
+import { formatDisplayDate } from "@/shared/lib/format-display-date";
+import { trpc } from "@/shared/api/trpc";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-function formatDate(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
 function replaceLastOccurrence(input: string, search: string, replacement: string) {
   const index = input.lastIndexOf(search);
   if (index === -1) return input;
@@ -45,42 +58,10 @@ function replaceLastOccurrence(input: string, search: string, replacement: strin
 }
 
 /* ------------------------------------------------------------------ */
-/*  Panel                                                              */
-/*  Reusable bordered panel matching the skill-detail design           */
-/* ------------------------------------------------------------------ */
-function Panel({
-  icon,
-  title,
-  trailing,
-  children,
-  className,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
-            {title}
-          </h2>
-        </div>
-        {trailing && <div className="flex items-center gap-2">{trailing}</div>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 export default function SkillEdit({ id }: { id: string }) {
+  const router = useRouter();
   const { data: session } = authClient.useSession();
   const { data, isLoading, isError } = useQuery(
     trpc.skills.getById.queryOptions({ id, linkMentions: true }),
@@ -90,6 +71,38 @@ export default function SkillEdit({ id }: { id: string }) {
   const hasMountedRef = useRef(false);
   const initialMarkdownRef = useRef("");
   const [hasChanges, setHasChanges] = useState(false);
+
+  /* ---- Unsaved-changes navigation guard ---- */
+  const [pendingHref, setPendingHref] = useState<Route | null>(null);
+
+  const guardedNavigate = useCallback(
+    (href: Route) => {
+      if (hasChanges) {
+        setPendingHref(href);
+      } else {
+        router.push(href);
+      }
+    },
+    [hasChanges, router],
+  );
+
+  const confirmLeave = useCallback(() => {
+    const href = pendingHref;
+    setPendingHref(null);
+    if (href) {
+      router.push(href);
+    }
+  }, [pendingHref, router]);
+
+  /* Warn on browser tab close / refresh */
+  useEffect(() => {
+    if (!hasChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasChanges]);
   const {
     contentRef: descriptionRef,
     expanded: descriptionExpanded,
@@ -123,25 +136,15 @@ export default function SkillEdit({ id }: { id: string }) {
 
   const saveMutation = useMutation(
     trpc.skills.update.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async () => {
         const currentMarkdown = editorRef.current?.getMarkdown();
         if (currentMarkdown != null) {
           initialMarkdownRef.current = currentMarkdown;
         }
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.getById.queryKey({ id }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.listByOwner.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.graph.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.graphForSkill.queryKey(),
-        });
+        await invalidateSkillEditQueries(id);
         setHasChanges(false);
         toast.success("Skill saved successfully");
+        router.push(buildSkillHref(id));
       },
       onError: (error) => {
         toast.error(`Failed to save: ${error.message}`);
@@ -274,7 +277,7 @@ export default function SkillEdit({ id }: { id: string }) {
           <p className="text-sm text-muted-foreground">
             The requested skill is not accessible or does not exist.
           </p>
-          <Link href={"/dashboard" as Route}>
+          <Link href={dashboardRoute}>
             <Button variant="outline" size="sm">
               Back to Skills
             </Button>
@@ -285,7 +288,8 @@ export default function SkillEdit({ id }: { id: string }) {
   }
 
   const isOwnedByViewer = data.ownerUserId != null && data.ownerUserId === session?.user?.id;
-  const canEditSkill = data.visibility === "private" && isOwnedByViewer;
+  const isDefaultSkill = data.isDefault;
+  const canEditSkill = data.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
 
   /* ---- Not editable ---- */
   if (!canEditSkill) {
@@ -293,10 +297,11 @@ export default function SkillEdit({ id }: { id: string }) {
       <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-4 py-32">
           <p className="text-sm text-muted-foreground">
-            Editing is only available for your private skills. Import this skill into your vault
-            first.
+            {isDefaultSkill
+              ? "Default skills are read-only and cannot be edited."
+              : "Editing is only available for your private skills. Import this skill into your vault first."}
           </p>
-          <Link href={`/dashboard/skills/${data.id}` as Route}>
+          <Link href={buildSkillHref(data.id)}>
             <Button variant="outline" size="sm">
               Back to Skill
             </Button>
@@ -310,8 +315,12 @@ export default function SkillEdit({ id }: { id: string }) {
 
   return (
     <main className="relative min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-0">
-      {/* Decorative background - matches skill detail */}
+      {/* Edit mode accent bar */}
+      {/* <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-amber-500" /> */}
+
+      {/* Decorative background - amber-tinted grid for edit mode */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
+      {/* <div className="pointer-events-none absolute inset-0 bg-amber-500/[0.01]" /> */}
 
       <div className="relative mx-auto max-w-7xl">
         {/* ============================================================ */}
@@ -321,32 +330,35 @@ export default function SkillEdit({ id }: { id: string }) {
           {/* Top bar: nav + actions */}
           <div className="flex items-center justify-between gap-4">
             <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Link
-                href={"/dashboard" as Route}
+              <button
+                type="button"
+                onClick={() => guardedNavigate(dashboardRoute)}
                 className="transition-colors duration-150 hover:text-foreground"
               >
                 skills
-              </Link>
+              </button>
               <span className="text-border">/</span>
-              <Link
-                href={`/dashboard/skills/${data.id}` as Route}
-                className="transition-colors duration-150 hover:text-foreground"
+              <button
+                type="button"
+                onClick={() => guardedNavigate(buildSkillHref(data.id))}
+                className="transition-colors duration-150 text-foreground"
               >
                 {data.slug}
-              </Link>
-              <span className="text-border">/</span>
-              <span className="text-foreground">edit</span>
+              </button>
             </nav>
 
             <div className="flex shrink-0 items-center gap-2">
-              <Link href={`/dashboard/skills/${data.id}` as Route}>
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="size-3.5" aria-hidden="true" />
-                  Back
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => guardedNavigate(buildSkillHref(data.id))}
+              >
+                <ArrowLeft className="size-3.5" aria-hidden="true" />
+                {hasChanges ? "Discard changes" : "Exit"}
+              </Button>
               <Button
                 size="sm"
+                className="border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
                 disabled={!hasChanges || saveMutation.isPending}
                 onClick={handleSave}
               >
@@ -355,16 +367,18 @@ export default function SkillEdit({ id }: { id: string }) {
                 ) : (
                   <Check className="size-3.5" aria-hidden="true" />
                 )}
-                {saveMutation.isPending ? "Saving..." : "Save"}
+                {saveMutation.isPending ? "Saving..." : "Save changes"}
               </Button>
             </div>
           </div>
 
           {/* Title + description */}
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold leading-tight text-foreground text-balance break-words sm:text-3xl">
-              {data.name}
-            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-semibold leading-tight text-foreground text-balance break-words sm:text-3xl">
+                {data.name}
+              </h1>
+            </div>
             {data.description && (
               <div>
                 <p
@@ -406,7 +420,7 @@ export default function SkillEdit({ id }: { id: string }) {
               {data.resources.length !== 1 ? "s" : ""}
             </span>
             <span className="text-border">|</span>
-            <span>Updated {formatDate(data.updatedAt)}</span>
+            <span>Updated {formatDisplayDate(data.updatedAt)}</span>
             {hasChanges && (
               <>
                 <span className="text-border">|</span>
@@ -424,14 +438,42 @@ export default function SkillEdit({ id }: { id: string }) {
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           {/* ---- Main column: editor ---- */}
           <div className="min-w-0 space-y-6">
-            <Panel
+            <SkillPanel
               icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="SKILL.md"
-              trailing={<span className="text-[10px] text-muted-foreground">markdown</span>}
+              trailing={
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-amber-500">
+                  <span className="relative flex size-1.5">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                    <span className="relative inline-flex size-1.5 rounded-full bg-amber-500" />
+                  </span>
+                  Editing
+                </span>
+              }
             >
-              <div ref={editorContainerRef} className="mdx-editor-wrapper relative">
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div
+                ref={editorContainerRef}
+                className="mdx-editor-wrapper relative"
+                onClick={(e) => {
+                  if (!hasChanges) return;
+                  const anchor = (e.target as HTMLElement).closest("a[href]");
+                  if (!anchor) return;
+                  const href = anchor.getAttribute("href");
+                  if (href && href.startsWith("/")) {
+                    const routeHref = resolveEditorNavigationHref(id, href);
+                    if (!routeHref) {
+                      return;
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    guardedNavigate(routeHref);
+                  }
+                }}
+              >
                 <MarkdownEditorLazy
                   editorRef={editorRef}
+                  overlayContainer={editorContainerRef.current}
                   markdown={markdownContent}
                   onChange={handleChange}
                 />
@@ -446,42 +488,14 @@ export default function SkillEdit({ id }: { id: string }) {
                   onHover={(index) => mention.setSelectedIndex(index)}
                 />
               </div>
-            </Panel>
+            </SkillPanel>
           </div>
 
           {/* ---- Sidebar ---- */}
           <aside className="hidden min-w-0 lg:block lg:h-full">
             <div className="flex h-full flex-col gap-6">
-              {/* Skill details */}
-              <Panel
-                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-                title="Details"
-                className="shrink-0"
-              >
-                <div className="px-5 py-4">
-                  <dl className="space-y-2.5 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Slug</dt>
-                      <dd className="truncate text-right text-foreground">{data.slug}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Created</dt>
-                      <dd className="text-foreground">{formatDate(data.createdAt)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Updated</dt>
-                      <dd className="text-foreground">{formatDate(data.updatedAt)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Visibility</dt>
-                      <dd className="text-foreground">{data.visibility}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </Panel>
-
               {/* Resources panel */}
-              <Panel
+              <SkillPanel
                 icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Resources"
                 trailing={
@@ -511,6 +525,12 @@ export default function SkillEdit({ id }: { id: string }) {
                             skillId={data.id}
                             skillName={data.name}
                             className="min-w-0 break-all text-xs text-primary underline-offset-4 hover:underline"
+                            onNavigate={(event, href) => {
+                              if (!hasChanges) return;
+                              event.preventDefault();
+                              event.stopPropagation();
+                              guardedNavigate(href);
+                            }}
                           >
                             {resource.path}
                           </ResourceHoverLink>
@@ -522,11 +542,35 @@ export default function SkillEdit({ id }: { id: string }) {
                     </div>
                   )}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
           </aside>
         </div>
       </div>
+
+      {/* Unsaved-changes confirmation dialog */}
+      <AlertDialog
+        open={pendingHref !== null}
+        onOpenChange={(open) => !open && setPendingHref(null)}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes that will be lost if you leave this page. Are you sure you
+              want to discard them?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel size="sm" onClick={() => setPendingHref(null)}>
+              Continue editing
+            </AlertDialogCancel>
+            <AlertDialogAction size="sm" variant="destructive" onClick={confirmLeave}>
+              Discard changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

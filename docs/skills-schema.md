@@ -24,6 +24,7 @@ Core node for a skill.
 - `skill_markdown`: full raw `SKILL.md` content
 - `frontmatter`: parsed YAML frontmatter as JSONB
 - `metadata`: app/system metadata as JSONB
+- `is_default`: boolean flag for seeded default skills (read-only)
 - `source_url`, `source_identifier`
 - timestamps (`created_at`, `updated_at`)
 

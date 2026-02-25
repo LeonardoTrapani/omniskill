@@ -13,6 +13,7 @@ type SkillRow = {
   skillMarkdown: string;
   frontmatter: Record<string, unknown>;
   metadata: Record<string, unknown>;
+  isDefault: boolean;
   sourceUrl: string | null;
   sourceIdentifier: string | null;
   createdAt: Date;
@@ -200,6 +201,7 @@ const fakeSkill = fakeTable("skill", {
   skillMarkdown: "skill_markdown",
   frontmatter: "frontmatter",
   metadata: "metadata",
+  isDefault: "is_default",
   sourceUrl: "source_url",
   sourceIdentifier: "source_identifier",
   createdAt: "created_at",
@@ -483,6 +485,9 @@ const mockDb = {
             updatedAt: now,
             ...v,
           };
+          if (tableName === "skill" && row.isDefault === undefined) {
+            row.isDefault = false;
+          }
           store.push(row);
           created.push(row);
         }
@@ -602,6 +607,7 @@ function seedSkill(overrides: Partial<SkillRow> = {}): SkillRow {
     skillMarkdown: "# Test\nSome content",
     frontmatter: {},
     metadata: {},
+    isDefault: false,
     sourceUrl: null,
     sourceIdentifier: null,
     createdAt: now,
@@ -1058,6 +1064,17 @@ describe("skills.update", () => {
     expect(result.name).toBe("Updated Name");
   });
 
+  test("default skills are read-only", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, isDefault: true });
+
+    try {
+      await authedCaller(USER_A).skills.update({ id: s.id, name: "Nope" });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("FORBIDDEN");
+    }
+  });
+
   test("update rejects non-uuid resource mention tokens", async () => {
     const source = seedSkill({ ownerUserId: USER_A, skillMarkdown: "# Start" });
 
@@ -1138,6 +1155,17 @@ describe("skills.delete", () => {
     const result = await authedCaller(USER_A).skills.delete({ id: s.id });
     expect(result.success).toBe(true);
     expect(skills.find((sk) => sk.id === s.id)).toBeUndefined();
+  });
+
+  test("default skills cannot be deleted", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, isDefault: true });
+
+    try {
+      await authedCaller(USER_A).skills.delete({ id: s.id });
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect((err as { code: string }).code).toBe("FORBIDDEN");
+    }
   });
 
   test("delete nonexistent skill returns NOT_FOUND", async () => {

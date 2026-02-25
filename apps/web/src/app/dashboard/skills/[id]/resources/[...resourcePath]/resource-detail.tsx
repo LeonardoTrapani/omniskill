@@ -1,121 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import type { Route } from "next";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowUpRight,
-  ChevronDown,
-  FileText,
-  FolderTree,
-  Info,
-  Loader2,
-  Network,
-  Pencil,
-} from "lucide-react";
+import { ArrowUpRight, FileText, FolderTree, Loader2, Network, Pencil } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { ForceGraph } from "@/components/graph/force-graph";
-import { createMarkdownComponents } from "@/components/skills/markdown-components";
-import { DownloadContentButton } from "@/components/skills/download-content-button";
-import { getHrefPath, parseMentionHref } from "@/components/skills/mention-markdown";
-import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+import { ForceGraph } from "@/features/skills/components/graph/force-graph";
+import { createMarkdownComponents } from "@/features/skills/components/markdown-components";
+import { DownloadContentButton } from "@/features/skills/components/download-content-button";
+import { markdownUrlTransform } from "@/features/skills/components/markdown-url-transform";
 import {
   canRenderResourceAsMarkdown,
   getResourceDownloadName,
   getResourceMimeType,
-} from "@/components/skills/resource-file";
-import { ResourceHoverLink } from "@/components/skills/resource-link";
+} from "@/features/skills/components/resource-file";
+import { ResourceHoverLink } from "@/features/skills/components/resource-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { trpc } from "@/utils/trpc";
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-function formatDate(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Panel                                                              */
-/*  Reusable bordered panel matching dashboard / skill-detail          */
-/* ------------------------------------------------------------------ */
-function Panel({
-  icon,
-  title,
-  trailing,
-  children,
-  className,
-  collapsible = false,
-  defaultOpen = true,
-  isEmpty = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-  collapsible?: boolean;
-  defaultOpen?: boolean;
-  isEmpty?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  const headerContent = (
-    <>
-      <div className="flex items-center gap-2">
-        {icon}
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
-          {title}
-        </h2>
-        {isEmpty && !open && (
-          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/50">
-            empty
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {trailing}
-        {collapsible && (
-          <ChevronDown
-            className={`size-3.5 text-muted-foreground transition-transform duration-150 ${open ? "" : "-rotate-90"}`}
-            aria-hidden="true"
-          />
-        )}
-      </div>
-    </>
-  );
-
-  return (
-    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
-      {collapsible ? (
-        <button
-          type="button"
-          className="flex w-full items-center justify-between px-5 py-3.5 border-b border-border/70 transition-colors duration-150 hover:bg-secondary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
-        >
-          {headerContent}
-        </button>
-      ) : (
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
-          {headerContent}
-        </div>
-      )}
-      {(!collapsible || open) && children}
-    </div>
-  );
-}
+import { GraphFill } from "@/features/skills/components/graph-fill";
+import { SkillPanel } from "@/features/skills/components/skill-panel";
+import { createResourceHrefResolver } from "@/features/skills/lib/resource-links";
+import { buildSkillHref, dashboardRoute } from "@/features/skills/lib/routes";
+import { formatDisplayDate } from "@/shared/lib/format-display-date";
+import { trpc } from "@/shared/api/trpc";
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
@@ -134,36 +45,7 @@ export default function ResourceDetail({
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId }));
 
   const resources = skillQuery.data?.resources ?? [];
-  const resourcesById = useMemo(
-    () => new Map(resources.map((resource) => [resource.id, resource])),
-    [resources],
-  );
-  const resourcesByPath = useMemo(
-    () => new Map(resources.map((resource) => [resource.path, resource])),
-    [resources],
-  );
-
-  const findResourceByHref = (href: string) => {
-    const mention = parseMentionHref(href);
-    if (mention?.type === "resource") {
-      const byId = resourcesById.get(mention.targetId);
-      if (byId) return byId;
-    }
-
-    const normalizedPath = getHrefPath(href);
-    if (!normalizedPath) return null;
-
-    if (resourcesByPath.has(normalizedPath)) {
-      return resourcesByPath.get(normalizedPath)!;
-    }
-
-    const match = resources.find(
-      (resource) =>
-        normalizedPath.endsWith(resource.path) || normalizedPath.endsWith(`/${resource.path}`),
-    );
-
-    return match ?? null;
-  };
+  const findResourceByHref = useMemo(() => createResourceHrefResolver(resources), [resources]);
 
   const markdownComponents = useMemo(
     () =>
@@ -172,7 +54,7 @@ export default function ResourceDetail({
         skillName: skillQuery.data?.name ?? resourceQuery.data?.skillName,
         findResourceByHref,
       }),
-    [skillId, skillQuery.data?.name, resourceQuery.data?.skillName, resourcesById, resourcesByPath],
+    [skillId, skillQuery.data?.name, resourceQuery.data?.skillName, findResourceByHref],
   );
 
   useEffect(() => {
@@ -213,7 +95,7 @@ export default function ResourceDetail({
           <p className="text-sm text-muted-foreground">
             The requested resource is not accessible or does not exist.
           </p>
-          <Link href={"/dashboard" as Route}>
+          <Link href={dashboardRoute}>
             <Button variant="outline" size="sm">
               Back to Skills
             </Button>
@@ -243,14 +125,14 @@ export default function ResourceDetail({
           <div className="flex items-center justify-between gap-4">
             <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <Link
-                href={"/dashboard" as Route}
+                href={dashboardRoute}
                 className="transition-colors duration-150 hover:text-foreground"
               >
                 skills
               </Link>
               <span className="text-border">/</span>
               <Link
-                href={`/dashboard/skills/${skillId}` as Route}
+                href={buildSkillHref(skillId)}
                 className="truncate transition-colors duration-150 hover:text-foreground"
               >
                 {parentSkillName}
@@ -274,7 +156,7 @@ export default function ResourceDetail({
             <p className="text-sm leading-relaxed text-muted-foreground break-words text-pretty">
               Child resource of{" "}
               <Link
-                href={`/dashboard/skills/${resource.skillId}` as Route}
+                href={buildSkillHref(resource.skillId)}
                 className="text-primary underline-offset-4 hover:underline"
               >
                 {parentSkillName}
@@ -290,10 +172,10 @@ export default function ResourceDetail({
               {resource.kind}
             </span>
             <span className="text-border">|</span>
-            <span>Updated {formatDate(resource.updatedAt)}</span>
+            <span>Updated {formatDisplayDate(resource.updatedAt)}</span>
             <span className="text-border">|</span>
             <Link
-              href={`/dashboard/skills/${skillId}` as Route}
+              href={buildSkillHref(skillId)}
               className="inline-flex items-center gap-0.5 text-primary transition-colors duration-150 hover:text-primary/80"
             >
               Parent Skill
@@ -312,7 +194,7 @@ export default function ResourceDetail({
           <div className="min-w-0 space-y-6">
             {/* Mobile graph toggle */}
             <div className="lg:hidden">
-              <Panel
+              <SkillPanel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Skill Graph"
                 collapsible
@@ -340,12 +222,12 @@ export default function ResourceDetail({
                     />
                   )}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
 
             {/* Resource content panel */}
             {canRenderMarkdown ? (
-              <Panel
+              <SkillPanel
                 icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Resource Content"
               >
@@ -360,17 +242,15 @@ export default function ResourceDetail({
                     </ReactMarkdown>
                   </article>
                 </div>
-              </Panel>
+              </SkillPanel>
             ) : (
-              <Panel
+              <SkillPanel
                 icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Resource Content"
               >
                 <div className="flex min-h-[180px] flex-col items-center justify-center gap-3 px-5 py-8 text-center">
                   <FileText className="size-8 text-muted-foreground/50" aria-hidden="true" />
-                  <p className="text-sm text-muted-foreground">
-                    This file cannot be rendered as Markdown.
-                  </p>
+                  <p className="text-sm text-muted-foreground">This file cannot be rendered.</p>
                   <DownloadContentButton
                     content={resource.content}
                     fileName={resourceDownloadName}
@@ -380,11 +260,11 @@ export default function ResourceDetail({
                     label="Download File"
                   />
                 </div>
-              </Panel>
+              </SkillPanel>
             )}
 
             {/* Related resources panel */}
-            <Panel
+            <SkillPanel
               icon={<FolderTree className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="Related Resources"
               trailing={
@@ -426,49 +306,14 @@ export default function ResourceDetail({
                   </div>
                 )}
               </div>
-            </Panel>
+            </SkillPanel>
           </div>
 
           {/* ---- Sidebar ---- */}
           <aside className="hidden min-w-0 lg:block lg:h-full">
             <div className="flex h-full flex-col gap-6">
-              {/* Resource details panel */}
-              <Panel
-                icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-                title="Details"
-                className="shrink-0"
-              >
-                <div className="px-5 py-4">
-                  <dl className="space-y-2.5 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Kind</dt>
-                      <dd className="text-foreground">{resource.kind}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Path</dt>
-                      <dd className="truncate text-right text-foreground">{resource.path}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Parent</dt>
-                      <dd className="truncate text-right">
-                        <Link
-                          href={`/dashboard/skills/${resource.skillId}` as Route}
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {parentSkillName}
-                        </Link>
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">Updated</dt>
-                      <dd className="text-foreground">{formatDate(resource.updatedAt)}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </Panel>
-
               {/* Graph panel -- sticky, fills remaining space */}
-              <Panel
+              <SkillPanel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Skill Graph"
                 className="sticky top-[68px] flex h-[calc(100dvh-92px)] min-h-0 flex-col"
@@ -494,44 +339,11 @@ export default function ResourceDetail({
                     />
                   )}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
           </aside>
         </div>
       </div>
     </main>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  GraphFill                                                          */
-/*  Renders ForceGraph filling its parent container via ResizeObserver  */
-/* ------------------------------------------------------------------ */
-function GraphFill({
-  data,
-  focusNodeId,
-}: {
-  data: import("@/components/graph/force-graph").GraphData;
-  focusNodeId?: string;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(400);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const update = () => setHeight(Math.max(el.clientHeight, 200));
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div ref={containerRef} className="absolute inset-0">
-      <ForceGraph data={data} focusNodeId={focusNodeId} height={height} />
-    </div>
   );
 }

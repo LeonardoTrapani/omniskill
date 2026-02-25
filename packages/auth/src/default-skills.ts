@@ -1,8 +1,9 @@
+import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, dirname, extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import matter from "gray-matter";
 
 import { db } from "@better-skills/db";
@@ -30,6 +31,16 @@ interface SeedDefaultSkillsResult {
   skipped: number;
   failed: number;
 }
+
+interface SyncDefaultSkillsResult {
+  templates: number;
+  matched: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+}
+
+const DEFAULT_TEMPLATE_VERSION_KEY = "defaultTemplateVersion";
 
 const DEFAULT_SKILLS_DIR_CANDIDATES = [
   join(dirname(fileURLToPath(import.meta.url)), "../../../resources/default-skills"),
@@ -79,6 +90,51 @@ const NEW_RESOURCE_MENTION_RE = new RegExp(
   String.raw`(?<!\\)\[\[(skill|resource):new:([^\]\n]+)\]\]`,
   "gi",
 );
+
+function withDefaultTemplateVersion(
+  metadata: Record<string, unknown>,
+  templateVersion: string,
+): Record<string, unknown> {
+  return {
+    ...metadata,
+    [DEFAULT_TEMPLATE_VERSION_KEY]: templateVersion,
+  };
+}
+
+function getDefaultTemplateVersion(metadata: Record<string, unknown>): string | null {
+  const value = metadata[DEFAULT_TEMPLATE_VERSION_KEY];
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeMetadata(metadata: unknown): Record<string, unknown> {
+  if (typeof metadata !== "object" || metadata === null || Array.isArray(metadata)) {
+    return {};
+  }
+
+  return metadata as Record<string, unknown>;
+}
+
+function buildTemplateVersion(template: SkillTemplate): string {
+  const hash = createHash("sha256");
+  hash.update(
+    JSON.stringify({
+      slug: template.slug,
+      name: template.name,
+      description: template.description,
+      markdown: template.markdown,
+      frontmatter: template.frontmatter,
+      resources: template.resources
+        .map((resource) => ({
+          path: normalizeResourcePath(resource.path),
+          kind: resource.kind,
+          content: resource.content,
+        }))
+        .toSorted((a, b) => a.path.localeCompare(b.path)),
+    }),
+  );
+
+  return hash.digest("hex");
+}
 
 async function pathExists(path: string): Promise<boolean> {
   try {
@@ -256,6 +312,25 @@ function collectNewResourceMentionPaths(markdown: string): string[] {
   return paths;
 }
 
+function assertTemplateMentionPathsExist(template: SkillTemplate): void {
+  const mentionedPaths = collectNewResourceMentionPaths(template.markdown);
+
+  if (mentionedPaths.length === 0) {
+    return;
+  }
+
+  const resourcePaths = new Set(
+    template.resources.map((resource) => normalizeResourcePath(resource.path)),
+  );
+  const missingPaths = mentionedPaths.filter((path) => !resourcePaths.has(path));
+
+  if (missingPaths.length > 0) {
+    throw new Error(
+      `default skill "${template.slug}" references missing local resources: ${missingPaths.join(", ")}`,
+    );
+  }
+}
+
 function resolveNewResourceMentionsToUuids(
   markdown: string,
   resourceIdByPath: ReadonlyMap<string, string>,
@@ -359,17 +434,8 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
         continue;
       }
 
-      const mentionedPaths = collectNewResourceMentionPaths(template.markdown);
-      const resourcePaths = new Set(
-        template.resources.map((resource) => normalizeResourcePath(resource.path)),
-      );
-      const missingPaths = mentionedPaths.filter((path) => !resourcePaths.has(path));
-
-      if (missingPaths.length > 0) {
-        throw new Error(
-          `default skill "${template.slug}" references missing local resources: ${missingPaths.join(", ")}`,
-        );
-      }
+      assertTemplateMentionPathsExist(template);
+      const templateVersion = buildTemplateVersion(template);
 
       await db.transaction(async (tx) => {
         const { sourceIdentifier, sourceUrl } = extractSkillSourceData(template.frontmatter);
@@ -384,7 +450,8 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
             description: template.description,
             skillMarkdown: template.markdown,
             frontmatter: template.frontmatter,
-            metadata: {},
+            metadata: withDefaultTemplateVersion({}, templateVersion),
+            isDefault: true,
             sourceUrl,
             sourceIdentifier,
           })
@@ -443,4 +510,190 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
   }
 
   return { created, skipped, failed };
+}
+
+async function syncExistingDefaultSkill(
+  existingSkill: {
+    id: string;
+    metadata: Record<string, unknown>;
+  },
+  template: SkillTemplate,
+  templateVersion: string,
+): Promise<"updated" | "skipped"> {
+  if (getDefaultTemplateVersion(existingSkill.metadata) === templateVersion) {
+    return "skipped";
+  }
+
+  await db.transaction(async (tx) => {
+    const { sourceIdentifier, sourceUrl } = extractSkillSourceData(template.frontmatter);
+
+    const existingResources = await tx
+      .select({ id: skillResource.id, path: skillResource.path })
+      .from(skillResource)
+      .where(eq(skillResource.skillId, existingSkill.id));
+
+    const existingResourceByPath = new Map(
+      existingResources.map((resource) => [normalizeResourcePath(resource.path), resource]),
+    );
+
+    const templateResourceByPath = new Map<string, SkillTemplateResource>();
+    for (const resource of template.resources) {
+      const normalizedPath = normalizeResourcePath(resource.path);
+
+      if (templateResourceByPath.has(normalizedPath)) {
+        throw new Error(
+          `default skill "${template.slug}" contains duplicate resource path "${normalizedPath}"`,
+        );
+      }
+
+      templateResourceByPath.set(normalizedPath, resource);
+    }
+
+    const resourceIdsToDelete = existingResources
+      .filter((resource) => !templateResourceByPath.has(normalizeResourcePath(resource.path)))
+      .map((resource) => resource.id);
+
+    if (resourceIdsToDelete.length > 0) {
+      await tx.delete(skillResource).where(inArray(skillResource.id, resourceIdsToDelete));
+    }
+
+    const resourcesToInsert: Array<typeof skillResource.$inferInsert> = [];
+
+    for (const [normalizedPath, templateResource] of templateResourceByPath) {
+      const existingResource = existingResourceByPath.get(normalizedPath);
+
+      if (existingResource) {
+        await tx
+          .update(skillResource)
+          .set({
+            path: templateResource.path,
+            kind: templateResource.kind,
+            content: templateResource.content,
+            metadata: {},
+          })
+          .where(eq(skillResource.id, existingResource.id));
+        continue;
+      }
+
+      resourcesToInsert.push({
+        skillId: existingSkill.id,
+        path: templateResource.path,
+        kind: templateResource.kind,
+        content: templateResource.content,
+        metadata: {},
+      });
+    }
+
+    if (resourcesToInsert.length > 0) {
+      await tx.insert(skillResource).values(resourcesToInsert);
+    }
+
+    const finalResources = await tx
+      .select({ id: skillResource.id, path: skillResource.path })
+      .from(skillResource)
+      .where(eq(skillResource.skillId, existingSkill.id));
+
+    const resourceIdByPath = new Map(
+      finalResources.map((resource) => [normalizeResourcePath(resource.path), resource.id]),
+    );
+
+    const resolvedMentions = resolveNewResourceMentionsToUuids(template.markdown, resourceIdByPath);
+
+    if (resolvedMentions.missingPaths.length > 0) {
+      throw new Error(
+        `default skill "${template.slug}" could not resolve :new: mentions: ${resolvedMentions.missingPaths.join(
+          ", ",
+        )}`,
+      );
+    }
+
+    await tx
+      .update(skill)
+      .set({
+        name: template.name,
+        description: template.description,
+        skillMarkdown: resolvedMentions.markdown,
+        frontmatter: template.frontmatter,
+        metadata: withDefaultTemplateVersion(existingSkill.metadata, templateVersion),
+        sourceUrl,
+        sourceIdentifier,
+        updatedAt: new Date(),
+      })
+      .where(eq(skill.id, existingSkill.id));
+  });
+
+  return "updated";
+}
+
+export async function syncDefaultSkillsForAllUsers(): Promise<SyncDefaultSkillsResult> {
+  const templates = await loadDefaultSkillTemplates();
+  if (templates.length === 0) {
+    return {
+      templates: 0,
+      matched: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+    };
+  }
+
+  let matched = 0;
+  let updated = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const template of templates) {
+    try {
+      assertTemplateMentionPathsExist(template);
+      const templateVersion = buildTemplateVersion(template);
+
+      const existingDefaultSkills = await db
+        .select({
+          id: skill.id,
+          slug: skill.slug,
+          ownerUserId: skill.ownerUserId,
+          metadata: skill.metadata,
+        })
+        .from(skill)
+        .where(and(eq(skill.slug, template.slug), eq(skill.isDefault, true)));
+
+      matched += existingDefaultSkills.length;
+
+      for (const existingSkill of existingDefaultSkills) {
+        try {
+          const outcome = await syncExistingDefaultSkill(
+            {
+              id: existingSkill.id,
+              metadata: normalizeMetadata(existingSkill.metadata),
+            },
+            template,
+            templateVersion,
+          );
+
+          if (outcome === "updated") {
+            updated++;
+          } else {
+            skipped++;
+          }
+        } catch (error) {
+          failed++;
+          console.error(
+            `[default-skills] failed syncing "${template.slug}" for skill ${existingSkill.id} (owner ${existingSkill.ownerUserId ?? "null"})`,
+            error,
+          );
+        }
+      }
+    } catch (error) {
+      failed++;
+      console.error(`[default-skills] failed preparing sync for "${template.slug}"`, error);
+    }
+  }
+
+  return {
+    templates: templates.length,
+    matched,
+    updated,
+    skipped,
+    failed,
+  };
 }

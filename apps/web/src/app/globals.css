@@ -7,8 +7,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-sans);
   --font-chat: var(--font-google-sans-code);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -55,8 +55,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.51 0.23 277);
-  --primary-foreground: oklch(0.96 0.02 272);
+  --primary: var(--color-amber-500);
+  --primary-foreground: var(--color-amber-950);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0 0);
@@ -67,16 +67,16 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.79 0.1 275);
-  --chart-2: oklch(0.68 0.16 277);
-  --chart-3: oklch(0.59 0.2 277);
-  --chart-4: oklch(0.51 0.23 277);
-  --chart-5: oklch(0.46 0.21 277);
+  --chart-1: var(--color-amber-300);
+  --chart-2: var(--color-amber-400);
+  --chart-3: var(--color-amber-500);
+  --chart-4: var(--color-amber-600);
+  --chart-5: var(--color-amber-700);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.51 0.23 277);
-  --sidebar-primary-foreground: oklch(0.96 0.02 272);
+  --sidebar-primary: var(--color-amber-500);
+  --sidebar-primary-foreground: var(--color-amber-950);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
@@ -90,8 +90,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.59 0.2 277);
-  --primary-foreground: oklch(0.96 0.02 272);
+  --primary: var(--color-amber-400);
+  --primary-foreground: var(--color-amber-950);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -102,15 +102,15 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.79 0.1 275);
-  --chart-2: oklch(0.68 0.16 277);
-  --chart-3: oklch(0.59 0.2 277);
-  --chart-4: oklch(0.51 0.23 277);
-  --chart-5: oklch(0.46 0.21 277);
+  --chart-1: var(--color-amber-300);
+  --chart-2: var(--color-amber-400);
+  --chart-3: var(--color-amber-500);
+  --chart-4: var(--color-amber-600);
+  --chart-5: var(--color-amber-700);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.68 0.16 277);
-  --sidebar-primary-foreground: oklch(0.96 0.02 272);
+  --sidebar-primary: var(--color-amber-400);
+  --sidebar-primary-foreground: var(--color-amber-950);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
@@ -123,6 +123,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans);
   }
 }
 
@@ -309,20 +310,34 @@
   list-style-type: disc;
   margin-left: 1.5rem;
   margin-bottom: 1rem;
-  display: grid;
   row-gap: 0.5rem;
+  color: var(--foreground);
 }
 
 .mdx-editor-content ol {
   list-style-type: decimal;
   margin-left: 1.5rem;
   margin-bottom: 1rem;
-  display: grid;
   row-gap: 0.5rem;
+  color: var(--foreground);
 }
 
 .mdx-editor-content li {
   line-height: 1.75;
+  color: var(--foreground) !important;
+}
+
+.mdx-editor-content li * {
+  color: inherit !important;
+}
+
+.mdx-editor-content li code {
+  color: var(--foreground) !important;
+  background: var(--secondary) !important;
+}
+
+.mdx-editor-content li a {
+  color: var(--primary) !important;
 }
 
 .mdx-editor-content li > ul,
@@ -414,39 +429,382 @@
   color: var(--muted-foreground);
 }
 
-/* Dialog / popover overrides for link dialog, block type select etc. */
-.mdx-editor-wrapper [class*="_dialogContent_"],
-.mdx-editor-wrapper [class*="_selectContent_"],
-.mdx-editor-wrapper [data-radix-popper-content-wrapper] {
-  background: var(--popover);
-  color: var(--popover-foreground);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* ------------------------------------------------------------------ */
+/*  MDXEditor – floating UI (popovers, dialogs, tooltips)              */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Override MDXEditor's internal design tokens on the editor root AND
+ * the popup container (portaled to overlayContainer / body).
+ * MDXEditor uses --basePageBg, --baseBgSubtle, --baseText, --accentBgActive
+ * etc. internally for popovers/dialogs. Map them to our design system so
+ * all floating UI automatically respects light/dark mode.
+ */
+.mdx-editor-wrapper .mdxeditor,
+.mdxeditor-popup-container {
+  --basePageBg: var(--popover);
+  --baseBgSubtle: var(--secondary);
+  --baseBorder: var(--border);
+  --baseBorderHover: var(--input);
+  --baseText: var(--foreground);
+  --baseTextHighContrast: var(--foreground);
+  --baseTextContrast: var(--popover);
+  --baseBase: var(--popover);
+  --accentBase: var(--primary);
+  --accentBgActive: var(--primary);
+  --accentText: var(--primary);
+  --accentTextContrast: var(--primary-foreground);
+  --accentBgHover: color-mix(in oklab, var(--primary) 14%, transparent);
 }
 
-.mdx-editor-wrapper [class*="_dialogContent_"] input,
-.mdx-editor-wrapper [class*="_dialogContent_"] select {
-  background: var(--background);
-  color: var(--foreground);
-  border: 1px solid var(--input);
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.8125rem;
+/*
+ * Shorthand: target elements inside either the wrapper or the popup
+ * container (which MDXEditor portals floating UI into).
+ * Using :is() so every rule below works in both locations.
+ */
+
+/* ---- Shared popover / dialog surfaces ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  :is(
+    [class*="_dialogContent_"],
+    [class*="_largeDialogContent_"],
+    [class*="_selectContent_"],
+    [class*="_popoverContent_"],
+    [class*="_linkDialogPopoverContent_"],
+    [class*="_tableColumnEditorPopoverContent_"]
+  ) {
+  background: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  box-shadow:
+    0 4px 16px color-mix(in oklab, var(--foreground) 8%, transparent),
+    0 1px 3px color-mix(in oklab, var(--foreground) 5%, transparent) !important;
 }
 
-.mdx-editor-wrapper [class*="_dialogContent_"] button {
-  font-size: 0.8125rem;
+/* Popover arrow color – match surface */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_popoverArrow_"] {
+  fill: var(--popover) !important;
 }
 
-/* CodeMirror overrides */
+/* ---- Dialog overlay ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_dialogOverlay_"] {
+  background: color-mix(in oklab, var(--background) 70%, transparent) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* ---- Dialog title ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_dialogTitle_"] {
+  color: var(--foreground) !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* ---- Dialog close button ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_dialogCloseButton_"] {
+  color: var(--muted-foreground) !important;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_dialogCloseButton_"]:hover {
+  color: var(--foreground) !important;
+}
+
+/* ---- All text inputs inside floating UI ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  :is(
+    [class*="_dialogContent_"] input,
+    [class*="_dialogContent_"] select,
+    [class*="_linkDialogPopoverContent_"] input,
+    [class*="_textInput_"],
+    [class*="_linkDialogInput_"],
+    [class*="_downshiftInput_"],
+    [class*="_propertyEditorInput_"],
+    [class*="_multiFieldForm_"] input
+  ) {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--input) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 0.8125rem !important;
+  outline: none !important;
+  transition: border-color 0.15s;
+}
+
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  :is(
+    [class*="_dialogContent_"] input:focus,
+    [class*="_linkDialogPopoverContent_"] input:focus,
+    [class*="_textInput_"]:focus,
+    [class*="_linkDialogInput_"]:focus,
+    [class*="_multiFieldForm_"] input:focus
+  ) {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 20%, transparent) !important;
+}
+
+/* Input wrapper (link dialog) */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_linkDialogInputWrapper_"] {
+  background: var(--background) !important;
+  border-color: var(--input) !important;
+  border-radius: 6px !important;
+}
+
+/* Form field labels */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_formField_"] label {
+  color: var(--muted-foreground) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+/* ---- Primary / secondary buttons ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_primaryButton_"] {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: opacity 0.15s;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_primaryButton_"]:hover {
+  opacity: 0.9;
+}
+
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_secondaryButton_"] {
+  background: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_secondaryButton_"]:hover {
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+
+/* ---- Action buttons (icon buttons in link bar, dialogs etc) ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_actionButton_"] {
+  color: var(--muted-foreground) !important;
+  border-radius: 6px !important;
+  padding: 4px !important;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_actionButton_"]:hover {
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_primaryActionButton_"] {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_primaryActionButton_"]:hover {
+  opacity: 0.9;
+}
+
+/* ---- Link preview popover (URL + edit / copy / unlink) ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_linkDialogPopoverContent_"] {
+  padding: 6px 10px !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_linkDialogPreviewAnchor_"] {
+  color: var(--primary) !important;
+  font-size: 0.8125rem !important;
+  font-family: var(--font-mono, monospace) !important;
+  max-width: 16rem !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ---- Tooltip (e.g. "Copied!") ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_tooltipContent_"] {
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  border-radius: 6px !important;
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+}
+
+/* ---- Autocomplete dropdown (link URL suggestions) ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_downshiftAutocompleteContainer_"] {
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0 0 6px 6px !important;
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--foreground) 6%, transparent) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  MDXEditor – table editor controls                                  */
+/* ------------------------------------------------------------------ */
+
+/* Table root – match content table styles */
+.mdx-editor-wrapper [class*="_tableEditor_"] {
+  border: 1px solid var(--border) !important;
+  font-size: 0.875rem !important;
+}
+
+.mdx-editor-wrapper [class*="_tableEditor_"] th,
+.mdx-editor-wrapper [class*="_tableEditor_"] td {
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+.mdx-editor-wrapper [class*="_tableEditor_"] th {
+  background: color-mix(in oklab, var(--secondary) 50%, transparent) !important;
+}
+
+/* Column / row "..." trigger buttons – smaller, subtler */
+.mdx-editor-wrapper [class*="_tableColumnEditorTrigger_"] {
+  border-radius: 4px !important;
+  color: var(--muted-foreground) !important;
+  opacity: 0 !important;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+  padding: 2px !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+.mdx-editor-wrapper [class*="_tableEditor_"]:hover [class*="_tableColumnEditorTrigger_"] {
+  opacity: 0.5 !important;
+}
+.mdx-editor-wrapper [class*="_tableColumnEditorTrigger_"]:hover {
+  opacity: 1 !important;
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Column/row editor popover toolbar buttons */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_tableColumnEditorToolbar_"] button {
+  color: var(--muted-foreground) !important;
+  border-radius: 4px !important;
+  padding: 4px !important;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  [class*="_tableColumnEditorToolbar_"]
+  button:hover {
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Alignment toggle group */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_toggleGroupRoot_"] {
+  background: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  overflow: hidden;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_toggleGroupRoot_"] button {
+  border-radius: 0 !important;
+  border: none !important;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  [class*="_toggleGroupRoot_"]
+  button[data-state="on"] {
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Tool cell (holds row triggers) – slimmer */
+.mdx-editor-wrapper [class*="_toolCell_"],
+.mdx-editor-wrapper [class*="_tableToolsColumn_"] {
+  width: 28px !important;
+  padding: 2px !important;
+}
+
+/* Add row / add column buttons – slim, subtle */
+.mdx-editor-wrapper [class*="_addRowButton_"],
+.mdx-editor-wrapper [class*="_addColumnButton_"] {
+  opacity: 0 !important;
+  border-radius: 0 !important;
+  color: var(--muted-foreground) !important;
+  background: transparent !important;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+  padding: 3px !important;
+}
+.mdx-editor-wrapper [class*="_tableEditor_"]:hover [class*="_addRowButton_"],
+.mdx-editor-wrapper [class*="_tableEditor_"]:hover [class*="_addColumnButton_"] {
+  opacity: 0.4 !important;
+}
+.mdx-editor-wrapper [class*="_addRowButton_"]:hover,
+.mdx-editor-wrapper [class*="_addColumnButton_"]:hover {
+  opacity: 1 !important;
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
+}
+
+/* Delete table icon button – slim */
+.mdx-editor-wrapper [class*="_tableEditor_"] [class*="_iconButton_"] {
+  opacity: 0 !important;
+  color: var(--muted-foreground) !important;
+  border-radius: 4px !important;
+  padding: 2px !important;
+  width: 22px !important;
+  height: 22px !important;
+  transition:
+    opacity 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+}
+.mdx-editor-wrapper [class*="_tableEditor_"]:hover [class*="_iconButton_"] {
+  opacity: 0.5 !important;
+}
+.mdx-editor-wrapper [class*="_tableEditor_"] [class*="_iconButton_"]:hover {
+  opacity: 1 !important;
+  background: color-mix(in oklab, var(--destructive) 15%, transparent) !important;
+  color: var(--destructive) !important;
+}
+
+/* ---- Property editor (frontmatter etc) ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_propertyPanelTitle_"] {
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+}
+
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_propertyEditorTable_"] {
+  border-color: var(--border) !important;
+}
+
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_propertyEditorTable_"] td {
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+/* ---- Buttons footer (e.g. frontmatter actions) ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container) [class*="_buttonsFooter_"] {
+  border-top: 1px solid var(--border) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  MDXEditor – CodeMirror overrides                                   */
+/* ------------------------------------------------------------------ */
+
 .mdx-editor-wrapper .cm-editor {
   background: var(--secondary);
+  color: var(--foreground);
   font-family: var(--monoFont);
 }
 
 .mdx-editor-wrapper .cm-editor .cm-gutters {
   background: var(--secondary);
+  color: var(--muted-foreground);
   border-right: 1px solid var(--border);
 }
 
@@ -459,11 +817,12 @@
   border-color: var(--primary);
 }
 
-.dark .mdx-editor-wrapper .cm-editor {
-  color: var(--foreground);
+.mdx-editor-wrapper .cm-editor .cm-selectionBackground,
+.mdx-editor-wrapper .cm-editor .cm-content ::selection {
+  background: color-mix(in oklab, var(--primary) 25%, transparent) !important;
 }
 
-/* Select dropdown for block type */
+/* ---- Select dropdown for block type ---- */
 .mdx-editor-wrapper [class*="_selectTrigger_"],
 .mdx-editor-wrapper select[class*="_selectTrigger_"] {
   background: transparent;
@@ -477,4 +836,23 @@
 .mdx-editor-wrapper [class*="_selectTrigger_"]:hover {
   background: var(--accent);
   color: var(--foreground);
+}
+
+/* ---- Select dropdown items ---- */
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  [class*="_selectContent_"]
+  [class*="_selectItem_"] {
+  color: var(--popover-foreground) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 0.8125rem !important;
+}
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  [class*="_selectContent_"]
+  [class*="_selectItem_"]:hover,
+:is(.mdx-editor-wrapper, .mdxeditor-popup-container)
+  [class*="_selectContent_"]
+  [class*="_selectItem_"][data-highlighted] {
+  background: var(--accent) !important;
+  color: var(--foreground) !important;
 }

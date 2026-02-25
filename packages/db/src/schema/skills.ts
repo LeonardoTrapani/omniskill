@@ -3,6 +3,7 @@ import {
   check,
   index,
   jsonb,
+  boolean,
   pgEnum,
   pgTable,
   text,
@@ -40,6 +41,7 @@ export const skill = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    isDefault: boolean("is_default").notNull().default(false),
     sourceUrl: text("source_url"),
     sourceIdentifier: text("source_identifier"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
