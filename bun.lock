@@ -5,13 +5,13 @@
     "": {
       "name": "omniscient",
       "dependencies": {
-        "@omniscient/env": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "dotenv": "catalog:",
         "motion": "^12.34.3",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@types/bun": "catalog:",
         "husky": "^9.1.7",
         "lint-staged": "^16.1.2",
@@ -25,8 +25,8 @@
       "name": "cli",
       "dependencies": {
         "@clack/prompts": "^1.0.1",
-        "@omniscient/api": "workspace:*",
-        "@omniscient/env": "workspace:*",
+        "@omniskill/api": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "@trpc/client": "catalog:",
         "better-auth": "^1.4.18",
         "dotenv": "catalog:",
@@ -35,7 +35,7 @@
         "picocolors": "^1.1.1",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
@@ -45,10 +45,10 @@
       "dependencies": {
         "@ai-sdk/google": "^3.0.30",
         "@hono/trpc-server": "^0.4.0",
-        "@omniscient/api": "workspace:*",
-        "@omniscient/auth": "workspace:*",
-        "@omniscient/db": "workspace:*",
-        "@omniscient/env": "workspace:*",
+        "@omniskill/api": "workspace:*",
+        "@omniskill/auth": "workspace:*",
+        "@omniskill/db": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "@trpc/server": "catalog:",
         "ai": "^6.0.97",
         "better-auth": "catalog:",
@@ -57,7 +57,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@types/bun": "catalog:",
         "tsdown": "^0.16.5",
         "typescript": "catalog:",
@@ -69,9 +69,9 @@
       "dependencies": {
         "@base-ui/react": "^1.0.0",
         "@mdxeditor/editor": "^3.52.4",
-        "@omniscient/api": "workspace:*",
-        "@omniscient/auth": "workspace:*",
-        "@omniscient/env": "workspace:*",
+        "@omniskill/api": "workspace:*",
+        "@omniskill/auth": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "@tanstack/react-query": "^5.90.12",
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
@@ -98,7 +98,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@tailwindcss/postcss": "^4.1.10",
         "@tanstack/react-query-devtools": "^5.91.1",
         "@types/d3": "^7.4.3",
@@ -110,11 +110,11 @@
       },
     },
     "packages/api": {
-      "name": "@omniscient/api",
+      "name": "@omniskill/api",
       "dependencies": {
-        "@omniscient/auth": "workspace:*",
-        "@omniscient/db": "workspace:*",
-        "@omniscient/env": "workspace:*",
+        "@omniskill/auth": "workspace:*",
+        "@omniskill/db": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "@trpc/client": "catalog:",
         "@trpc/server": "catalog:",
         "dotenv": "catalog:",
@@ -122,46 +122,46 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "hono": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/auth": {
-      "name": "@omniscient/auth",
+      "name": "@omniskill/auth",
       "dependencies": {
-        "@omniscient/db": "workspace:*",
-        "@omniscient/env": "workspace:*",
+        "@omniskill/db": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
-      "name": "@omniscient/config",
+      "name": "@omniskill/config",
       "version": "0.0.0",
     },
     "packages/db": {
-      "name": "@omniscient/db",
+      "name": "@omniskill/db",
       "dependencies": {
-        "@omniscient/env": "workspace:*",
+        "@omniskill/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
         "postgres": "^3.4.7",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "drizzle-kit": "^0.31.8",
         "typescript": "catalog:",
       },
     },
     "packages/env": {
-      "name": "@omniscient/env",
+      "name": "@omniskill/env",
       "version": "0.0.0",
       "dependencies": {
         "@t3-oss/env-core": "^0.13.1",
@@ -170,20 +170,20 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/scraping": {
-      "name": "@omniscient/scraping",
+      "name": "@omniskill/scraping",
       "dependencies": {
-        "@omniscient/db": "workspace:*",
+        "@omniskill/db": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "gray-matter": "^4.0.3",
       },
       "devDependencies": {
-        "@omniscient/config": "workspace:*",
+        "@omniskill/config": "workspace:*",
         "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
@@ -626,17 +626,17 @@
 
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
-    "@omniscient/api": ["@omniscient/api@workspace:packages/api"],
+    "@omniskill/api": ["@omniskill/api@workspace:packages/api"],
 
-    "@omniscient/auth": ["@omniscient/auth@workspace:packages/auth"],
+    "@omniskill/auth": ["@omniskill/auth@workspace:packages/auth"],
 
-    "@omniscient/config": ["@omniscient/config@workspace:packages/config"],
+    "@omniskill/config": ["@omniskill/config@workspace:packages/config"],
 
-    "@omniscient/db": ["@omniscient/db@workspace:packages/db"],
+    "@omniskill/db": ["@omniskill/db@workspace:packages/db"],
 
-    "@omniscient/env": ["@omniscient/env@workspace:packages/env"],
+    "@omniskill/env": ["@omniskill/env@workspace:packages/env"],
 
-    "@omniscient/scraping": ["@omniscient/scraping@workspace:packages/scraping"],
+    "@omniskill/scraping": ["@omniskill/scraping@workspace:packages/scraping"],
 
     "@open-draft/deferred-promise": ["@open-draft/deferred-promise@2.2.0", "", {}, "sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA=="],
 
