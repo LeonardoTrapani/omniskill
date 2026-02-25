@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import DeleteSkillDialog from "./_components/delete-skill-dialog";
-import MyOmniTable from "./_components/my-omni-table";
+import MySkillsTable from "./_components/my-skills-table";
 import SkillGraph from "./_components/skill-graph";
 
 export default function Dashboard() {
@@ -85,7 +85,7 @@ export default function Dashboard() {
               aria-labelledby="dashboard-content-tab-vault"
               className={mobileTab === "vault" ? "" : "hidden"}
             >
-              <MyOmniTable
+              <MySkillsTable
                 height={panelHeight}
                 onDelete={(skillId, skillName) => setDeleteTarget({ id: skillId, name: skillName })}
               />
@@ -95,7 +95,7 @@ export default function Dashboard() {
           <div className="hidden lg:block" style={{ height: backgroundHeight }}>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-6">
               <div className="pointer-events-auto h-[75svh] w-[min(380px,calc(100vw-3rem))]">
-                <MyOmniTable
+                <MySkillsTable
                   className="h-full shadow-[0_20px_45px_color-mix(in_oklab,var(--background)_45%,transparent)]"
                   onDelete={(skillId, skillName) =>
                     setDeleteTarget({ id: skillId, name: skillName })

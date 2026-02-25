@@ -10,7 +10,7 @@ const metrics = [
 ];
 
 const chartData = [
-  { tool: "Omniskill", score: 95 },
+  { tool: "BETTER-SKILLS", score: 95 },
   { tool: "Custom Solutions", score: 60 },
   { tool: "Manual Setup", score: 40 },
 ];
@@ -29,12 +29,12 @@ const examples = [
     tab: "Data Processing",
     description: "Build a skill that processes and transforms data",
     noContext: {
-      label: "Without Omniskill",
+      label: "Without BETTER-SKILLS",
       code: "# Custom setup required\n# Multiple files to manage\n# No sharing between agents",
     },
-    withOmniskill: {
-      label: "With Omniskill",
-      code: 'import { skill } from "@omniskill/core"\n\n@skill({\n  name: "data-processor",\n  inputs: ["json", "csv"],\n  outputs: ["processed"],\n})\nasync function processData(input) {\n  return transform(input);\n}',
+    withBetterSkills: {
+      label: "With BETTER-SKILLS",
+      code: 'import { skill } from "@better-skills/core"\n\n@skill({\n  name: "data-processor",\n  inputs: ["json", "csv"],\n  outputs: ["processed"],\n})\nasync function processData(input) {\n  return transform(input);\n}',
     },
   },
 ];
@@ -61,7 +61,7 @@ export default function Benchmark() {
             BUILT DIFFERENT
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-[700px] mx-auto leading-relaxed">
-            Omniskill is built from the ground up for the agent era.
+            BETTER-SKILLS is built from the ground up for the agent era.
           </p>
         </motion.div>
 

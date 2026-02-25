@@ -12,7 +12,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-background">
       <HeroSection skillCount={skillCount} />
-      <div className="py-6 max-w-7xl mx-auto">
+      <div className="py-6 flex flex-col gap-24 max-w-7xl mx-auto">
         <SkillsTable limit={5} showSearch />
         <Features />
         <Pricing />

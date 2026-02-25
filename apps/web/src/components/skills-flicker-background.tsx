@@ -52,11 +52,13 @@ export default function SkillsFlickerBackground() {
     let paddingY = 40;
     let normalColor = "rgba(240, 240, 240, 0.8)";
     let accentColor = "rgba(112, 122, 255, 0.9)";
+    let uiFontFamily = "sans-serif";
     let cells: Cell[] = [];
 
     const readPalette = () => {
       normalColor = getComputedStyle(normalColorEl).color;
       accentColor = getComputedStyle(accentColorEl).color;
+      uiFontFamily = getComputedStyle(document.body).fontFamily || "sans-serif";
     };
 
     const buildCells = () => {
@@ -117,7 +119,7 @@ export default function SkillsFlickerBackground() {
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.font = `${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace`;
+      context.font = `${fontSize}px ${uiFontFamily}`;
 
       buildCells();
       readPalette();

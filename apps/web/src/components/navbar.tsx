@@ -7,7 +7,6 @@ import { X, Menu, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
-import BrandMark from "@/components/brand-mark";
 import UserMenu from "@/components/user-menu";
 import { SkillCommandTrigger, SkillCommandPalette } from "@/components/skill-command-palette";
 import { trpc } from "@/utils/trpc";
@@ -101,8 +100,7 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-foreground tracking-tight"
           >
-            <BrandMark className="size-3.5" />
-            <span>omniskill</span>
+            <span>BETTER-SKILLS.</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
@@ -158,8 +156,7 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
             <div className="bg-background border-t border-border mx-2 mb-2 p-6">
               <div className="flex items-center justify-between mb-6">
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                  <BrandMark className="size-3.5" />
-                  <span>omniskill</span>
+                  <span>BETTER-SKILLS</span>
                 </span>
                 <button
                   onClick={() => setMobileOpen(false)}

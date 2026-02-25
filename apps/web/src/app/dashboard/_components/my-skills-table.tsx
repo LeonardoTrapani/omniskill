@@ -16,13 +16,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/utils/trpc";
 
-interface MyOmniTableProps {
+interface MySkillsTableProps {
   onDelete: (skillId: string, skillName: string) => void;
   height?: number;
   className?: string;
 }
 
-export default function MyOmniTable({ onDelete, height, className }: MyOmniTableProps) {
+export default function MySkillsTable({ onDelete, height, className }: MySkillsTableProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 

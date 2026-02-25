@@ -77,8 +77,8 @@ function LoginPageContent() {
               Sign In
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Continue to your Omniskill workspace to manage reusable skills for your agents across
-              CLI and web.
+              Continue to your BETTER-SKILLS workspace to manage reusable skills for your agents
+              across CLI and web.
             </p>
             {/*
             <div className="mt-7 border border-border bg-muted/20 p-4">
@@ -86,11 +86,11 @@ function LoginPageContent() {
                 Session Preview
               </p>
               <p className="mt-2 font-mono text-xs leading-6 text-foreground/90 break-words">
-                &gt; omniskill login
+                &gt; better-skills login
                 <br />
-                &gt; omniskill config
+                &gt; better-skills config
                 <br />
-                &gt; omniskill sync
+                &gt; better-skills sync
               </p>
             </div> */}
           </div>

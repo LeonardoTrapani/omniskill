@@ -17,7 +17,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             {/* Left side - branding */}
             <div className="flex-1">
-              <p className="text-xs text-primary uppercase tracking-[0.05em] mb-3">Omniskill</p>
+              <p className="text-xs text-primary uppercase tracking-[0.05em] mb-3">BETTER-SKILLS</p>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
                 The open agent skills ecosystem. Build, share, and manage a graph of reusable skills
                 for your AI agents.
@@ -51,7 +51,7 @@ export default function Footer() {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Omniskill, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} BETTER-SKILLS, Inc. All rights reserved.
           </p>
         </div>
       </div>

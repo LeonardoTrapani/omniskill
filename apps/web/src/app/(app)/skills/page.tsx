@@ -22,7 +22,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
           <PageHeroCard
             eyebrow="Skills Marketplace"
             title="Explore the Ecosystem"
-            description="Browse the complete catalog of skills in the Omniskill ecosystem. Install skills to your agent graph with one click, or publish your own for the community."
+            description="Browse the complete catalog of skills in the BETTER-SKILLS ecosystem. Install skills to your agent graph with one click, or publish your own for the community."
           />
 
           <SkillsTable
