@@ -8,30 +8,57 @@ import { parseMentions } from "./mentions";
 const SKILL_FALLBACK = "`(unknown skill)`";
 const RESOURCE_FALLBACK = "`(unknown resource)`";
 
-export async function renderMentions(markdown: string, currentSkillId?: string): Promise<string> {
+function buildMentionQuery(type: "skill" | "resource", id: string) {
+  const params = new URLSearchParams({ mention: `${type}:${id}` });
+  return `?${params.toString()}`;
+}
+
+function buildSkillHref(skillId: string) {
+  return `/dashboard/skills/${encodeURIComponent(skillId)}${buildMentionQuery("skill", skillId)}`;
+}
+
+function buildResourceHref(skillId: string, resourcePath: string, resourceId: string) {
+  const encodedPath = resourcePath
+    .split("/")
+    .filter(Boolean)
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  return `/dashboard/skills/${encodeURIComponent(skillId)}/resources/${encodedPath}${buildMentionQuery("resource", resourceId)}`;
+}
+
+export async function renderMentions(
+  markdown: string,
+  options?: {
+    currentSkillId?: string;
+    linkMentions?: boolean;
+  },
+): Promise<string> {
+  const { currentSkillId, linkMentions = false } = options ?? {};
+
   const mentions = parseMentions(markdown);
   if (mentions.length === 0) return markdown;
 
   const skillIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
   const resourceIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
 
-  // batch-fetch skill slugs
-  const skillSlugMap = new Map<string, string>();
+  // batch-fetch skill names
+  const skillNameMap = new Map<string, string>();
   if (skillIds.length > 0) {
     const rows = (await db
-      .select({ id: skill.id, slug: skill.slug })
+      .select({ id: skill.id, name: skill.name })
       .from(skill)
       .where(inArray(skill.id, skillIds))
-      .execute()) as Array<{ id: string; slug: string }>;
+      .execute()) as Array<{ id: string; name: string }>;
     for (const row of rows) {
-      skillSlugMap.set(row.id, row.slug);
+      skillNameMap.set(row.id, row.name);
     }
   }
 
-  // batch-fetch resource paths + parent skill slugs
+  // batch-fetch resource paths + parent skill names
   const resourceInfoMap = new Map<
     string,
-    { resourcePath: string; skillSlug: string; skillId: string }
+    { resourcePath: string; skillName: string; skillId: string }
   >();
   if (resourceIds.length > 0) {
     const rows = await db
@@ -39,7 +66,7 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
         id: skillResource.id,
         path: skillResource.path,
         skillId: skillResource.skillId,
-        skillSlug: skill.slug,
+        skillName: skill.name,
       })
       .from(skillResource)
       .innerJoin(skill, eq(skill.id, skillResource.skillId))
@@ -49,7 +76,7 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     for (const row of rows) {
       resourceInfoMap.set(row.id, {
         resourcePath: row.path,
-        skillSlug: row.skillSlug,
+        skillName: row.skillName,
         skillId: row.skillId,
       });
     }
@@ -66,8 +93,12 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
     const normalizedId = targetId.toLowerCase();
 
     if (normalizedType === "skill") {
-      const slug = skillSlugMap.get(normalizedId);
-      if (slug) return `[\`${slug}\`](skill://${normalizedId})`;
+      const skillName = skillNameMap.get(normalizedId);
+      if (skillName) {
+        const label = `\`${skillName}\``;
+        if (!linkMentions) return label;
+        return `[${label}](${buildSkillHref(normalizedId)})`;
+      }
       return SKILL_FALLBACK;
     }
 
@@ -76,10 +107,14 @@ export async function renderMentions(markdown: string, currentSkillId?: string):
       if (info) {
         const sameSkill =
           currentSkillId && info.skillId.toLowerCase() === currentSkillId.toLowerCase();
-        if (sameSkill) {
-          return `[\`${info.resourcePath}\`](resource://${normalizedId})`;
-        }
-        return `[\`${info.resourcePath}\`](resource://${normalizedId}) in [\`${info.skillSlug}\`](skill://${info.skillId})`;
+
+        const label = sameSkill
+          ? `\`${info.resourcePath}\``
+          : `\`${info.resourcePath} for ${info.skillName}\``;
+
+        if (!linkMentions) return label;
+
+        return `[${label}](${buildResourceHref(info.skillId, info.resourcePath, normalizedId)})`;
       }
       return RESOURCE_FALLBACK;
     }

@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import MarkdownEditorLazy from "@/components/skills/markdown-editor-lazy";
 import MentionPopover from "@/components/skills/mention-popover";
 import {
+  buildResourceMentionHref,
+  buildSkillMentionHref,
   editorMarkdownToStorageMarkdown,
   storageMarkdownToEditorMarkdown,
 } from "@/components/skills/mention-markdown";
@@ -80,7 +82,9 @@ function Panel({
 /* ------------------------------------------------------------------ */
 export default function SkillEdit({ id }: { id: string }) {
   const { data: session } = authClient.useSession();
-  const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
+  const { data, isLoading, isError } = useQuery(
+    trpc.skills.getById.queryOptions({ id, linkMentions: true }),
+  );
 
   const editorRef = useRef<MDXEditorMethods>(null);
   const hasMountedRef = useRef(false);
@@ -166,11 +170,29 @@ export default function SkillEdit({ id }: { id: string }) {
 
   const handleMentionInsert = useCallback(
     (item: MentionItem, mentionRange: Range, query: string) => {
+      const activeSkillId = (data?.id ?? id).toLowerCase();
+
       // Build a friendly markdown link for display in the editor
-      const linkText =
-        item.type === "skill"
-          ? `[${item.label}](skill://${item.id})`
-          : `[${item.label}](resource://${item.id})`;
+      const linkText = (() => {
+        if (item.type === "skill") {
+          const href = buildSkillMentionHref(item.id);
+          return `[${item.label}](${href})`;
+        }
+
+        if (!item.parentSkillId) {
+          return `[[resource:${item.id.toLowerCase()}]]`;
+        }
+
+        const isInternalResource = item.parentSkillId.toLowerCase() === activeSkillId;
+        const label = isInternalResource
+          ? item.label
+          : item.subtitle
+            ? `${item.label} for ${item.subtitle}`
+            : item.label;
+        const href = buildResourceMentionHref(item.parentSkillId, item.label, item.id);
+
+        return `[${label}](${href})`;
+      })();
 
       const currentMarkdown = editorRef.current?.getMarkdown();
       if (currentMarkdown == null) return;
@@ -212,7 +234,7 @@ export default function SkillEdit({ id }: { id: string }) {
         setHasChanges(afterInsertMarkdown !== initialMarkdownRef.current);
       }
     },
-    [],
+    [data?.id, id],
   );
 
   const mention = useMentionAutocomplete({

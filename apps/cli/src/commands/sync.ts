@@ -108,7 +108,7 @@ export async function syncCommand() {
     spinner.start(`syncing ${item.slug} (${index + 1}/${privateSkills.length})`);
 
     try {
-      const skill = await trpc.skills.getById.query({ id: item.id });
+      const skill = await trpc.skills.getById.query({ id: item.id, linkMentions: false });
       await installSkill(toInstallableSkill(skill), selectedAgents);
       synced += 1;
       spinner.stop(pc.green(`synced ${item.slug}`));

@@ -18,8 +18,8 @@ export async function getCommand() {
 
   try {
     const skill = UUID_RE.test(identifier)
-      ? await trpc.skills.getById.query({ id: identifier })
-      : await trpc.skills.getBySlug.query({ slug: identifier });
+      ? await trpc.skills.getById.query({ id: identifier, linkMentions: false })
+      : await trpc.skills.getBySlug.query({ slug: identifier, linkMentions: false });
 
     s.stop(pc.dim(`fetched ${skill.name}`));
 

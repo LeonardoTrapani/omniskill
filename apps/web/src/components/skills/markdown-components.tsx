@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 
+import { getInternalDashboardHref, parseMentionHref } from "@/components/skills/mention-markdown";
 import { ResourceHoverLink, type ResourceLike } from "@/components/skills/resource-link";
 import { Separator } from "@/components/ui/separator";
 
@@ -45,8 +46,10 @@ export function createMarkdownComponents(options: {
       />
     ),
     a: ({ href = "", children, ...props }: ComponentPropsWithoutRef<"a">) => {
-      if (href.startsWith("skill://")) {
-        const targetId = href.replace("skill://", "");
+      const mention = parseMentionHref(href);
+
+      if (mention?.type === "skill") {
+        const targetId = mention.targetId;
         return (
           <Link
             href={`/dashboard/skills/${targetId}` as Route}
@@ -66,8 +69,20 @@ export function createMarkdownComponents(options: {
         );
       }
 
-      if (href.startsWith("resource://")) {
+      if (mention?.type === "resource") {
         return <span className="text-muted-foreground">{children}</span>;
+      }
+
+      const internalDashboardHref = getInternalDashboardHref(href);
+      if (internalDashboardHref) {
+        return (
+          <Link
+            href={internalDashboardHref as Route}
+            className="text-primary underline underline-offset-4 break-all"
+          >
+            {children}
+          </Link>
+        );
       }
 
       return (

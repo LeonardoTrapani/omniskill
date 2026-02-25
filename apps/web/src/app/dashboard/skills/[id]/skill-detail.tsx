@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import AddSkillModal from "@/app/dashboard/_components/add-skill-modal";
 import { ForceGraph } from "@/components/graph/force-graph";
 import { createMarkdownComponents } from "@/components/skills/markdown-components";
+import { getHrefPath, parseMentionHref } from "@/components/skills/mention-markdown";
 import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
 
 import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
@@ -145,7 +146,9 @@ export default function SkillDetail({ id }: { id: string }) {
   const router = useRouter();
   const { session, selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } =
     useAddSkillFlow({ loginNext: `/dashboard/skills/${id}` });
-  const { data, isLoading, isError } = useQuery(trpc.skills.getById.queryOptions({ id }));
+  const { data, isLoading, isError } = useQuery(
+    trpc.skills.getById.queryOptions({ id, linkMentions: true }),
+  );
   const graphQuery = useQuery(trpc.skills.graphForSkill.queryOptions({ skillId: id }));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const {
@@ -190,23 +193,22 @@ export default function SkillDetail({ id }: { id: string }) {
   );
 
   const findResourceByHref = (href: string) => {
-    let decodedHref = href;
-    try {
-      decodedHref = decodeURIComponent(href);
-    } catch {}
-
-    if (decodedHref.startsWith("resource://")) {
-      const byId = resourcesById.get(decodedHref.replace("resource://", ""));
+    const mention = parseMentionHref(href);
+    if (mention?.type === "resource") {
+      const byId = resourcesById.get(mention.targetId);
       if (byId) return byId;
     }
 
-    if (resourcesByPath.has(decodedHref)) {
-      return resourcesByPath.get(decodedHref)!;
+    const normalizedPath = getHrefPath(href);
+    if (!normalizedPath) return null;
+
+    if (resourcesByPath.has(normalizedPath)) {
+      return resourcesByPath.get(normalizedPath)!;
     }
 
     const match = resources.find(
       (resource) =>
-        decodedHref.endsWith(resource.path) || decodedHref.endsWith(`/${resource.path}`),
+        normalizedPath.endsWith(resource.path) || normalizedPath.endsWith(`/${resource.path}`),
     );
 
     return match ?? null;

@@ -7,8 +7,8 @@ const UNKNOWN_SKILL_ID = "d4e5f6a7-b8c9-0123-defa-234567890123";
 const UNKNOWN_RESOURCE_ID = "e5f6a7b8-c9d0-1234-efab-345678901234";
 
 const mockSkills = [
-  { id: SKILL_A_ID, slug: "typescript-basics" },
-  { id: SKILL_B_ID, slug: "react-patterns" },
+  { id: SKILL_A_ID, slug: "typescript-basics", name: "TypeScript Basics" },
+  { id: SKILL_B_ID, slug: "react-patterns", name: "React Patterns" },
 ];
 
 const mockResources = [{ id: RESOURCE_ID, path: "examples/hooks.ts", skillId: SKILL_A_ID }];
@@ -57,29 +57,27 @@ describe("renderMentions", () => {
   test("replaces skill mention with resolved name", async () => {
     const md = `Check out [[skill:${SKILL_A_ID}]] for more info.`;
     const result = await renderMentions(md);
-    expect(result).toBe(`Check out \`typescript-basics\` for more info.`);
+    expect(result).toBe(`Check out \`TypeScript Basics\` for more info.`);
   });
 
   test("replaces escaped mention tokens", async () => {
     const md = String.raw`Check \[\[resource:${RESOURCE_ID}\]\] and \[\[skill:${SKILL_A_ID}\]\].`;
     const result = await renderMentions(md);
-    expect(result).toContain(`resource://${RESOURCE_ID}`);
-    expect(result).toContain("`typescript-basics`");
+    expect(result).toContain("`examples/hooks.ts for TypeScript Basics`");
+    expect(result).toContain("`TypeScript Basics`");
   });
 
-  test("replaces resource mention with resolved name and parent skill", async () => {
+  test("replaces resource mention with resolved name and parent skill name", async () => {
     const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
     const result = await renderMentions(md);
-    expect(result).toBe(
-      `See [\`examples/hooks.ts\`](resource://${RESOURCE_ID}) in skill \`typescript-basics\` for examples.`,
-    );
+    expect(result).toBe(`See \`examples/hooks.ts for TypeScript Basics\` for examples.`);
   });
 
   test("replaces multiple mentions in same markdown", async () => {
     const md = `Start with [[skill:${SKILL_A_ID}]] then try [[skill:${SKILL_B_ID}]].`;
     const result = await renderMentions(md);
-    expect(result).toContain("`typescript-basics`");
-    expect(result).toContain("`react-patterns`");
+    expect(result).toContain("`TypeScript Basics`");
+    expect(result).toContain("`React Patterns`");
   });
 
   test("unknown skill mention resolves to fallback text", async () => {
@@ -91,26 +89,35 @@ describe("renderMentions", () => {
   test("unknown resource mention resolves to fallback text", async () => {
     const md = `See [[resource:${UNKNOWN_RESOURCE_ID}]].`;
     const result = await renderMentions(md);
-    expect(result).toBe("See `(unknown resource)` in skill `(unknown skill)`.");
+    expect(result).toBe("See `(unknown resource)`.");
   });
 
   test("self-reference resource renders just the path", async () => {
     const md = `See [[resource:${RESOURCE_ID}]] for examples.`;
-    const result = await renderMentions(md, SKILL_A_ID);
-    expect(result).toBe(`See [\`examples/hooks.ts\`](resource://${RESOURCE_ID}) for examples.`);
+    const result = await renderMentions(md, { currentSkillId: SKILL_A_ID });
+    expect(result).toBe(`See \`examples/hooks.ts\` for examples.`);
   });
 
   test("handles mixed known and unknown mentions", async () => {
     const md = `[[skill:${SKILL_A_ID}]] and [[skill:${UNKNOWN_SKILL_ID}]]`;
     const result = await renderMentions(md);
-    expect(result).toContain("`typescript-basics`");
+    expect(result).toContain("`TypeScript Basics`");
     expect(result).toContain("`(unknown skill)`");
   });
 
   test("case-insensitive mention type", async () => {
     const md = `See [[Skill:${SKILL_A_ID}]].`;
     const result = await renderMentions(md);
-    expect(result).toContain("`typescript-basics`");
+    expect(result).toContain("`TypeScript Basics`");
+  });
+
+  test("renders linked markdown when linkMentions is true", async () => {
+    const md = `See [[skill:${SKILL_A_ID}]] and [[resource:${RESOURCE_ID}]].`;
+    const result = await renderMentions(md, { linkMentions: true, currentSkillId: SKILL_A_ID });
+    expect(result).toContain(`/dashboard/skills/${SKILL_A_ID}?mention=skill%3A${SKILL_A_ID}`);
+    expect(result).toContain(
+      `/dashboard/skills/${SKILL_A_ID}/resources/examples/hooks.ts?mention=resource%3A${RESOURCE_ID}`,
+    );
   });
 
   test("does not query DB when no mentions present", async () => {

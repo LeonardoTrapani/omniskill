@@ -278,6 +278,7 @@ mock.module("drizzle-orm", () => ({
   and: buildAnd,
   or: buildOr,
   desc: buildDesc,
+  getTableColumns: (table: Record<string, unknown>) => table,
   sql: buildSql,
   relations: fakeRelations,
   asc: (col: unknown) => ({ direction: "asc", col }),
@@ -531,7 +532,7 @@ function authedCaller(userId: string) {
 }
 
 function anonCaller() {
-  return createCaller({ session: null });
+  return createCaller({ session: null } as never);
 }
 
 function seedSkill(overrides: Partial<SkillRow> = {}): SkillRow {
@@ -887,6 +888,46 @@ describe("skills.create", () => {
 });
 
 // ============================================================
+// DUPLICATE — import into private vault
+// ============================================================
+
+describe("skills.duplicate", () => {
+  test("remaps internal mention UUIDs to duplicated skill resources", async () => {
+    const source = seedSkill({
+      visibility: "public",
+      ownerUserId: USER_A,
+    });
+    const sourceResource = seedResource(source.id, { path: "references/guide.md" });
+
+    source.skillMarkdown = `See [[skill:${source.id}]] and [[resource:${sourceResource.id}]]`;
+
+    const result = await authedCaller(USER_B).skills.duplicate({ id: source.id });
+
+    expect(result.ownerUserId).toBe(USER_B);
+    expect(result.visibility).toBe("private");
+
+    const duplicatedResource = result.resources.find(
+      (resource) => resource.path === sourceResource.path,
+    );
+    expect(duplicatedResource).toBeDefined();
+    if (!duplicatedResource) return;
+
+    expect(result.originalMarkdown).toBe(
+      `See [[skill:${result.id}]] and [[resource:${duplicatedResource.id}]]`,
+    );
+
+    const autoLinks = links.filter(
+      (link) =>
+        link.sourceSkillId === result.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+
+    expect(autoLinks.some((link) => link.targetSkillId === result.id)).toBe(true);
+    expect(autoLinks.some((link) => link.targetResourceId === duplicatedResource.id)).toBe(true);
+  });
+});
+
+// ============================================================
 // UPDATE — ownership + field persistence
 // ============================================================
 
@@ -989,7 +1030,7 @@ describe("rendering", () => {
     expect(result.renderedMarkdown).toBe("# Hello World");
   });
 
-  test("get response renders skill mentions to backticked slug", async () => {
+  test("get response renders skill mentions to backticked skill name", async () => {
     const target = seedSkill({ visibility: "public", name: "Target Skill" });
     const source = seedSkill({
       visibility: "public",
@@ -998,7 +1039,7 @@ describe("rendering", () => {
 
     const result = await anonCaller().skills.getById({ id: source.id });
     expect(result.originalMarkdown).toContain(`[[skill:${target.id}]]`);
-    expect(result.renderedMarkdown).toContain(`\`${target.slug}\``);
+    expect(result.renderedMarkdown).toContain(`\`${target.name}\``);
   });
 
   test("get response renders resource mentions", async () => {
@@ -1010,8 +1051,20 @@ describe("rendering", () => {
     });
 
     const result = await anonCaller().skills.getById({ id: source.id });
+    expect(result.renderedMarkdown).toContain("`helpers/util.ts for Parent Skill`");
+  });
+
+  test("get response can render mention links for web", async () => {
+    const target = seedSkill({ visibility: "public", name: "Target Skill" });
+    const source = seedSkill({
+      visibility: "public",
+      skillMarkdown: `See [[skill:${target.id}]]`,
+    });
+
+    const result = await anonCaller().skills.getById({ id: source.id, linkMentions: true });
+
     expect(result.renderedMarkdown).toContain(
-      `[\`helpers/util.ts\`](resource://${res.id}) in skill \`${parent.slug}\``,
+      `/dashboard/skills/${target.id}?mention=skill%3A${target.id}`,
     );
   });
 

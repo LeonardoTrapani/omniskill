@@ -7,6 +7,7 @@ import { skill, skillLink, skillResource } from "@omniskill/db/schema/skills";
 
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { syncAutoLinks } from "../lib/link-sync";
+import { remapMentionTargetIds } from "../lib/mentions";
 import { renderMentions } from "../lib/render-mentions";
 
 // -- shared enums --
@@ -170,8 +171,14 @@ function buildGraphPayload(
 async function toSkillOutput(
   row: typeof skill.$inferSelect,
   resources: (typeof skillResource.$inferSelect)[],
+  options?: {
+    linkMentions?: boolean;
+  },
 ) {
-  const renderedMarkdown = await renderMentions(row.skillMarkdown, row.id);
+  const renderedMarkdown = await renderMentions(row.skillMarkdown, {
+    currentSkillId: row.id,
+    linkMentions: options?.linkMentions ?? false,
+  });
 
   return {
     id: row.id,
@@ -617,7 +624,12 @@ export const skillsRouter = router({
     }),
 
   getById: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        linkMentions: z.boolean().optional(),
+      }),
+    )
     .output(skillOutput)
     .query(async ({ ctx, input }) => {
       const rows = await db
@@ -635,11 +647,16 @@ export const skillsRouter = router({
         .from(skillResource)
         .where(eq(skillResource.skillId, row.id));
 
-      return await toSkillOutput(row, resources);
+      return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
 
   getBySlug: publicProcedure
-    .input(z.object({ slug: z.string().min(1) }))
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        linkMentions: z.boolean().optional(),
+      }),
+    )
     .output(skillOutput)
     .query(async ({ ctx, input }) => {
       const rows = await db
@@ -657,7 +674,7 @@ export const skillsRouter = router({
         .from(skillResource)
         .where(eq(skillResource.skillId, row.id));
 
-      return await toSkillOutput(row, resources);
+      return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
 
   getResourceByPath: publicProcedure
@@ -1117,9 +1134,40 @@ export const skillsRouter = router({
           .returning();
       }
 
-      await syncAutoLinks(created.id, source.skillMarkdown, userId);
+      const mentionIdMap = new Map<string, string>([[source.id.toLowerCase(), created.id]]);
 
-      return await toSkillOutput(created, resources);
+      if (sourceResources.length > 0 && resources.length > 0) {
+        const duplicatedResourceIdByPath = new Map(
+          resources.map((resource) => [resource.path, resource.id]),
+        );
+
+        for (const sourceResource of sourceResources) {
+          const duplicatedResourceId = duplicatedResourceIdByPath.get(sourceResource.path);
+          if (duplicatedResourceId) {
+            mentionIdMap.set(sourceResource.id.toLowerCase(), duplicatedResourceId);
+          }
+        }
+      }
+
+      // Product invariant: public catalog skills only contain internal mentions.
+      const remappedMarkdown = remapMentionTargetIds(source.skillMarkdown, mentionIdMap);
+
+      let createdSkill = created;
+      if (remappedMarkdown !== source.skillMarkdown) {
+        const [updatedSkill] = await db
+          .update(skill)
+          .set({ skillMarkdown: remappedMarkdown })
+          .where(eq(skill.id, created.id))
+          .returning();
+
+        if (updatedSkill) {
+          createdSkill = updatedSkill;
+        }
+      }
+
+      await syncAutoLinks(createdSkill.id, remappedMarkdown, userId);
+
+      return await toSkillOutput(createdSkill, resources);
     }),
 
   delete: protectedProcedure
