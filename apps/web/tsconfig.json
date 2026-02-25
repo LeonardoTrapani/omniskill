@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "customConditions": ["bun"],
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,

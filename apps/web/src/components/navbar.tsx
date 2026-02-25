@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { useRouter, usePathname } from "next/navigation";
 import { X, Menu, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,16 +13,20 @@ import UserMenu from "@/components/user-menu";
 import { SkillCommandTrigger, SkillCommandPalette } from "@/components/skill-command-palette";
 import { trpc } from "@/utils/trpc";
 
-const publicNav = [
-  { label: "Skills", href: "/skills" },
-  { label: "Docs", href: "#docs" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Github", href: "#github" },
+type NavItem =
+  | { label: string; href: Route; kind: "route" }
+  | { label: string; href: `#${string}`; kind: "hash" };
+
+const publicNav: NavItem[] = [
+  { label: "Skills", href: "/skills", kind: "route" },
+  { label: "Docs", href: "#docs", kind: "hash" },
+  { label: "Pricing", href: "#pricing", kind: "hash" },
+  { label: "Github", href: "#github", kind: "hash" },
 ];
 
-const appNav = [
-  { label: "Vault", href: "/dashboard" },
-  { label: "Explore", href: "/skills" },
+const appNav: NavItem[] = [
+  { label: "Vault", href: "/dashboard", kind: "route" },
+  { label: "Explore", href: "/skills", kind: "route" },
 ];
 
 export default function Navbar({ skillCount }: { skillCount?: number }) {
@@ -106,15 +111,25 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
           </Link>
 
           <div className="hidden lg:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href as "/skills"}
-                className="text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) =>
+              item.kind === "route" ? (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
+                >
+                  {item.label}
+                </a>
+              ),
+            )}
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
@@ -171,18 +186,31 @@ export default function Navbar({ skillCount }: { skillCount?: number }) {
               </div>
 
               <div className="border border-border mb-4">
-                {navItems.map((item, i) => (
-                  <Link
-                    key={item.label}
-                    href={item.href as "/skills"}
-                    className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
-                      i < navItems.length - 1 ? "border-b border-border" : ""
-                    }`}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                ))}
+                {navItems.map((item, i) =>
+                  item.kind === "route" ? (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
+                        i < navItems.length - 1 ? "border-b border-border" : ""
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <span>{item.label}</span>
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
+                        i < navItems.length - 1 ? "border-b border-border" : ""
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <span>{item.label}</span>
+                    </a>
+                  ),
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
