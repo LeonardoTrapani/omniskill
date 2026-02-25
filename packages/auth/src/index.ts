@@ -6,6 +6,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { bearer } from "better-auth/plugins/bearer";
 import { deviceAuthorization } from "better-auth/plugins/device-authorization";
 
+import { seedDefaultSkillsForUser } from "./default-skills";
+
 function isLocalHost(host: string): boolean {
   return host === "localhost" || host === "127.0.0.1";
 }
@@ -70,6 +72,28 @@ export const auth = betterAuth({
   user: {
     deleteUser: {
       enabled: true,
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (createdUser) => {
+          try {
+            const seeded = await seedDefaultSkillsForUser(createdUser.id);
+
+            if (seeded.failed > 0) {
+              console.error(
+                `[default-skills] seeded ${seeded.created}, skipped ${seeded.skipped}, failed ${seeded.failed} for user ${createdUser.id}`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[default-skills] failed to seed default skills for user ${createdUser.id}`,
+              error,
+            );
+          }
+        },
+      },
     },
   },
   advanced: {

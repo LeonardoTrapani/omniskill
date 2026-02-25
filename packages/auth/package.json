@@ -19,6 +19,8 @@
     "@omniskill/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.1",
+    "gray-matter": "^4.0.3",
     "zod": "catalog:"
   },
   "devDependencies": {
