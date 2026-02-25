@@ -1,21 +1,14 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { authClient } from "@/lib/auth-client";
+import { requireSession } from "@/shared/auth/require-session";
 
 import SettingsView from "./settings-view";
 
 export default async function SettingsPage() {
-  const session = await authClient.getSession({
-    fetchOptions: {
-      headers: await headers(),
-      throw: true,
-    },
-  });
+  const session = await requireSession("/settings");
 
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  return <SettingsView />;
+  return (
+    <SettingsView
+      userName={session.user.name ?? "Unnamed user"}
+      userEmail={session.user.email ?? "No email"}
+    />
+  );
 }

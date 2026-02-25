@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Laptop, Loader2, Lock, LogOut, Moon, ShieldCheck, Sun, Trash2 } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Check, Laptop, Loader2, Lock, LogOut, Moon, ShieldCheck, Sun, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/shared/auth/auth-client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import PageHeroCard from "@/components/page-hero-card";
+import PageHeroCard from "@/shared/components/page-hero-card";
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Light", icon: Sun, description: "Classic bright interface" },
+  { value: "dark", label: "Dark", icon: Moon, description: "Easier on the eyes" },
+  { value: "system", label: "System", icon: Laptop, description: "Match your device settings" },
+] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Setting Row                                                        */
@@ -50,45 +56,26 @@ function SettingRow({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Theme options                                                      */
-/* ------------------------------------------------------------------ */
-type ThemeOption = {
-  value: "light" | "dark" | "system";
-  label: string;
-  icon: typeof Sun;
-  description: string;
-};
-
-const THEME_OPTIONS: ThemeOption[] = [
-  {
-    value: "light",
-    label: "Light",
-    icon: Sun,
-    description: "Bright interface with strong contrast.",
-  },
-  { value: "dark", label: "Dark", icon: Moon, description: "Lower glare in dim environments." },
-  { value: "system", label: "System", icon: Laptop, description: "Follow your device preference." },
-];
-
-/* ------------------------------------------------------------------ */
 /*  Main                                                               */
 /* ------------------------------------------------------------------ */
-export default function SettingsView() {
+interface SettingsViewProps {
+  userName: string;
+  userEmail: string;
+}
+
+export default function SettingsView({ userName, userEmail }: SettingsViewProps) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
   const [signOutPending, setSignOutPending] = useState(false);
-  const { data: session } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const activeTheme = mounted ? (theme ?? "system") : "system";
-  const userName = session?.user.name ?? "Unnamed user";
-  const userEmail = session?.user.email ?? "No email";
+  const selectedTheme = mounted ? (theme ?? "system") : "system";
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
   const handleSignOut = async () => {
@@ -170,6 +157,65 @@ export default function SettingsView() {
             </div>
           </div>
         </SettingRow>
+
+        <Separator />
+
+        {/* ---- Appearance ---- */}
+
+        <div className="md:hidden">
+          <SettingRow
+            title="Appearance"
+            description="Choose how the interface looks on this device."
+          >
+            <div className="space-y-1.5">
+              {THEME_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = option.value === selectedTheme;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => setTheme(option.value)}
+                    className={`flex w-full items-center gap-4 border px-4 py-3.5 text-left transition-colors duration-150 ${
+                      isSelected
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border bg-card hover:bg-muted/40"
+                    }`}
+                  >
+                    <div
+                      className={`flex size-9 shrink-0 items-center justify-center border ${
+                        isSelected
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">{option.label}</p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                        {option.description}
+                      </p>
+                    </div>
+                    <div
+                      className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-150 ${
+                        isSelected
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground/30 bg-transparent"
+                      }`}
+                    >
+                      {isSelected ? (
+                        <Check className="size-3 text-primary-foreground" aria-hidden="true" />
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </SettingRow>
+        </div>
 
         <Separator />
 

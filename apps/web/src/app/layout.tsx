@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import { Fira_Mono, Geist } from "next/font/google";
 
 import "./globals.css";
-import Providers from "@/components/providers";
-import Navbar from "@/components/navbar";
-import { getSkillCount } from "@/lib/get-skill-count";
+import Navbar from "@/features/navigation/components/navbar";
+import Providers from "@/shared/providers/providers";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -29,15 +28,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const skillCount = await getSkillCount();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.className} ${geistSans.variable} ${firaMono.variable} antialiased`}
       >
         <Providers>
-          <Navbar skillCount={skillCount} />
+          <Navbar />
           {children}
         </Providers>
       </body>

@@ -1,10 +1,10 @@
-import HeroSection from "@/components/landing/HeroSection";
-import SkillsTable from "@/components/landing/SkillsTable";
-import Features from "@/components/landing/Features";
-import Pricing from "@/components/landing/Pricing";
-import CTA from "@/components/landing/CTA";
-import Footer from "@/components/landing/Footer";
-import { getSkillCount } from "@/lib/get-skill-count";
+import CTA from "@/features/landing/components/CTA";
+import Features from "@/features/landing/components/Features";
+import Footer from "@/features/landing/components/Footer";
+import HeroSection from "@/features/landing/components/HeroSection";
+import Pricing from "@/features/landing/components/Pricing";
+import SkillsTable from "@/features/landing/components/SkillsTable";
+import { getSkillCount } from "@/features/landing/lib/get-skill-count";
 
 export default async function Home() {
   const skillCount = await getSkillCount();

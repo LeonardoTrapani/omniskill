@@ -8,17 +8,27 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, FileText, Loader2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
-import MarkdownEditorLazy from "@/components/skills/markdown-editor-lazy";
-import MentionPopover from "@/components/skills/mention-popover";
+import MarkdownEditorLazy from "@/features/skills/components/markdown-editor-lazy";
+import MentionPopover from "@/features/skills/components/mention-popover";
 import {
   editorMarkdownToStorageMarkdown,
   storageMarkdownToEditorMarkdown,
-} from "@/components/skills/mention-markdown";
+} from "@/features/skills/components/mention-markdown";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
-import { useClampedDescription } from "@/hooks/use-clamped-description";
-import { useMentionAutocomplete, type MentionItem } from "@/hooks/use-mention-autocomplete";
-import { ResourceHoverLink } from "@/components/skills/resource-link";
-import { authClient } from "@/lib/auth-client";
+import { SkillPanel } from "@/features/skills/components/skill-panel";
+import { useClampedDescription } from "@/features/skills/hooks/use-clamped-description";
+import {
+  useMentionAutocomplete,
+  type MentionItem,
+} from "@/features/skills/hooks/use-mention-autocomplete";
+import { invalidateSkillEditQueries } from "@/features/skills/lib/invalidate-skill-queries";
+import {
+  buildSkillHref,
+  dashboardRoute,
+  resolveEditorNavigationHref,
+} from "@/features/skills/lib/routes";
+import { ResourceHoverLink } from "@/features/skills/components/resource-link";
+import { authClient } from "@/shared/auth/auth-client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,62 +38,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { queryClient, trpc } from "@/utils/trpc";
+} from "@/shared/ui/alert-dialog";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { formatDisplayDate } from "@/shared/lib/format-display-date";
+import { trpc } from "@/shared/api/trpc";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-function formatDate(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
 function replaceLastOccurrence(input: string, search: string, replacement: string) {
   const index = input.lastIndexOf(search);
   if (index === -1) return input;
   return `${input.slice(0, index)}${replacement}${input.slice(index + search.length)}`;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Panel                                                              */
-/*  Reusable bordered panel matching the skill-detail design           */
-/* ------------------------------------------------------------------ */
-function Panel({
-  icon,
-  title,
-  trailing,
-  children,
-  className,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
-            {title}
-          </h2>
-        </div>
-        {trailing && <div className="flex items-center gap-2">{trailing}</div>}
-      </div>
-      {children}
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -100,14 +69,14 @@ export default function SkillEdit({ id }: { id: string }) {
   const [hasChanges, setHasChanges] = useState(false);
 
   /* ---- Unsaved-changes navigation guard ---- */
-  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [pendingHref, setPendingHref] = useState<Route | null>(null);
 
   const guardedNavigate = useCallback(
-    (href: string) => {
+    (href: Route) => {
       if (hasChanges) {
         setPendingHref(href);
       } else {
-        router.push(href as Route);
+        router.push(href);
       }
     },
     [hasChanges, router],
@@ -117,7 +86,7 @@ export default function SkillEdit({ id }: { id: string }) {
     const href = pendingHref;
     setPendingHref(null);
     if (href) {
-      router.push(href as Route);
+      router.push(href);
     }
   }, [pendingHref, router]);
 
@@ -163,26 +132,15 @@ export default function SkillEdit({ id }: { id: string }) {
 
   const saveMutation = useMutation(
     trpc.skills.update.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async () => {
         const currentMarkdown = editorRef.current?.getMarkdown();
         if (currentMarkdown != null) {
           initialMarkdownRef.current = currentMarkdown;
         }
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.getById.queryKey({ id }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.listByOwner.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.graph.queryKey(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.skills.graphForSkill.queryKey(),
-        });
+        await invalidateSkillEditQueries(id);
         setHasChanges(false);
         toast.success("Skill saved successfully");
-        router.push(`/dashboard/skills/${id}` as Route);
+        router.push(buildSkillHref(id));
       },
       onError: (error) => {
         toast.error(`Failed to save: ${error.message}`);
@@ -297,7 +255,7 @@ export default function SkillEdit({ id }: { id: string }) {
           <p className="text-sm text-muted-foreground">
             The requested skill is not accessible or does not exist.
           </p>
-          <Link href={"/dashboard" as Route}>
+          <Link href={dashboardRoute}>
             <Button variant="outline" size="sm">
               Back to Skills
             </Button>
@@ -319,7 +277,7 @@ export default function SkillEdit({ id }: { id: string }) {
             Editing is only available for your private skills. Import this skill into your vault
             first.
           </p>
-          <Link href={`/dashboard/skills/${data.id}` as Route}>
+          <Link href={buildSkillHref(data.id)}>
             <Button variant="outline" size="sm">
               Back to Skill
             </Button>
@@ -350,7 +308,7 @@ export default function SkillEdit({ id }: { id: string }) {
             <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <button
                 type="button"
-                onClick={() => guardedNavigate("/dashboard")}
+                onClick={() => guardedNavigate(dashboardRoute)}
                 className="transition-colors duration-150 hover:text-foreground"
               >
                 skills
@@ -358,7 +316,7 @@ export default function SkillEdit({ id }: { id: string }) {
               <span className="text-border">/</span>
               <button
                 type="button"
-                onClick={() => guardedNavigate(`/dashboard/skills/${data.id}`)}
+                onClick={() => guardedNavigate(buildSkillHref(data.id))}
                 className="transition-colors duration-150 text-foreground"
               >
                 {data.slug}
@@ -369,7 +327,7 @@ export default function SkillEdit({ id }: { id: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => guardedNavigate(`/dashboard/skills/${data.id}`)}
+                onClick={() => guardedNavigate(buildSkillHref(data.id))}
               >
                 <ArrowLeft className="size-3.5" aria-hidden="true" />
                 {hasChanges ? "Discard changes" : "Exit"}
@@ -438,7 +396,7 @@ export default function SkillEdit({ id }: { id: string }) {
               {data.resources.length !== 1 ? "s" : ""}
             </span>
             <span className="text-border">|</span>
-            <span>Updated {formatDate(data.updatedAt)}</span>
+            <span>Updated {formatDisplayDate(data.updatedAt)}</span>
             {hasChanges && (
               <>
                 <span className="text-border">|</span>
@@ -456,7 +414,7 @@ export default function SkillEdit({ id }: { id: string }) {
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           {/* ---- Main column: editor ---- */}
           <div className="min-w-0 space-y-6">
-            <Panel
+            <SkillPanel
               icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="SKILL.md"
               trailing={
@@ -479,9 +437,13 @@ export default function SkillEdit({ id }: { id: string }) {
                   if (!anchor) return;
                   const href = anchor.getAttribute("href");
                   if (href && href.startsWith("/")) {
+                    const routeHref = resolveEditorNavigationHref(id, href);
+                    if (!routeHref) {
+                      return;
+                    }
                     e.preventDefault();
                     e.stopPropagation();
-                    guardedNavigate(href);
+                    guardedNavigate(routeHref);
                   }
                 }}
               >
@@ -502,14 +464,14 @@ export default function SkillEdit({ id }: { id: string }) {
                   onHover={(index) => mention.setSelectedIndex(index)}
                 />
               </div>
-            </Panel>
+            </SkillPanel>
           </div>
 
           {/* ---- Sidebar ---- */}
           <aside className="hidden min-w-0 lg:block lg:h-full">
             <div className="flex h-full flex-col gap-6">
               {/* Resources panel */}
-              <Panel
+              <SkillPanel
                 icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Resources"
                 trailing={
@@ -556,7 +518,7 @@ export default function SkillEdit({ id }: { id: string }) {
                     </div>
                   )}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
           </aside>
         </div>

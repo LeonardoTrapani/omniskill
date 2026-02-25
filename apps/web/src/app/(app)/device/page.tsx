@@ -1,14 +1,14 @@
 "use client";
 
-import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
-import Loader from "@/components/loader";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { buildDeviceAuthorizationHref, buildLoginHref } from "@/features/skills/lib/routes";
+import { authClient } from "@/shared/auth/auth-client";
+import Loader from "@/shared/components/loader";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
 
 function normalizeUserCode(input: string | null | undefined) {
   return (input ?? "").trim().replaceAll("-", "").toUpperCase();
@@ -106,9 +106,7 @@ function DeviceAuthorizationContent() {
   }
 
   const codeForRedirect = verifiedCode ?? queryCode;
-  const loginHref = `/login?next=${encodeURIComponent(
-    codeForRedirect ? `/device?user_code=${codeForRedirect}` : "/device",
-  )}`;
+  const loginHref = buildLoginHref(buildDeviceAuthorizationHref(codeForRedirect));
 
   return (
     <div className="mx-auto mt-10 w-full max-w-md px-4">
@@ -127,7 +125,7 @@ function DeviceAuthorizationContent() {
                 if (!normalizedCode) {
                   return;
                 }
-                router.replace(`/device?user_code=${normalizedCode}` as Route);
+                router.replace(buildDeviceAuthorizationHref(normalizedCode));
               }}
             >
               <Input
@@ -152,7 +150,7 @@ function DeviceAuthorizationContent() {
               <Button
                 className="w-full"
                 onClick={() => {
-                  router.push(loginHref as Route);
+                  router.push(loginHref);
                 }}
               >
                 sign in

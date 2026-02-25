@@ -4,9 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { ComponentProps } from "react";
 
-import { authClient } from "@/lib/auth-client";
-import Loader from "@/components/loader";
-import { Button } from "@/components/ui/button";
+import { authClient } from "@/shared/auth/auth-client";
+import Loader from "@/shared/components/loader";
+import { Button } from "@/shared/ui/button";
 
 function GitHubIcon({ className, ...props }: ComponentProps<"svg">) {
   return (

@@ -1,16 +1,13 @@
-import SkillsTable from "@/components/landing/SkillsTable";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/landing/Footer";
-import PageHeroCard from "@/components/page-hero-card";
-import SkillsFlickerBackground from "@/components/skills-flicker-background";
-import { getSkillCount } from "@/lib/get-skill-count";
+import SkillsFlickerBackground from "@/features/landing/components/skills-flicker-background";
+import SkillsTable from "@/features/landing/components/SkillsTable";
+import PageHeroCard from "@/shared/components/page-hero-card";
 
 interface SkillsPageProps {
   searchParams: Promise<{ q?: string }>;
 }
 
 export default async function SkillsPage({ searchParams }: SkillsPageProps) {
-  const [params, skillCount] = await Promise.all([searchParams, getSkillCount()]);
+  const params = await searchParams;
   const initialSearch = params.q ?? "";
 
   return (
@@ -25,12 +22,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
             description="Browse the complete catalog of skills in the BETTER-SKILLS ecosystem. Install skills to your agent graph with one click, or publish your own for the community."
           />
 
-          <SkillsTable
-            showViewAll={false}
-            infiniteScroll
-            initialSearch={initialSearch}
-            className="pt-8 pb-24 px-6 md:px-16"
-          />
+          <SkillsTable showViewAll={false} infiniteScroll initialSearch={initialSearch} />
         </div>
       </div>
     </main>

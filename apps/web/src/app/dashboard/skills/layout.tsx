@@ -1,4 +1,4 @@
-import Footer from "@/components/landing/Footer";
+import Footer from "@/features/landing/components/Footer";
 
 export default async function AppLayout({
   children,

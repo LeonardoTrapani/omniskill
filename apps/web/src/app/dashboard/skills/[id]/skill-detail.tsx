@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
-  ChevronDown,
   FileText,
   Info,
   Loader2,
@@ -21,14 +19,19 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
-import AddSkillModal from "@/app/dashboard/_components/add-skill-modal";
-import { ForceGraph } from "@/components/graph/force-graph";
-import { createMarkdownComponents } from "@/components/skills/markdown-components";
-import { markdownUrlTransform } from "@/components/skills/markdown-url-transform";
+import { AddSkillModal } from "@/features/dashboard";
+import { ForceGraph } from "@/features/skills/components/graph/force-graph";
+import { createMarkdownComponents } from "@/features/skills/components/markdown-components";
+import { markdownUrlTransform } from "@/features/skills/components/markdown-url-transform";
 
-import { useAddSkillFlow } from "@/hooks/use-add-skill-flow";
-import { useClampedDescription } from "@/hooks/use-clamped-description";
-import { ResourceHoverLink } from "@/components/skills/resource-link";
+import { GraphFill } from "@/features/skills/components/graph-fill";
+import { SkillPanel } from "@/features/skills/components/skill-panel";
+import { useAddSkillFlow } from "@/features/skills/hooks/use-add-skill-flow";
+import { useClampedDescription } from "@/features/skills/hooks/use-clamped-description";
+import { invalidateSkillCollectionQueries } from "@/features/skills/lib/invalidate-skill-queries";
+import { createResourceHrefResolver } from "@/features/skills/lib/resource-links";
+import { buildSkillEditHref, dashboardRoute } from "@/features/skills/lib/routes";
+import { ResourceHoverLink } from "@/features/skills/components/resource-link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,25 +41,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { queryClient, trpc } from "@/utils/trpc";
+} from "@/shared/ui/alert-dialog";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { formatDisplayDate } from "@/shared/lib/format-display-date";
+import { trpc } from "@/shared/api/trpc";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-function formatDate(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
 function jsonEntries(value: Record<string, unknown>) {
   return Object.entries(value).slice(0, 12);
 }
@@ -66,77 +61,6 @@ function displayValue(value: unknown) {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return JSON.stringify(value);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Panel                                                              */
-/*  Reusable bordered panel matching dashboard components              */
-/* ------------------------------------------------------------------ */
-function Panel({
-  icon,
-  title,
-  trailing,
-  children,
-  className,
-  collapsible = false,
-  defaultOpen = true,
-  isEmpty = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-  collapsible?: boolean;
-  defaultOpen?: boolean;
-  isEmpty?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  const headerContent = (
-    <>
-      <div className="flex items-center gap-2">
-        {icon}
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
-          {title}
-        </h2>
-        {isEmpty && !open && (
-          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/50">
-            empty
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {trailing}
-        {collapsible && (
-          <ChevronDown
-            className={`size-3.5 text-muted-foreground transition-transform duration-150 ${open ? "" : "-rotate-90"}`}
-            aria-hidden="true"
-          />
-        )}
-      </div>
-    </>
-  );
-
-  return (
-    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
-      {collapsible ? (
-        <button
-          type="button"
-          className="flex w-full items-center justify-between px-5 py-3.5 border-b border-border/70 transition-colors duration-150 hover:bg-secondary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-expanded={open}
-        >
-          {headerContent}
-        </button>
-      ) : (
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/70">
-          {headerContent}
-        </div>
-      )}
-      {(!collapsible || open) && children}
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -158,13 +82,11 @@ export default function SkillDetail({ id }: { id: string }) {
 
   const deleteMutation = useMutation(
     trpc.skills.delete.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: trpc.skills.listByOwner.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.skills.graph.queryKey() });
-        queryClient.invalidateQueries({ queryKey: trpc.skills.graphForSkill.queryKey() });
+      onSuccess: async () => {
+        await invalidateSkillCollectionQueries(id);
         toast.success(`"${data?.name ?? "Skill"}" has been deleted`);
         setDeleteDialogOpen(false);
-        router.push("/dashboard" as Route);
+        router.push(dashboardRoute);
       },
       onError: (error) => {
         toast.error(`Failed to delete skill: ${error.message}`);
@@ -179,39 +101,7 @@ export default function SkillDetail({ id }: { id: string }) {
   const frontmatter = useMemo(() => (data ? jsonEntries(data.frontmatter) : []), [data]);
   const metadata = useMemo(() => (data ? jsonEntries(data.metadata) : []), [data]);
   const resources = data?.resources ?? [];
-
-  const resourcesById = useMemo(
-    () => new Map(resources.map((resource) => [resource.id, resource])),
-    [resources],
-  );
-
-  const resourcesByPath = useMemo(
-    () => new Map(resources.map((resource) => [resource.path, resource])),
-    [resources],
-  );
-
-  const findResourceByHref = (href: string) => {
-    let decodedHref = href;
-    try {
-      decodedHref = decodeURIComponent(href);
-    } catch {}
-
-    if (decodedHref.startsWith("resource://")) {
-      const byId = resourcesById.get(decodedHref.replace("resource://", ""));
-      if (byId) return byId;
-    }
-
-    if (resourcesByPath.has(decodedHref)) {
-      return resourcesByPath.get(decodedHref)!;
-    }
-
-    const match = resources.find(
-      (resource) =>
-        decodedHref.endsWith(resource.path) || decodedHref.endsWith(`/${resource.path}`),
-    );
-
-    return match ?? null;
-  };
+  const findResourceByHref = useMemo(() => createResourceHrefResolver(resources), [resources]);
 
   const skillId = data?.id ?? id;
   const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
@@ -225,7 +115,7 @@ export default function SkillDetail({ id }: { id: string }) {
         skillName: data?.name,
         findResourceByHref,
       }),
-    [data?.name, skillId, resourcesById, resourcesByPath],
+    [data?.name, skillId, findResourceByHref],
   );
 
   /* ---- Loading ---- */
@@ -262,7 +152,7 @@ export default function SkillDetail({ id }: { id: string }) {
           <p className="text-sm text-muted-foreground">
             The requested skill is not accessible or does not exist.
           </p>
-          <Link href={"/dashboard" as Route}>
+          <Link href={dashboardRoute}>
             <Button variant="outline" size="sm">
               Back to Skills
             </Button>
@@ -289,7 +179,7 @@ export default function SkillDetail({ id }: { id: string }) {
           <div className="flex items-center justify-between gap-4">
             <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
               <Link
-                href={"/dashboard" as Route}
+                href={dashboardRoute}
                 className="transition-colors duration-150 hover:text-foreground"
               >
                 skills
@@ -311,7 +201,7 @@ export default function SkillDetail({ id }: { id: string }) {
               )}
               {canManageSkill && (
                 <>
-                  <Link href={`/dashboard/skills/${data.id}/edit` as Route}>
+                  <Link href={buildSkillEditHref(data.id)}>
                     <Button variant="outline" size="sm" aria-label="Edit skill">
                       <Pencil className="size-3.5" aria-hidden="true" />
                       Edit
@@ -379,7 +269,7 @@ export default function SkillDetail({ id }: { id: string }) {
               {data.resources.length} resource{data.resources.length !== 1 ? "s" : ""}
             </span>
             <span className="text-border">|</span>
-            <span>Updated {formatDate(data.updatedAt)}</span>
+            <span>Updated {formatDisplayDate(data.updatedAt)}</span>
             {data.sourceIdentifier && (
               <>
                 <span className="text-border">|</span>
@@ -413,7 +303,7 @@ export default function SkillDetail({ id }: { id: string }) {
           <div className="min-w-0 space-y-6">
             {/* Mobile graph toggle */}
             <div className="lg:hidden">
-              <Panel
+              <SkillPanel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Skill Graph"
                 collapsible
@@ -437,11 +327,11 @@ export default function SkillDetail({ id }: { id: string }) {
                     <ForceGraph data={graphQuery.data} focusNodeId={id} height={360} />
                   )}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
 
             {/* SKILL.md panel */}
-            <Panel
+            <SkillPanel
               icon={<FileText className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="SKILL.md"
             >
@@ -456,10 +346,10 @@ export default function SkillDetail({ id }: { id: string }) {
                   </ReactMarkdown>
                 </article>
               </div>
-            </Panel>
+            </SkillPanel>
 
             {/* Frontmatter + metadata panel */}
-            <Panel
+            <SkillPanel
               icon={<Info className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="Skill Data"
               trailing={
@@ -497,10 +387,10 @@ export default function SkillDetail({ id }: { id: string }) {
                   </div>
                 )}
               </div>
-            </Panel>
+            </SkillPanel>
 
             {/* Resources panel */}
-            <Panel
+            <SkillPanel
               icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
               title="Resources"
               trailing={
@@ -540,7 +430,7 @@ export default function SkillDetail({ id }: { id: string }) {
                   </div>
                 )}
               </div>
-            </Panel>
+            </SkillPanel>
           </div>
 
           {/* ---- Sidebar ---- */}
@@ -549,7 +439,7 @@ export default function SkillDetail({ id }: { id: string }) {
               {/* Skill details panel */}
 
               {/* Graph panel -- fills remaining space */}
-              <Panel
+              <SkillPanel
                 icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
                 title="Skill Graph"
                 className="sticky top-[68px] flex h-[calc(100dvh-92px)] min-h-0 flex-col"
@@ -570,7 +460,7 @@ export default function SkillDetail({ id }: { id: string }) {
                   )}
                   {graphQuery.data && <GraphFill data={graphQuery.data} focusNodeId={id} />}
                 </div>
-              </Panel>
+              </SkillPanel>
             </div>
           </aside>
         </div>
@@ -606,38 +496,5 @@ export default function SkillDetail({ id }: { id: string }) {
         initialSkill={selectedSkill}
       />
     </main>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  GraphFill                                                          */
-/*  Renders ForceGraph filling its parent container via ResizeObserver  */
-/* ------------------------------------------------------------------ */
-function GraphFill({
-  data,
-  focusNodeId,
-}: {
-  data: import("@/components/graph/force-graph").GraphData;
-  focusNodeId?: string;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(400);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const update = () => setHeight(Math.max(el.clientHeight, 200));
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div ref={containerRef} className="absolute inset-0">
-      <ForceGraph data={data} focusNodeId={focusNodeId} height={height} />
-    </div>
   );
 }
