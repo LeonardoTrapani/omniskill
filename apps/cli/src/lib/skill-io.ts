@@ -36,6 +36,8 @@ export type LocalSkillDraft = {
   newResourcePaths: string[];
   /** markdown with [[resource:new:...]] mentions stripped (safe to send on first mutation) */
   markdownForMutation: string;
+  /** resources with [[resource:new:...]] mentions stripped in .md content */
+  resourcesForMutation: ResourceInput[];
 };
 
 export type UpdateResourcePayload = {
@@ -117,7 +119,15 @@ export async function loadLocalSkillDraft(from: string): Promise<LocalSkillDraft
 
   const resources = await scanResources(from);
   const markdown = markdownBody.trim();
-  const newResourcePaths = collectNewResourceMentionPaths(markdown);
+
+  // collect :new: mentions from SKILL.md and all .md resource files
+  const mentionSet = new Set<string>();
+  for (const p of collectNewResourceMentionPaths(markdown)) mentionSet.add(p);
+  for (const r of resources) {
+    if (!r.path.endsWith(".md")) continue;
+    for (const p of collectNewResourceMentionPaths(r.content)) mentionSet.add(p);
+  }
+  const newResourcePaths = [...mentionSet];
 
   if (newResourcePaths.length > 0) {
     const localPaths = new Set(resources.map((r) => normalizeResourcePath(r.path)));
@@ -133,8 +143,19 @@ export async function loadLocalSkillDraft(from: string): Promise<LocalSkillDraft
     }
   }
 
-  const markdownForMutation =
-    newResourcePaths.length > 0 ? stripNewResourceMentionsForCreate(markdown) : markdown;
+  const hasNewMentions = newResourcePaths.length > 0;
+
+  const markdownForMutation = hasNewMentions
+    ? stripNewResourceMentionsForCreate(markdown)
+    : markdown;
+
+  const resourcesForMutation = hasNewMentions
+    ? resources.map((r) => {
+        if (!r.path.endsWith(".md")) return r;
+        if (collectNewResourceMentionPaths(r.content).length === 0) return r;
+        return { ...r, content: stripNewResourceMentionsForCreate(r.content) };
+      })
+    : resources;
 
   return {
     name,
@@ -144,12 +165,14 @@ export async function loadLocalSkillDraft(from: string): Promise<LocalSkillDraft
     resources,
     newResourcePaths,
     markdownForMutation,
+    resourcesForMutation,
   };
 }
 
 /**
  * After the first create/update call, resolve [[resource:new:...]] mentions
- * to real UUIDs with a second update if needed.
+ * to real UUIDs with a second update if needed. Resolves both SKILL.md and
+ * resource file content.
  */
 export async function resolveNewResourceMentions(
   skillId: string,
@@ -162,22 +185,49 @@ export async function resolveNewResourceMentions(
     serverResources.map((r) => [normalizeResourcePath(r.path), r.id]),
   );
 
-  const resolved = resolveNewResourceMentionsToUuids(draft.markdown, resourceIdByPath);
+  const allMissing = new Set<string>();
 
-  if (resolved.missingPaths.length > 0) {
+  // resolve SKILL.md
+  const resolvedSkillMd = resolveNewResourceMentionsToUuids(draft.markdown, resourceIdByPath);
+  for (const p of resolvedSkillMd.missingPaths) allMissing.add(p);
+
+  // resolve .md resource files that had :new: mentions
+  const resolvedResources: UpdateResourcePayload[] = [];
+  for (const resource of draft.resources) {
+    if (!resource.path.endsWith(".md")) continue;
+    if (collectNewResourceMentionPaths(resource.content).length === 0) continue;
+
+    const serverId = resourceIdByPath.get(normalizeResourcePath(resource.path));
+    if (!serverId) continue;
+
+    const resolved = resolveNewResourceMentionsToUuids(resource.content, resourceIdByPath);
+    for (const p of resolved.missingPaths) allMissing.add(p);
+
+    resolvedResources.push({
+      id: serverId,
+      path: resource.path,
+      kind: resource.kind,
+      content: resolved.markdown,
+      metadata: resource.metadata,
+    });
+  }
+
+  if (allMissing.size > 0) {
     throw new Error(
       [
         "failed to resolve new resource mention path(s):",
-        ...resolved.missingPaths.map((p) => `  - ${p}`),
+        ...[...allMissing].map((p) => `  - ${p}`),
       ].join("\n"),
     );
   }
 
-  if (resolved.markdown === draft.markdownForMutation) return null;
+  const skillMdChanged = resolvedSkillMd.markdown !== draft.markdownForMutation;
+  if (!skillMdChanged && resolvedResources.length === 0) return null;
 
   return await trpc.skills.update.mutate({
     id: skillId,
-    skillMarkdown: resolved.markdown,
+    ...(skillMdChanged ? { skillMarkdown: resolvedSkillMd.markdown } : {}),
+    ...(resolvedResources.length > 0 ? { resources: resolvedResources } : {}),
   });
 }
 

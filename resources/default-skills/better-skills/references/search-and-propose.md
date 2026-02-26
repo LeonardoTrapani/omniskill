@@ -1,11 +1,10 @@
-# Flow: Search and Propose
+# Search and Propose
 
 Use this for discovery, recommendations, and linking suggestions.
 
 ## Read first
 
-- [[resource:new:references/commands/other-commands.md]]
-- [[resource:new:references/guidelines/mention-linking.md]]
+- [[resource:new:references/commands.md]]
 
 ## Search steps
 
@@ -24,8 +23,8 @@ better-skills get <slug-or-uuid>
 ## Proposal format
 
 1. Candidate skill(s) and why they match.
-2. Suggested action:
-   - link from existing private skill.
+2. Suggested action: link from existing skill, or import.
 3. Exact command(s) to run once approved.
 
-For linking, update target markdown with valid UUID mentions using create/edit flows.
+For linking, update target markdown with valid UUID mentions using the
+create/edit flows.

@@ -69,7 +69,10 @@ export async function updateCommand() {
     process.exit(1);
   }
 
-  const resourcesPayload = buildUpdateResourcesPayload(targetSkill.resources, draft.resources);
+  const resourcesPayload = buildUpdateResourcesPayload(
+    targetSkill.resources,
+    draft.resourcesForMutation,
+  );
 
   s.start("updating skill");
 

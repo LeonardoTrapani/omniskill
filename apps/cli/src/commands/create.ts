@@ -59,7 +59,7 @@ export async function createCommand() {
       description: draft.description,
       skillMarkdown: draft.markdownForMutation,
       frontmatter: draft.frontmatter,
-      resources: draft.resources,
+      resources: draft.resourcesForMutation,
     });
 
     if (draft.newResourcePaths.length > 0) {

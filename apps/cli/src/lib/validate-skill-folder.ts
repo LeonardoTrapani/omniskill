@@ -72,6 +72,39 @@ async function collectLocalResources(folder: string): Promise<Set<string>> {
   return resources;
 }
 
+/**
+ * Scan all .md resource files for [[resource:new:...]] mentions and return
+ * the deduplicated set of mentioned paths (combined with SKILL.md mentions).
+ */
+async function collectAllMentionPaths(
+  folder: string,
+  skillMdBody: string,
+  localResources: Set<string>,
+): Promise<string[]> {
+  const seen = new Set<string>();
+  const paths: string[] = [];
+
+  const addPaths = (newPaths: string[]) => {
+    for (const p of newPaths) {
+      if (!seen.has(p)) {
+        seen.add(p);
+        paths.push(p);
+      }
+    }
+  };
+
+  addPaths(collectNewResourceMentionPaths(skillMdBody));
+
+  for (const resourcePath of localResources) {
+    if (!resourcePath.endsWith(".md")) continue;
+    const content = await readFile(join(folder, resourcePath), "utf8").catch(() => null);
+    if (!content) continue;
+    addPaths(collectNewResourceMentionPaths(content));
+  }
+
+  return paths;
+}
+
 export async function validateSkillFolder(folder: string): Promise<SkillFolderValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -115,7 +148,8 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
   }
 
   const localResources = await collectLocalResources(folder);
-  const mentionPaths = collectNewResourceMentionPaths(body);
+  const mentionPaths = await collectAllMentionPaths(folder, body, localResources);
+  const mentionPathSet = new Set(mentionPaths);
   const missing = mentionPaths.filter((path) => !localResources.has(path));
 
   if (missing.length > 0) {
@@ -125,6 +159,17 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
 
   if (localResources.size === 0) {
     warnings.push("no local resources found under references/, scripts/, or assets/");
+  }
+
+  const unreferenced = [...localResources].filter((path) => !mentionPathSet.has(path));
+
+  if (unreferenced.length > 0) {
+    warnings.push(
+      [
+        `${unreferenced.length} resource file(s) not referenced by any [[resource:new:...]] mention:`,
+        ...unreferenced.map((path) => `  - ${path}`),
+      ].join("\n"),
+    );
   }
 
   return {

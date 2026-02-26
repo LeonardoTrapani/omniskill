@@ -3,23 +3,26 @@ name: better-skills
 description: |
   Index and route better-skills vault operations from the CLI.
   Trigger when users ask to manage better-skills or a skill vault
-  (create, edit, delete, remove, search, clone, link, sync, backup).
+  (create, edit, delete, remove, search, import, clone, link, sync, backup).
   Do not use when asked to use a skill.
 ---
 
 # better-skills
 
-## Skill index
+## Flows
 
-- To create a skill -> [[resource:new:references/flows/create-skill.md]]
-- To edit a skill -> [[resource:new:references/flows/edit-skill.md]]
-- To back up local skills to tmp and route vault upload -> [[resource:new:references/flows/upload-local-skills-to-vault.md]]
-- To search and propose links -> [[resource:new:references/flows/search-and-propose.md]]
-- To run other CLI operations -> [[resource:new:references/commands/other-commands.md]]
-- General guidelines for writing skills -> [[resource:new:references/guidelines/authoring.md]]
-- Mention and linking rules -> [[resource:new:references/guidelines/mention-linking.md]]
+- Create a skill → [[resource:new:references/create-skill.md]]
+- Edit a skill → [[resource:new:references/edit-skill.md]]
+- Onboard unmanaged local skills → [[resource:new:references/onboard-skills.md]]
+- Search and propose links → [[resource:new:references/search-and-propose.md]]
+- CLI command reference → [[resource:new:references/commands.md]]
+- Authoring guidelines → [[resource:new:references/authoring.md]]
 
-## Always do
+## Rules
 
-1. Always follow mention and linking rules.
-2. Always follow the skill writing guidelines.
+1. Every resource file must have a `[[resource:new:<path>]]` mention — either
+   in SKILL.md or in another resource. Run `better-skills validate` and fix
+   all warnings before create/update.
+2. Never use bare markdown links for internal resource references.
+3. Always read [[resource:new:references/authoring.md]] before creating or
+   editing a skill.
