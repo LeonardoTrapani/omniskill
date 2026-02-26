@@ -105,8 +105,7 @@ export default function ResourceDetail({
 
           <ResourceContentPanel
             canRenderMarkdown={canRenderMarkdown}
-            content={resource.renderedContent}
-            downloadContent={resource.content}
+            content={resource.content}
             markdownComponents={markdownComponents}
             downloadName={resourceDownloadName}
             mimeType={resourceMimeType}
@@ -123,6 +122,7 @@ export default function ResourceDetail({
             collapsible
             defaultOpen={resources.length > 0}
             isEmpty={resources.length === 0}
+            className="border"
           >
             <ResourceList
               resources={resources}

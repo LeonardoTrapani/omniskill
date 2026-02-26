@@ -138,7 +138,7 @@ export default function UserMenu({ onOpenCommandPalette, onSearchVault }: UserMe
 
         {/* ── Navigation section ── */}
         <DropdownMenuGroup className="p-1">
-          <DropdownMenuLabel className="uppercase font-mono text-[10px] text-neutral-300">
+          <DropdownMenuLabel className="uppercase font-mono text-[10px] text-muted-foreground/50">
             Navigation
           </DropdownMenuLabel>
           <DropdownMenuItem onClick={() => onSearchVault?.()}>
@@ -161,7 +161,7 @@ export default function UserMenu({ onOpenCommandPalette, onSearchVault }: UserMe
 
         {/* ── Preferences section ── */}
         <DropdownMenuGroup className="p-1">
-          <DropdownMenuLabel className="uppercase font-mono text-[10px] text-neutral-300">
+          <DropdownMenuLabel className="uppercase font-mono text-[10px] text-muted-foreground/50">
             Preferences
           </DropdownMenuLabel>
           <DropdownMenuItem onClick={toggleTheme}>

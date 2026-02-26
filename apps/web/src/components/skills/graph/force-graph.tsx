@@ -7,9 +7,9 @@ import * as d3 from "d3";
 
 import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { NodePreviewCard } from "@/components/skills/graph/node-preview-card";
-import { buildSkillHref, buildResourceResponsiveHref } from "@/lib/skills/routes";
+import { buildResourceHref } from "@/lib/skills/resource-links";
+import { buildSkillHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
-import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 
 export interface GraphNode extends d3.SimulationNodeDatum {
   id: string;
@@ -75,7 +75,6 @@ export function ForceGraph({
   onNodeClick,
 }: ForceGraphProps) {
   const router = useRouter();
-  const isDesktopLg = useIsDesktopLg();
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
@@ -193,11 +192,11 @@ export function ForceGraph({
       const circles = node
         .append("circle")
         .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)))
-        .attr("fill", (d) => {
-          if (d.type === "skill") return "var(--primary)";
-          return isFocus(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+        .attr("fill", (d) => (d.type === "skill" ? "var(--primary)" : "var(--muted-foreground)"))
+        .attr("fill-opacity", (d) => {
+          if (d.type === "skill") return 1;
+          return isFocus(d) ? 1 : 0.5;
         })
-        .attr("fill-opacity", (d) => (d.type === "skill" ? 1 : 1))
         .attr("stroke", (d) => {
           return d.type === "skill" ? "var(--primary)" : "none";
         })
@@ -232,14 +231,14 @@ export function ForceGraph({
           .duration(TRANSITION_MS)
           .style("opacity", (d) => (isActive(d) ? 1 : 0.12));
 
-        // Connected resources transition to muted-foreground color; skills stay primary always
+        // Connected resources go to full muted-foreground; skills stay primary always
         circles
           .transition()
           .duration(TRANSITION_MS)
-          .attr("fill", (d) => {
-            if (d.type === "skill") return "var(--primary)"; // skills always primary
-            if (isFocus(d)) return "var(--muted-foreground)";
-            return isActive(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+          .attr("fill-opacity", (d) => {
+            if (d.type === "skill") return 1; // skills always full
+            if (isFocus(d)) return 1;
+            return isActive(d) ? 1 : 0.35;
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
@@ -261,13 +260,13 @@ export function ForceGraph({
       const resetHighlight = () => {
         node.transition().duration(TRANSITION_MS).style("opacity", 1);
 
-        // Reset resource circles to default color and size; skills unchanged
+        // Reset resource circles to default size and opacity; skills unchanged
         circles
           .transition()
           .duration(TRANSITION_MS)
-          .attr("fill", (d) => {
-            if (d.type === "skill") return "var(--primary)";
-            return isFocus(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+          .attr("fill-opacity", (d) => {
+            if (d.type === "skill") return 1;
+            return isFocus(d) ? 1 : 0.35;
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
@@ -298,8 +297,7 @@ export function ForceGraph({
           if (d.type === "skill") {
             router.push(buildSkillHref(d.id));
           } else if (d.parentSkillId) {
-            const href = buildResourceResponsiveHref(d.parentSkillId, d.label, isDesktopLg);
-            router.push(href);
+            router.push(buildResourceHref(d.parentSkillId, d.label));
           }
         });
 
@@ -355,7 +353,7 @@ export function ForceGraph({
 
       simulationRef.current = simulation;
     },
-    [data, height, focusNodeId, router, centerXBias, mobileInitialScale, onNodeClick, isDesktopLg],
+    [data, height, focusNodeId, router, centerXBias, mobileInitialScale, onNodeClick],
   );
 
   useEffect(() => {

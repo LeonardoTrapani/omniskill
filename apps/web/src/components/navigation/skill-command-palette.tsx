@@ -16,6 +16,7 @@ import {
   BookOpen,
   CornerDownLeft,
   FileText,
+  Globe,
   Hexagon,
   Loader2,
   LogOut,
@@ -28,12 +29,10 @@ import {
 import { useTheme } from "next-themes";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { useDebouncedValue } from "@/hooks/skills/use-skill-search";
+import { useSkillSearch, useDebouncedValue } from "@/hooks/skills/use-skill-search";
 import { authClient } from "@/lib/auth/auth-client";
 import { trpc } from "@/lib/api/trpc";
-import { buildResourceResponsiveHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
-import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +43,7 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type PaletteMode = "command" | "vault";
+type PaletteMode = "command" | "vault" | "marketplace";
 
 interface CommandItem {
   id: string;
@@ -71,13 +70,14 @@ interface FlatItem {
 const MODE_META: Record<PaletteMode, { label: string; placeholder: string }> = {
   command: { label: "Commands", placeholder: "Type a command..." },
   vault: { label: "My vault", placeholder: "Search skills & resources..." },
+  marketplace: { label: "Explore", placeholder: "Search public skills..." },
 };
 
 function ModeBadge({ mode }: { mode: PaletteMode }) {
   if (mode === "command") return null;
   return (
     <span className="inline-flex items-center gap-1 shrink-0 border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground font-mono">
-      <Hexagon className="size-2.5" />
+      {mode === "vault" ? <Hexagon className="size-2.5" /> : <Globe className="size-2.5" />}
       {MODE_META[mode].label}
     </span>
   );
@@ -87,7 +87,7 @@ function ModeBadge({ mode }: { mode: PaletteMode }) {
 
 function PaletteFooter({ mode }: { mode: PaletteMode }) {
   return (
-    <div className="lg:flex hidden items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
+    <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
       <div className="flex items-center gap-3">
         <span className="inline-flex items-center gap-1">
           <kbd className="inline-flex items-center justify-center size-4 border border-border bg-muted rounded-sm">
@@ -155,7 +155,7 @@ function PaletteRow({
         isSelected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
       )}
     >
-      <span className="flex-shrink-0 text-neutral-300">{item.icon}</span>
+      <span className="flex-shrink-0 text-muted-foreground/50">{item.icon}</span>
       <span className="flex-1 min-w-0 truncate">{item.label}</span>
       {item.subtitle && (
         <span className="flex-shrink-0 text-[11px] text-muted-foreground truncate max-w-[40%]">
@@ -191,7 +191,6 @@ export function SkillCommandPalette({
   initialMode?: PaletteMode;
 }) {
   const router = useRouter();
-  const isDesktopLg = useIsDesktopLg();
   const { resolvedTheme, setTheme } = useTheme();
   const [mode, setMode] = useState<PaletteMode>(initialMode ?? "command");
   const [search, setSearch] = useState(initialSearch ?? "");
@@ -199,22 +198,6 @@ export function SkillCommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const listRef = useRef<HTMLDivElement>(null);
-
-  const navigateTo = useCallback(
-    (href: Route | string) => {
-      const target = String(href);
-      const current = `${window.location.pathname}${window.location.search}`;
-
-      if (current === target) {
-        // Force a real navigation when selecting the current URL
-        window.location.assign(target);
-        return;
-      }
-
-      router.push(target as Route);
-    },
-    [router],
-  );
 
   // ── Close helper ────────────────────────────────────────────────────────────
 
@@ -251,7 +234,7 @@ export function SkillCommandPalette({
 
   const cycleMode = useCallback(() => {
     setMode((m) => {
-      const order: PaletteMode[] = ["command", "vault"];
+      const order: PaletteMode[] = ["command", "vault", "marketplace"];
       return order[(order.indexOf(m) + 1) % order.length];
     });
     setSearch("");
@@ -286,6 +269,18 @@ export function SkillCommandPalette({
         },
       },
       {
+        id: "search-marketplace",
+        label: "Search marketplace",
+        description: "Explore public skills",
+        icon: <Globe className="size-4" />,
+        keywords: ["search", "explore", "marketplace", "public", "browse"],
+        action: () => {
+          setMode("marketplace");
+          setSearch("");
+          setSelectedIndex(0);
+        },
+      },
+      {
         id: "create-skill",
         label: "Create new skill",
         description: "Start from scratch",
@@ -299,7 +294,7 @@ export function SkillCommandPalette({
         description: "Account & preferences",
         icon: <Settings className="size-4" />,
         keywords: ["settings", "account", "preferences", "profile"],
-        action: () => runAndClose(() => navigateTo("/settings")),
+        action: () => runAndClose(() => window.location.assign("/settings")),
       },
       {
         id: "switch-theme",
@@ -326,7 +321,7 @@ export function SkillCommandPalette({
           ),
       },
     ],
-    [isDark, setTheme, close, runAndClose, router, navigateTo],
+    [isDark, setTheme, close, runAndClose, router],
   );
 
   // ── Vault search (skills + resources via searchMentions) ───────────────────
@@ -350,6 +345,26 @@ export function SkillCommandPalette({
     enabled: open && mode === "vault" && vaultDebouncedQuery.length === 0,
   });
   const vaultEmptySkills = vaultEmptyQuery.data?.items ?? [];
+
+  // ── Marketplace search (public skills) ─────────────────────────────────────
+
+  const {
+    items: marketplaceItems,
+    isLoading: marketplaceLoading,
+    isFetching: marketplaceFetching,
+    hasQuery: marketplaceHasQuery,
+    canLoadMore: marketplaceCanLoadMore,
+    loadMore: marketplaceLoadMore,
+  } = useSkillSearch({
+    query: search,
+    enabled: open && mode === "marketplace",
+    scope: "all",
+    visibility: "public",
+    initialLimit: 8,
+    limitStep: 5,
+    maxLimit: 50,
+    debounceMs: 250,
+  });
 
   // ── Build flat item list based on mode ─────────────────────────────────────
 
@@ -398,7 +413,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
           });
         }
       }
@@ -431,7 +446,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
             sectionLabel: items.length === 0 ? "Your skills" : undefined,
           });
         }
@@ -449,7 +464,7 @@ export function SkillCommandPalette({
           label: skill.label,
           subtitle: skill.subtitle ?? "",
           icon: <BookOpen className="size-4" />,
-          action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
+          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
           sectionLabel: items.length === 0 ? "Skills" : undefined,
         });
       }
@@ -462,16 +477,34 @@ export function SkillCommandPalette({
           subtitle: res.subtitle ?? "",
           icon: <FileText className="size-4" />,
           action: () =>
-            runAndClose(() => {
-              if (!res.parentSkillId) return;
-
-              const href = buildResourceResponsiveHref(res.parentSkillId, res.label, isDesktopLg);
-              navigateTo(href);
-            }),
+            runAndClose(() =>
+              router.push(`/vault/skills/${res.parentSkillId}/resources/${res.label}` as Route),
+            ),
           sectionLabel:
             items.length === skills.length && resources.indexOf(res) === 0
               ? "Resources"
               : undefined,
+        });
+      }
+
+      return items;
+    }
+
+    if (mode === "marketplace") {
+      const items: FlatItem[] = [];
+
+      for (const skill of marketplaceItems) {
+        items.push({
+          kind: "skill",
+          id: skill.id,
+          label: skill.name,
+          subtitle:
+            skill.matchType === "content" && skill.snippet
+              ? skill.snippet
+              : (skill.description ?? ""),
+          icon: <BookOpen className="size-4" />,
+          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+          sectionLabel: items.length === 0 ? "Public skills" : undefined,
         });
       }
 
@@ -487,10 +520,9 @@ export function SkillCommandPalette({
     vaultDebouncedQuery,
     vaultItems,
     vaultEmptySkills,
+    marketplaceItems,
     runAndClose,
     router,
-    navigateTo,
-    isDesktopLg,
   ]);
 
   // ── Reset selection when items change ──────────────────────────────────────
@@ -507,12 +539,18 @@ export function SkillCommandPalette({
 
   // ── Loading states ─────────────────────────────────────────────────────────
 
-  const isLoading = mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading;
+  const isLoading =
+    (mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading) ||
+    (mode === "marketplace" && marketplaceHasQuery && marketplaceLoading);
 
   const showEmpty =
     (mode === "vault" &&
       vaultDebouncedQuery.length > 0 &&
       !vaultQuery.isLoading &&
+      flatItems.length === 0) ||
+    (mode === "marketplace" &&
+      marketplaceHasQuery &&
+      !marketplaceLoading &&
       flatItems.length === 0) ||
     (mode === "command" && search.trim().length > 0 && flatItems.length === 0);
 
@@ -539,18 +577,24 @@ export function SkillCommandPalette({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((i) => {
-          if (flatItems.length === 0) return 0;
-          return i >= flatItems.length - 1 ? 0 : i + 1;
+          const next = Math.min(i + 1, flatItems.length - 1);
+          // load more in marketplace
+          if (
+            mode === "marketplace" &&
+            next >= flatItems.length - 1 &&
+            marketplaceCanLoadMore &&
+            !marketplaceFetching
+          ) {
+            marketplaceLoadMore();
+          }
+          return next;
         });
         return;
       }
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((i) => {
-          if (flatItems.length === 0) return 0;
-          return i === 0 ? flatItems.length - 1 : i - 1;
-        });
+        setSelectedIndex((i) => Math.max(i - 1, 0));
         return;
       }
 
@@ -563,14 +607,23 @@ export function SkillCommandPalette({
         return;
       }
 
-      // Backspace in vault mode with empty search -> return to command
+      // Backspace in vault/marketplace mode with empty search -> return to command
       if (e.key === "Backspace" && search === "" && mode !== "command") {
         e.preventDefault();
         setMode("command");
         setSelectedIndex(0);
       }
     },
-    [mode, search, flatItems, selectedIndex, cycleMode],
+    [
+      mode,
+      search,
+      flatItems,
+      selectedIndex,
+      cycleMode,
+      marketplaceCanLoadMore,
+      marketplaceFetching,
+      marketplaceLoadMore,
+    ],
   );
 
   // ── Render section headers inline ──────────────────────────────────────────
@@ -616,7 +669,7 @@ export function SkillCommandPalette({
       >
         {/* ── Search input ── */}
         <div className="flex items-center gap-3 px-4 py-3">
-          <Search className="size-4 text-neutral-300 flex-shrink-0" />
+          <Search className="size-4 text-muted-foreground/50 flex-shrink-0" />
           <ModeBadge mode={mode} />
           <input
             ref={inputRef}
@@ -641,7 +694,18 @@ export function SkillCommandPalette({
         </div>
 
         {/* ── Results ── */}
-        <div ref={listRef} className="max-h-[320px] overflow-y-auto border-t border-border">
+        <div
+          ref={listRef}
+          className="max-h-[320px] overflow-y-auto border-t border-border"
+          onScroll={(e) => {
+            if (mode !== "marketplace") return;
+            const el = e.currentTarget;
+            const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+            if (remaining < 16 && marketplaceCanLoadMore && !marketplaceFetching) {
+              marketplaceLoadMore();
+            }
+          }}
+        >
           {isLoading && flatItems.length === 0 && (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
@@ -655,6 +719,13 @@ export function SkillCommandPalette({
           )}
 
           {renderedItems}
+
+          {/* Marketplace infinite loading spinner */}
+          {mode === "marketplace" && marketplaceFetching && flatItems.length > 0 && (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
 
         {/* ── Footer ── */}

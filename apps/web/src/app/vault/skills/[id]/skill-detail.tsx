@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Download, Paperclip, Pencil, Trash2 } from "lucide-react";
+import { Download, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
+import AddSkillModal from "@/components/skills/add-skill-modal";
 import {
   DesktopSkillGraphPanel,
   MobileSkillGraphPanel,
@@ -21,6 +22,7 @@ import type { GraphNode } from "@/components/skills/graph/force-graph";
 import { ResourceList } from "@/components/skills/resource-list";
 import { SkillPanel } from "@/components/skills/skill-panel";
 import { Button } from "@/components/ui/button";
+import { useAddSkillFlow } from "@/hooks/skills/use-add-skill-flow";
 import { useResourceTabs } from "@/hooks/skills/use-resource-tabs";
 import { invalidateSkillCollectionQueries } from "@/lib/skills/invalidate-skill-queries";
 import {
@@ -36,7 +38,8 @@ import { SkillDetailHeader } from "@/app/vault/skills/[id]/_components/skill-det
 
 function SkillDetailInner({ id }: { id: string }) {
   const router = useRouter();
-  const { data: session } = useQuery(trpc.me.queryOptions());
+  const { session, selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } =
+    useAddSkillFlow({ loginNext: `/vault/skills/${id}` });
   const { data, isLoading, isError } = useQuery(
     trpc.skills.getById.queryOptions({ id, linkMentions: true }),
   );
@@ -85,7 +88,8 @@ function SkillDetailInner({ id }: { id: string }) {
   const skillId = data?.id ?? id;
   const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data?.isDefault ?? false;
-  const canManageSkill = isOwnedByViewer && !isDefaultSkill;
+  const canManageSkill = data?.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
+  const canAddToVault = data?.visibility === "public" && !isOwnedByViewer;
 
   /* ── Desktop: intercept resource clicks to open as tab ── */
   const handleOpenResourceTab = useCallback(
@@ -97,25 +101,16 @@ function SkillDetailInner({ id }: { id: string }) {
 
   const handleDesktopResourceListNavigate = useCallback(
     (event: React.MouseEvent<HTMLElement>, href: string) => {
-      const skillHref = `/vault/skills/${encodeURIComponent(skillId)}`;
-      const legacyPrefix = `${skillHref}/resources/`;
+      // Extract resource path from href: /vault/skills/{id}/resources/{path}
+      const prefix = `/vault/skills/${encodeURIComponent(skillId)}/resources/`;
+      if (!href.startsWith(prefix)) return;
 
-      let decodedPath: string | null = null;
-      if (href.startsWith(legacyPrefix)) {
-        const encodedPath = href.slice(legacyPrefix.length);
-        decodedPath = encodedPath
-          .split("/")
-          .filter(Boolean)
-          .map((s) => decodeURIComponent(s))
-          .join("/");
-      } else {
-        const parsed = new URL(href, window.location.origin);
-        if (parsed.pathname !== skillHref) return;
-
-        decodedPath = parsed.searchParams.get("resource");
-      }
-
-      if (!decodedPath) return;
+      const encodedPath = href.slice(prefix.length);
+      const decodedPath = encodedPath
+        .split("/")
+        .filter(Boolean)
+        .map((s) => decodeURIComponent(s))
+        .join("/");
 
       const resource = resources.find((r) => r.path === decodedPath);
       if (resource) {
@@ -198,12 +193,15 @@ function SkillDetailInner({ id }: { id: string }) {
     slug: data.slug,
     name: data.name,
     description: data.description,
+    visibility: data.visibility as "public" | "private",
     isDefaultSkill,
     sourceIdentifier: data.sourceIdentifier,
     sourceUrl: data.sourceUrl,
     updatedAt: data.updatedAt,
     resourcesCount: data.resources.length,
+    canAddToVault,
     canManageSkill,
+    onAddToVault: () => openAddSkillFlow(data),
     onDelete: () => setDeleteDialogOpen(true),
   };
 
@@ -248,6 +246,7 @@ function SkillDetailInner({ id }: { id: string }) {
             collapsible
             defaultOpen={data.resources.length > 0}
             isEmpty={data.resources.length === 0}
+            className="border"
           >
             <ResourceList
               resources={data.resources}
@@ -264,7 +263,7 @@ function SkillDetailInner({ id }: { id: string }) {
         {/* ── Left sidebar ── */}
         <aside className="w-[280px] xl:w-[320px] shrink-0 border-r border-border flex flex-col">
           {/* Metadata section */}
-          <div className="p-5 overflow-y-auto shrink-0 border-b border-border">
+          <div className="p-5 overflow-y-auto shrink-0">
             <SkillDetailHeader
               {...headerProps}
               compact
@@ -312,6 +311,17 @@ function SkillDetailInner({ id }: { id: string }) {
                       <Download className="size-3" aria-hidden="true" />
                       DOWNLOAD MD
                     </button>
+
+                    {canAddToVault && (
+                      <Button
+                        size="sm"
+                        className="hover:bg-primary/90"
+                        onClick={() => openAddSkillFlow(data)}
+                      >
+                        Add to Vault
+                        <Plus className="size-3.5" />
+                      </Button>
+                    )}
 
                     {canManageSkill && (
                       <>
@@ -362,6 +372,7 @@ function SkillDetailInner({ id }: { id: string }) {
                       collapsible
                       defaultOpen={data.resources.length > 0}
                       isEmpty={data.resources.length === 0}
+                      className="border"
                     >
                       <ResourceList
                         resources={data.resources}
@@ -395,6 +406,13 @@ function SkillDetailInner({ id }: { id: string }) {
         skillName={data.name}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={() => deleteMutation.mutate({ id: data.id })}
+      />
+
+      <AddSkillModal
+        key={selectedSkill?.id ?? "none"}
+        open={modalOpen}
+        onClose={closeAddSkillFlow}
+        initialSkill={selectedSkill}
       />
     </main>
   );

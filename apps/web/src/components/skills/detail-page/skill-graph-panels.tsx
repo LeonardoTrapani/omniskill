@@ -98,7 +98,7 @@ export function DesktopSkillGraphPanel({
     <SkillPanel
       icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
       title="Skill Graph"
-      className="flex h-full min-h-0 flex-col md:border-none"
+      className="flex h-full min-h-0 flex-col"
     >
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <SkillGraphPanelContent

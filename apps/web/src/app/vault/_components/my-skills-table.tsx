@@ -96,7 +96,7 @@ export default function MySkillsTable({ onDelete, height, className }: MySkillsT
               key={skill.id}
               className="flex justify-between gap-6 items-center border-b border-border px-6 py-2 transition-colors hover:bg-secondary/50 group"
             >
-              <span className="text-sm text-neutral-300 tabular-nums">{index + 1}</span>
+              <span className="text-sm text-muted-foreground/50 tabular-nums">{index + 1}</span>
 
               <Link href={buildSkillHref(skill.id)} className="min-w-0 w-full">
                 <div className="flex flex-wrap items-baseline gap-x-2">

@@ -4,32 +4,36 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { Command, Search, Hexagon } from "lucide-react";
+import { X, Menu, Settings, Hexagon, Globe } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 
 import UserMenu from "./user-menu";
 import { SkillCommandPalette } from "./skill-command-palette";
 
-type PaletteMode = "command" | "vault";
+type PaletteMode = "command" | "vault" | "marketplace";
 
 type NavItem =
   | { label: string; href: Route; kind: "route" }
   | { label: string; href: `#${string}`; kind: "hash" };
 
 const publicNav: NavItem[] = [
+  { label: "Skills", href: "/skills", kind: "route" },
   { label: "Docs", href: "#docs", kind: "hash" },
   { label: "Pricing", href: "#pricing", kind: "hash" },
   { label: "Github", href: "#github", kind: "hash" },
 ];
 
-const appNav: NavItem[] = [];
+const appNav: NavItem[] = [
+  { label: "My Vault", href: "/vault" as Route, kind: "route" },
+  { label: "Explore", href: "/skills", kind: "route" },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, _setMobileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdInitialSearch, setCmdInitialSearch] = useState("");
   const [cmdInitialMode, setCmdInitialMode] = useState<PaletteMode>("command");
@@ -125,6 +129,7 @@ export default function Navbar() {
                   className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
                 >
                   {item.label === "My Vault" ? <Hexagon className="size-3.5" /> : null}
+                  {item.label === "Explore" ? <Globe className="size-3.5" /> : null}
                   {item.label}
                 </Link>
               ) : (
@@ -143,23 +148,7 @@ export default function Navbar() {
             {mounted &&
               !isPending &&
               (session ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={openCmd}
-                    className="inline-flex h-8 items-center gap-6 border border-border bg-background pl-2 pr-1.5 text-muted-foreground transition-colors hover:bg-muted-foreground/3"
-                    aria-label="Open search and command menu with Command+K"
-                  >
-                    <div className="inline-flex gap-2 items-center">
-                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-[11px] text-muted-foreground">Search</span>
-                    </div>
-                    <span className="inline-flex items-center gap-0.5 rounded-xs border border-border px-1.5 py-0.5 text-[10px] font-mono tracking-widest text-foreground">
-                      <Command className="h-2 w-2" />K
-                    </span>
-                  </button>
-                  <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
-                </>
+                <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
               ) : (
                 <Link
                   href="/login"
@@ -174,9 +163,101 @@ export default function Navbar() {
             {mounted && !isPending && session && (
               <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
             )}
+            <button
+              className="text-foreground"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </nav>
+
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-[70] lg:hidden">
+            <div className="bg-background border-t border-border mx-2 mb-2 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                  <span>BETTER-SKILLS</span>
+                </span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="border border-border mb-4">
+                {navItems.map((item, i) =>
+                  item.kind === "route" ? (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
+                        i < navItems.length - 1 ? "border-b border-border" : ""
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        {item.label === "My Vault" ? <Hexagon className="size-4" /> : null}
+                        {item.label === "Explore" ? <Globe className="size-4" /> : null}
+                        {item.label}
+                      </span>
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
+                        i < navItems.length - 1 ? "border-b border-border" : ""
+                      }`}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <span>{item.label}</span>
+                    </a>
+                  ),
+                )}
+              </div>
+
+              {mounted && !isPending && session && (
+                <div className="border border-border mb-4">
+                  <Link
+                    href="/settings"
+                    className="flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Settings className="size-4" />
+                      Settings
+                    </span>
+                  </Link>
+                </div>
+              )}
+
+              {mounted && !isPending && !session && (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/login"
+                    className="w-full text-center py-3 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* single palette instance */}
       {mounted && !isPending && session && (
         <SkillCommandPalette

@@ -110,37 +110,6 @@ export function useResourceTabs({
   /** The node id to highlight in the graph */
   const focusNodeId = activeTab.kind === "resource" ? activeTab.id : skillId;
 
-  /* ── URL -> state sync (for cmd+k and browser navigation) ── */
-  useEffect(() => {
-    const resourcePath = searchParams.get("resource");
-
-    if (!resourcePath) {
-      setActiveTabId(skillId);
-      return;
-    }
-
-    const resource = resources.find((r) => r.path === resourcePath);
-    if (!resource) return;
-
-    setOpenResourceTabs((prev) => {
-      if (prev.some((tab) => tab.id === resource.id)) {
-        return prev;
-      }
-
-      return [
-        ...prev,
-        {
-          kind: "resource",
-          id: resource.id,
-          path: resource.path,
-          label: lastSegment(resource.path),
-        },
-      ];
-    });
-
-    setActiveTabId(resource.id);
-  }, [searchParams, resources, skillId]);
-
   /* ── URL sync ── */
   useEffect(() => {
     const currentParam = searchParams.get("resource");
@@ -165,10 +134,12 @@ export function useResourceTabs({
   }, [activeResourcePath, searchParams]);
 
   /* ── Actions ── */
-  const openResource = useCallback((resource: SkillResourceReference) => {
-    setOpenResourceTabs((prev) => {
-      if (prev.some((tab) => tab.id === resource.id)) {
-        return prev;
+  const openResource = useCallback(
+    (resource: SkillResourceReference) => {
+      const existing = openResourceTabs.find((t) => t.id === resource.id);
+      if (existing) {
+        setActiveTabId(existing.id);
+        return;
       }
 
       const newTab: ResourceTab = {
@@ -178,10 +149,11 @@ export function useResourceTabs({
         label: lastSegment(resource.path),
       };
 
-      return [...prev, newTab];
-    });
-    setActiveTabId(resource.id);
-  }, []);
+      setOpenResourceTabs((prev) => [...prev, newTab]);
+      setActiveTabId(resource.id);
+    },
+    [openResourceTabs],
+  );
 
   const openResourceByPath = useCallback(
     (path: string) => {
