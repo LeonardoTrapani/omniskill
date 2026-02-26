@@ -7,6 +7,8 @@ description: |
   Trigger on any request about "better-skills" or "better skills", managing a
   skill vault, creating/updating/deleting/removing a skill, importing/cloning/
   linking skills, backing up local skills, and similar requests.
+  Do not use for general CLI help unrelated to better-skills, or for editing
+  AGENTS.md/CLAUDE.md files directly.
 ---
 
 # better-skills

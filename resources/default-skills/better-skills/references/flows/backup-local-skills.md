@@ -26,6 +26,7 @@ No mutations happen until the user explicitly confirms a selection.
    - Each subfolder with `SKILL.md` is a candidate. Skip invalid folders and note them briefly.
 
 2. Fetch vault inventory:
+
    ```bash
    better-skills list --all
    ```
@@ -62,16 +63,19 @@ Only proceed to Step 3 after the user confirms their selections.
 ## Step 3: Execute
 
 1. Build the backup plan scoped to the user's selections:
+
    ```bash
    better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
    ```
 
 2. Execute the approved plan:
+
    ```bash
    better-skills backup apply --plan <plan-file>
    ```
 
 3. If the user chose to delete any vault-only skills:
+
    ```bash
    better-skills delete <uuid>
    ```
