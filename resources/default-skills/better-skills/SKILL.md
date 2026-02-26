@@ -30,4 +30,4 @@ description: |
    - \[[resource:new:<path>]]
 4. Validate local folder before mutation with `better-skills validate <folder>`.
 5. After any edit, update, or mutation to a skill, run `better-skills sync` and tell the user to start a new session so the changes take effect.
-6. For backup requests, run a two-pass flow: concise analysis/proposal first, then mutate only after user approval.
+6. For backup requests, run a three-step interactive flow: discover local + vault state, let the user pick which skills to port and what to do with vault-only orphans, then execute only the confirmed selections.

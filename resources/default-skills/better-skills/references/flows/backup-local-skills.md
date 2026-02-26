@@ -9,50 +9,74 @@ Use this when user asks to back up local OpenCode/Claude/Cursor (or custom-folde
 - [[skill:new:references/commands/create-update.md]]
 - [[skill:new:references/flows/search-and-propose.md]]
 
-## Two-pass contract
+## Overview
 
-1. Pass 1 (required): inspect deeply, then return a concise proposal.
-2. Pass 2 (only after approval): create/update skills, then apply link edits.
+This is a three-step interactive flow: discover, choose, execute.
+No mutations happen until the user explicitly confirms a selection.
 
-Do not mutate in pass 1.
+## Step 1: Discover
 
-## Source discovery
+1. Find local skill folders:
+   - If user gave a folder, use it.
+   - Else check common roots in this order (if they exist):
+     - `~/.config/opencode/skills`
+     - `~/.claude/skills`
+     - `~/.cursor/skills`
+     - `.agents/skills` in current workspace
+   - Each subfolder with `SKILL.md` is a candidate. Skip invalid folders and note them briefly.
 
-1. If user gave a folder, use it.
-2. Else check common roots in this order (if they exist):
-   - `~/.config/opencode/skills`
-   - `~/.claude/skills`
-   - `~/.cursor/skills`
-   - `.agents/skills` in current workspace
-3. Treat each subfolder with `SKILL.md` as a candidate skill folder.
-4. Skip invalid folders and report skipped items briefly.
+2. Fetch vault inventory:
+   ```bash
+   better-skills list --all
+   ```
 
-## Pass 1: analyze and propose
+3. Build a comparison table classifying every skill into one of:
+   - **Local only** - exists locally but not in the vault (will create)
+   - **Both (changed)** - exists in both, local version differs (will update)
+   - **Both (unchanged)** - exists in both, no meaningful diff (skip)
+   - **Vault only** - exists in vault but not found locally (orphan)
 
-1. Build the backup plan JSON (no mutation):
+## Step 2: Choose
 
-```bash
-better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
-```
+Present the comparison to the user and ask two questions:
 
-2. Review the plan and return concise proposal:
-   - create/update/skip decisions
-   - dedupe summary (same skill seen in multiple folders)
-   - confidence (`high`/`medium`/`low`) and skip reasons
-   - explicit plan path for pass 2
+### Question A: Which skills to port?
 
-3. Link policy default in automated backup is `preserve-current-links-only`.
-   - If user asks for link curation, propose exact edits separately before mutating.
+Show all **local only** and **both (changed)** skills as a checklist.
+Include a brief note for each (e.g. "new skill", "description changed", "3 resources added").
+Let the user select which ones to back up. Default: all of them selected.
 
-## Pass 2: execute after approval
+Skills classified as **both (unchanged)** are reported as skipped - no action needed.
 
-1. Execute the approved plan:
+### Question B: What to do with vault-only skills?
 
-```bash
-better-skills backup apply --plan <plan-file>
-```
+If there are **vault only** skills (in the vault but not on the local filesystem), list them and ask:
 
-2. `backup apply` behavior:
+- **Keep in vault** - leave them as-is, no changes (default)
+- **Delete from vault** - remove them from better-skills
+
+Let the user decide per-skill or in bulk.
+
+Only proceed to Step 3 after the user confirms their selections.
+
+## Step 3: Execute
+
+1. Build the backup plan scoped to the user's selections:
+   ```bash
+   better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
+   ```
+
+2. Execute the approved plan:
+   ```bash
+   better-skills backup apply --plan <plan-file>
+   ```
+
+3. If the user chose to delete any vault-only skills:
+   ```bash
+   better-skills delete <uuid>
+   ```
+
+4. `backup apply` behavior:
    - creates snapshot copies outside agent skill roots
    - validates each folder before mutation
    - runs create/update using snapshot sources
@@ -61,10 +85,10 @@ better-skills backup apply --plan <plan-file>
    - deletes snapshot on successful sync (unless keep flag is used)
    - keeps snapshot on sync failure for recovery
 
-3. Return concise recap:
-   - counts: created/updated/skipped
+5. Return concise recap:
+   - counts: created / updated / skipped / deleted from vault
    - local cleanup: removed folders + retained snapshot path (if any)
-   - sync result: success/failure
+   - sync result: success / failure
    - failures and manual recovery steps (if any)
 
 ## Link heuristics
@@ -73,3 +97,5 @@ better-skills backup apply --plan <plan-file>
 - Prefer update over create when identity + purpose match.
 - Add links that help navigation/actionability; avoid cosmetic full-mesh graphs.
 - If uncertain, do not mutate that edge; keep as suggestion.
+- Link policy default in automated backup is `preserve-current-links-only`.
+- If user asks for link curation, propose exact edits separately before mutating.
