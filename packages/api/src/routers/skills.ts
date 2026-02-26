@@ -7,9 +7,10 @@ import { skill, skillLink, skillResource } from "@better-skills/db/schema/skills
 
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import {
+  type AutoLinkSourceInput,
   MentionSyntaxError,
   MentionValidationError,
-  syncAutoLinks,
+  syncAutoLinksForSources,
   validateMentionTargets,
 } from "../lib/link-sync";
 import { remapMentionTargetIds } from "../lib/mentions";
@@ -791,6 +792,14 @@ export const skillsRouter = router({
         throwMentionValidationError(error);
       }
 
+      for (const resource of input.resources) {
+        try {
+          await validateMentionTargets(resource.content, userId);
+        } catch (error) {
+          throwMentionValidationError(error);
+        }
+      }
+
       const [created] = await db
         .insert(skill)
         .values({
@@ -829,7 +838,22 @@ export const skillsRouter = router({
       }
 
       try {
-        await syncAutoLinks(created.id, input.skillMarkdown, userId);
+        const linkSyncSources: AutoLinkSourceInput[] = [
+          {
+            type: "skill",
+            sourceId: created.id,
+            sourceOwnerUserId: created.ownerUserId,
+            markdown: input.skillMarkdown,
+          },
+          ...resources.map((resource) => ({
+            type: "resource" as const,
+            sourceId: resource.id,
+            sourceOwnerUserId: created.ownerUserId,
+            markdown: resource.content,
+          })),
+        ];
+
+        await syncAutoLinksForSources(linkSyncSources, userId);
       } catch (error) {
         if (error instanceof MentionSyntaxError || error instanceof MentionValidationError) {
           await db.delete(skill).where(eq(skill.id, created.id));
@@ -890,6 +914,18 @@ export const skillsRouter = router({
         }
       }
 
+      if (input.resources) {
+        for (const resource of input.resources) {
+          if (resource.delete) continue;
+
+          try {
+            await validateMentionTargets(resource.content, existing.ownerUserId);
+          } catch (error) {
+            throwMentionValidationError(error);
+          }
+        }
+      }
+
       // build partial update set
       const updates: Partial<typeof skill.$inferInsert> = {};
       if (input.slug !== undefined) updates.slug = input.slug;
@@ -908,6 +944,17 @@ export const skillsRouter = router({
       if (Object.keys(updates).length > 0) {
         const [row] = await db.update(skill).set(updates).where(eq(skill.id, input.id)).returning();
         if (row) updatedSkill = row;
+      }
+
+      const linkSyncSources: AutoLinkSourceInput[] = [];
+
+      if (input.skillMarkdown !== undefined) {
+        linkSyncSources.push({
+          type: "skill",
+          sourceId: input.id,
+          sourceOwnerUserId: existing.ownerUserId,
+          markdown: input.skillMarkdown,
+        });
       }
 
       // handle resource mutations when provided
@@ -938,25 +985,43 @@ export const skillsRouter = router({
               metadata: r.metadata,
             })
             .where(and(eq(skillResource.id, r.id!), eq(skillResource.skillId, input.id)));
+
+          linkSyncSources.push({
+            type: "resource",
+            sourceId: r.id!,
+            sourceOwnerUserId: existing.ownerUserId,
+            markdown: r.content,
+          });
         }
 
         if (toInsert.length > 0) {
-          await db.insert(skillResource).values(
-            toInsert.map((r) => ({
-              skillId: input.id,
-              path: r.path,
-              kind: r.kind,
-              content: r.content,
-              metadata: r.metadata,
-            })),
-          );
+          const insertedResources = await db
+            .insert(skillResource)
+            .values(
+              toInsert.map((r) => ({
+                skillId: input.id,
+                path: r.path,
+                kind: r.kind,
+                content: r.content,
+                metadata: r.metadata,
+              })),
+            )
+            .returning({ id: skillResource.id, content: skillResource.content });
+
+          for (const insertedResource of insertedResources) {
+            linkSyncSources.push({
+              type: "resource",
+              sourceId: insertedResource.id,
+              sourceOwnerUserId: existing.ownerUserId,
+              markdown: insertedResource.content,
+            });
+          }
         }
       }
 
-      // sync auto-generated links when markdown changed
-      if (input.skillMarkdown !== undefined) {
+      if (linkSyncSources.length > 0) {
         try {
-          await syncAutoLinks(input.id, input.skillMarkdown, userId);
+          await syncAutoLinksForSources(linkSyncSources, userId);
         } catch (error) {
           throwMentionValidationError(error);
         }
@@ -1201,7 +1266,17 @@ export const skillsRouter = router({
       }
 
       try {
-        await syncAutoLinks(createdSkill.id, remappedMarkdown, userId);
+        await syncAutoLinksForSources(
+          [
+            {
+              type: "skill",
+              sourceId: createdSkill.id,
+              sourceOwnerUserId: createdSkill.ownerUserId,
+              markdown: remappedMarkdown,
+            },
+          ],
+          userId,
+        );
       } catch (error) {
         throwMentionValidationError(error);
       }

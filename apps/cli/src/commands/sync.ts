@@ -9,6 +9,7 @@ import {
   uninstallSkill,
   type InstallableSkill,
 } from "../lib/skills-installer";
+import { maybePromptUnsyncedLocalSkillsBackup } from "../lib/unsynced-local-skills";
 import { trpc } from "../lib/trpc";
 
 const SYNC_PAGE_LIMIT = 100;
@@ -91,6 +92,7 @@ export async function syncCommand() {
 
   if (privateSkills.length === 0) {
     fetchSpinner.stop(pc.dim("no private skills to sync"));
+    await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
     return;
   }
 
@@ -137,4 +139,6 @@ export async function syncCommand() {
   }
 
   p.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
+
+  await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
 }

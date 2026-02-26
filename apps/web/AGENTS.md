@@ -17,6 +17,7 @@ This package is the authenticated Next.js web console for browsing and managing 
 
 ## Additional guidance
 
+- `docs/mention-link-sync-flow.md`
 - `.agents/skills/next-best-practices/SKILL.md`
 - `.agents/skills/vercel-react-best-practices/SKILL.md`
 - `.agents/skills/vercel-composition-patterns/SKILL.md`

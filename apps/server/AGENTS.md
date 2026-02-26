@@ -18,5 +18,6 @@ This package is the Hono backend for better-skills. It hosts Better Auth and tRP
 
 ## Additional guidance
 
+- `docs/mention-link-sync-flow.md`
 - `.agents/skills/hono/SKILL.md`
 - `.agents/skills/better-auth-best-practices/SKILL.md`

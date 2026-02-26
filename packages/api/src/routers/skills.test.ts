@@ -1337,4 +1337,85 @@ describe("link auto-sync", () => {
     );
     expect(manualLinks).toHaveLength(1);
   });
+
+  test("create syncs auto links for resource markdown", async () => {
+    const targetSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const targetResource = seedResource(targetSkill.id, { path: "references/target.md" });
+
+    const created = await authedCaller(USER_A).skills.create({
+      slug: "resource-source-create",
+      name: "Resource Source Create",
+      description: "resource link source",
+      skillMarkdown: "# skill",
+      resources: [
+        {
+          path: "references/source.md",
+          content: `See [[skill:${targetSkill.id}]] and [[resource:${targetResource.id}]]`,
+        },
+      ],
+    });
+
+    const sourceResource = created.resources.find(
+      (resource) => resource.path === "references/source.md",
+    );
+    expect(sourceResource).toBeDefined();
+    if (!sourceResource) return;
+
+    const autoLinks = links.filter(
+      (link) =>
+        link.sourceResourceId === sourceResource.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+
+    expect(autoLinks.some((link) => link.targetSkillId === targetSkill.id)).toBe(true);
+    expect(autoLinks.some((link) => link.targetResourceId === targetResource.id)).toBe(true);
+  });
+
+  test("update resource markdown refreshes resource auto links", async () => {
+    const targetSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const targetResourceA = seedResource(targetSkill.id, { path: "references/target-a.md" });
+    const targetResourceB = seedResource(targetSkill.id, { path: "references/target-b.md" });
+    const sourceSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const sourceResource = seedResource(sourceSkill.id, {
+      path: "references/source.md",
+      content: `See [[resource:${targetResourceA.id}]]`,
+    });
+
+    seedLink({
+      sourceResourceId: sourceResource.id,
+      targetResourceId: targetResourceA.id,
+      kind: "mention",
+      metadata: { origin: "markdown-auto" },
+      createdByUserId: USER_A,
+    });
+
+    await authedCaller(USER_A).skills.update({
+      id: sourceSkill.id,
+      resources: [
+        {
+          id: sourceResource.id,
+          path: sourceResource.path,
+          kind: sourceResource.kind,
+          content: `Now [[resource:${targetResourceB.id}]]`,
+          metadata: sourceResource.metadata,
+        },
+      ],
+    });
+
+    const linksToA = links.filter(
+      (link) =>
+        link.sourceResourceId === sourceResource.id &&
+        link.targetResourceId === targetResourceA.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+    const linksToB = links.filter(
+      (link) =>
+        link.sourceResourceId === sourceResource.id &&
+        link.targetResourceId === targetResourceB.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+
+    expect(linksToA).toHaveLength(0);
+    expect(linksToB).toHaveLength(1);
+  });
 });

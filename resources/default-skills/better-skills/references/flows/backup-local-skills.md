@@ -39,6 +39,7 @@ Do not mutate in pass 1.
    - likely duplicate/overlap candidates
 4. Build concise proposal with:
    - backup plan: create vs update vs skip
+   - dedupe plan: which folders are the same skill and should be backed up once
    - link plan: exact suggested edges + one-line reason each
    - confidence label: `high`, `medium`, or `low`
 5. If linking policy is unclear, present clean options:
@@ -48,16 +49,21 @@ Do not mutate in pass 1.
 
 ## Pass 2: execute after approval
 
-1. Backup/import:
+1. Create a safety backup snapshot first:
+   - create a temporary folder outside agent skill roots
+   - copy each candidate local skill folder into it
+   - use those copied folders as mutation sources
+
+2. Backup/import from the snapshot:
 
 ```bash
-python scripts/validate_skill_folder.py <folder>
-better-skills create --from <folder> [--slug <slug>] [--public]
-better-skills update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
+python scripts/validate_skill_folder.py <backup-folder>/<skill-folder>
+better-skills create --from <backup-folder>/<skill-folder> [--slug <slug>] [--public]
+better-skills update <slug-or-uuid> --from <backup-folder>/<skill-folder> [--slug <slug>] [--public|--private]
 better-skills get <slug-or-uuid>
 ```
 
-2. Link curation pass:
+3. Link curation pass:
    - clone each target skill to local folder
    - edit markdown to use final UUID mention forms:
      - `[[skill:<uuid>]]`
@@ -65,8 +71,16 @@ better-skills get <slug-or-uuid>
    - do not use `[[skill:new:<path>]]` for cross-skill links
    - validate folder, then update skill
 
-3. Return concise recap:
+4. Reconcile local agent folders and sync:
+   - for each skill successfully backed up, delete unmanaged copies from local agent skill folders before running sync
+   - run `better-skills sync`
+   - after successful sync, delete the temporary backup snapshot folder
+   - if sync fails, keep snapshot folder and report recovery steps
+
+5. Return concise recap:
    - counts: created/updated/skipped
+   - local cleanup: removed folders + retained snapshot path (if any)
+   - sync result: success/failure
    - links: added/updated/left-as-suggestion
    - unresolved low-confidence edges
 

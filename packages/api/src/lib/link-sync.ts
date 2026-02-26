@@ -22,6 +22,20 @@ interface MentionValidationOptions {
   allowResourceIds?: ReadonlySet<string>;
 }
 
+export type AutoLinkSourceInput =
+  | {
+      type: "skill";
+      sourceId: string;
+      sourceOwnerUserId: string | null;
+      markdown: string;
+    }
+  | {
+      type: "resource";
+      sourceId: string;
+      sourceOwnerUserId: string | null;
+      markdown: string;
+    };
+
 function formatMentionSyntaxMessage(issues: MentionSyntaxIssue[]): string {
   const details = issues
     .map((issue) => `[[${issue.type}:${issue.target}]] target must be a uuid`)
@@ -178,6 +192,54 @@ export async function validateMentionTargets(
   await validateMentionTargetsFromMentions(mentions, sourceOwner, options);
 }
 
+async function syncAutoLinksForSource(source: AutoLinkSourceInput, userId: string): Promise<void> {
+  await validateMentionTargets(source.markdown, source.sourceOwnerUserId);
+  const mentions = parseMentions(source.markdown);
+
+  const sourceCondition =
+    source.type === "skill"
+      ? eq(skillLink.sourceSkillId, source.sourceId)
+      : eq(skillLink.sourceResourceId, source.sourceId);
+
+  await db
+    .delete(skillLink)
+    .where(and(sourceCondition, sql`${skillLink.metadata}->>'origin' = 'markdown-auto'`))
+    .execute();
+
+  if (mentions.length === 0) return;
+
+  const values = mentions.map((m) => ({
+    sourceSkillId: source.type === "skill" ? source.sourceId : null,
+    sourceResourceId: source.type === "resource" ? source.sourceId : null,
+    targetSkillId: m.type === "skill" ? m.targetId : null,
+    targetResourceId: m.type === "resource" ? m.targetId : null,
+    kind: "mention" as const,
+    metadata: { origin: "markdown-auto" } as Record<string, unknown>,
+    createdByUserId: userId,
+  }));
+
+  await db.insert(skillLink).values(values).execute();
+}
+
+export async function syncAutoLinksForSources(
+  sources: AutoLinkSourceInput[],
+  userId: string,
+): Promise<void> {
+  if (sources.length === 0) return;
+
+  const dedupedSources = new Map<string, AutoLinkSourceInput>();
+  for (const source of sources) {
+    dedupedSources.set(`${source.type}:${source.sourceId.toLowerCase()}`, {
+      ...source,
+      sourceId: source.sourceId.toLowerCase(),
+    });
+  }
+
+  for (const source of dedupedSources.values()) {
+    await syncAutoLinksForSource(source, userId);
+  }
+}
+
 /**
  * Replace all auto-generated skill_link edges for a source skill
  * with the current set of [[...]] mentions found in the markdown.
@@ -208,31 +270,15 @@ export async function syncAutoLinks(
 
   if (!sourceSkill) return;
 
-  await validateMentionTargets(markdown, sourceSkill.ownerUserId);
-  const mentions = parseMentions(markdown);
-
-  // delete existing auto-links, then insert current ones
-  await db
-    .delete(skillLink)
-    .where(
-      and(
-        eq(skillLink.sourceSkillId, sourceSkillId),
-        sql`${skillLink.metadata}->>'origin' = 'markdown-auto'`,
-      ),
-    )
-    .execute();
-
-  if (mentions.length === 0) return;
-
-  const values = mentions.map((m) => ({
-    sourceSkillId,
-    sourceResourceId: null,
-    targetSkillId: m.type === "skill" ? m.targetId : null,
-    targetResourceId: m.type === "resource" ? m.targetId : null,
-    kind: "mention" as const,
-    metadata: { origin: "markdown-auto" } as Record<string, unknown>,
-    createdByUserId: userId,
-  }));
-
-  await db.insert(skillLink).values(values).execute();
+  await syncAutoLinksForSources(
+    [
+      {
+        type: "skill",
+        sourceId: sourceSkillId,
+        sourceOwnerUserId: sourceSkill.ownerUserId,
+        markdown,
+      },
+    ],
+    userId,
+  );
 }

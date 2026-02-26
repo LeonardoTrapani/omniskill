@@ -45,6 +45,11 @@ interface SyncDefaultSkillsResult {
   failed: number;
 }
 
+interface ResolvedTemplateMentions {
+  skillMarkdown: string;
+  resourceContentByPath: Map<string, string>;
+}
+
 const DEFAULT_TEMPLATE_VERSION_KEY = "defaultTemplateVersion";
 
 const DEFAULT_SKILLS_DIR_CANDIDATES = [
@@ -91,6 +96,8 @@ const BINARY_EXTENSIONS = new Set([
   ".sqlite",
 ]);
 
+const NEW_MENTION_MARKDOWN_EXTENSIONS = new Set([".md", ".mdx", ".txt"]);
+
 function withDefaultTemplateVersion(
   metadata: Record<string, unknown>,
   templateVersion: string,
@@ -115,19 +122,32 @@ function normalizeMetadata(metadata: unknown): Record<string, unknown> {
 }
 
 function buildTemplateVersion(template: SkillTemplate): string {
+  const stableResourceIdByPath = new Map<string, string>();
+  for (const resource of template.resources) {
+    const normalizedPath = normalizeResourcePath(resource.path);
+    if (!stableResourceIdByPath.has(normalizedPath)) {
+      stableResourceIdByPath.set(normalizedPath, `path:${normalizedPath}`);
+    }
+  }
+
+  const resolvedTemplateMentions = resolveTemplateMentions(template, stableResourceIdByPath);
+
   const hash = createHash("sha256");
   hash.update(
     JSON.stringify({
       slug: template.slug,
       name: template.name,
       description: template.description,
-      markdown: template.markdown,
+      markdown: resolvedTemplateMentions.skillMarkdown,
       frontmatter: template.frontmatter,
       resources: template.resources
         .map((resource) => ({
           path: normalizeResourcePath(resource.path),
           kind: resource.kind,
-          content: resource.content,
+          content:
+            resolvedTemplateMentions.resourceContentByPath.get(
+              normalizeResourcePath(resource.path),
+            ) ?? resource.content,
         }))
         .toSorted((a, b) => a.path.localeCompare(b.path)),
     }),
@@ -180,6 +200,10 @@ function classifyResource(path: string): ResourceKind {
   return "other";
 }
 
+function shouldResolveNewMentionsInResource(path: string): boolean {
+  return NEW_MENTION_MARKDOWN_EXTENSIONS.has(extname(path).toLowerCase());
+}
+
 async function scanSkillResources(skillDir: string): Promise<SkillTemplateResource[]> {
   async function walk(currentDir: string): Promise<SkillTemplateResource[]> {
     const entries = await readdir(currentDir, { withFileTypes: true });
@@ -220,8 +244,82 @@ async function scanSkillResources(skillDir: string): Promise<SkillTemplateResour
   return walk(skillDir);
 }
 
+function collectTemplateMentionPaths(template: SkillTemplate): string[] {
+  const seen = new Set<string>();
+  const mentionedPaths: string[] = [];
+
+  const collectFromMarkdown = (markdown: string) => {
+    for (const mentionedPath of collectNewResourceMentionPaths(markdown)) {
+      if (!seen.has(mentionedPath)) {
+        seen.add(mentionedPath);
+        mentionedPaths.push(mentionedPath);
+      }
+    }
+  };
+
+  collectFromMarkdown(template.markdown);
+  for (const resource of template.resources) {
+    if (!shouldResolveNewMentionsInResource(resource.path)) {
+      continue;
+    }
+
+    collectFromMarkdown(resource.content);
+  }
+
+  return mentionedPaths;
+}
+
+function resolveTemplateMentions(
+  template: SkillTemplate,
+  resourceIdByPath: ReadonlyMap<string, string>,
+): ResolvedTemplateMentions {
+  const missingPaths = new Set<string>();
+
+  const resolvedSkillMentions = resolveNewResourceMentionsToUuids(
+    template.markdown,
+    resourceIdByPath,
+  );
+  for (const missingPath of resolvedSkillMentions.missingPaths) {
+    missingPaths.add(missingPath);
+  }
+
+  const resourceContentByPath = new Map<string, string>();
+  for (const resource of template.resources) {
+    if (!shouldResolveNewMentionsInResource(resource.path)) {
+      continue;
+    }
+
+    const normalizedPath = normalizeResourcePath(resource.path);
+    const resolvedResourceMentions = resolveNewResourceMentionsToUuids(
+      resource.content,
+      resourceIdByPath,
+    );
+
+    for (const missingPath of resolvedResourceMentions.missingPaths) {
+      missingPaths.add(missingPath);
+    }
+
+    if (resolvedResourceMentions.markdown !== resource.content) {
+      resourceContentByPath.set(normalizedPath, resolvedResourceMentions.markdown);
+    }
+  }
+
+  if (missingPaths.size > 0) {
+    throw new Error(
+      `default skill "${template.slug}" could not resolve :new: mentions: ${[...missingPaths]
+        .toSorted((a, b) => a.localeCompare(b))
+        .join(", ")}`,
+    );
+  }
+
+  return {
+    skillMarkdown: resolvedSkillMentions.markdown,
+    resourceContentByPath,
+  };
+}
+
 function assertTemplateMentionPathsExist(template: SkillTemplate): void {
-  const mentionedPaths = collectNewResourceMentionPaths(template.markdown);
+  const mentionedPaths = collectTemplateMentionPaths(template);
 
   if (mentionedPaths.length === 0) {
     return;
@@ -365,23 +463,27 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
           insertedResources.map((resource) => [normalizeResourcePath(resource.path), resource.id]),
         );
 
-        const resolvedMentions = resolveNewResourceMentionsToUuids(
-          template.markdown,
-          resourceIdByPath,
-        );
+        const resolvedMentions = resolveTemplateMentions(template, resourceIdByPath);
 
-        if (resolvedMentions.missingPaths.length > 0) {
-          throw new Error(
-            `default skill "${template.slug}" could not resolve :new: mentions: ${resolvedMentions.missingPaths.join(
-              ", ",
-            )}`,
+        for (const insertedResource of insertedResources) {
+          const resolvedResourceMarkdown = resolvedMentions.resourceContentByPath.get(
+            normalizeResourcePath(insertedResource.path),
           );
+
+          if (!resolvedResourceMarkdown) {
+            continue;
+          }
+
+          await tx
+            .update(skillResource)
+            .set({ content: resolvedResourceMarkdown })
+            .where(eq(skillResource.id, insertedResource.id));
         }
 
-        if (resolvedMentions.markdown !== template.markdown) {
+        if (resolvedMentions.skillMarkdown !== template.markdown) {
           await tx
             .update(skill)
-            .set({ skillMarkdown: resolvedMentions.markdown, updatedAt: new Date() })
+            .set({ skillMarkdown: resolvedMentions.skillMarkdown, updatedAt: new Date() })
             .where(eq(skill.id, createdSkill.id));
         }
       });
@@ -481,14 +583,21 @@ async function syncExistingDefaultSkill(
       finalResources.map((resource) => [normalizeResourcePath(resource.path), resource.id]),
     );
 
-    const resolvedMentions = resolveNewResourceMentionsToUuids(template.markdown, resourceIdByPath);
+    const resolvedMentions = resolveTemplateMentions(template, resourceIdByPath);
 
-    if (resolvedMentions.missingPaths.length > 0) {
-      throw new Error(
-        `default skill "${template.slug}" could not resolve :new: mentions: ${resolvedMentions.missingPaths.join(
-          ", ",
-        )}`,
+    for (const resource of finalResources) {
+      const resolvedResourceMarkdown = resolvedMentions.resourceContentByPath.get(
+        normalizeResourcePath(resource.path),
       );
+
+      if (!resolvedResourceMarkdown) {
+        continue;
+      }
+
+      await tx
+        .update(skillResource)
+        .set({ content: resolvedResourceMarkdown })
+        .where(eq(skillResource.id, resource.id));
     }
 
     await tx
@@ -496,7 +605,7 @@ async function syncExistingDefaultSkill(
       .set({
         name: template.name,
         description: template.description,
-        skillMarkdown: resolvedMentions.markdown,
+        skillMarkdown: resolvedMentions.skillMarkdown,
         frontmatter: template.frontmatter,
         metadata: withDefaultTemplateVersion(existingSkill.metadata, templateVersion),
         sourceUrl,

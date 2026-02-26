@@ -4,6 +4,7 @@ import pc from "picocolors";
 import { getAgentDisplayName, promptAgentSelection } from "../lib/agents";
 import type { SupportedAgent } from "../lib/agents";
 import { readConfig, saveConfig } from "../lib/config";
+import { maybePromptUnsyncedLocalSkillsBackup } from "../lib/unsynced-local-skills";
 
 export async function configCommand() {
   const current = readConfig();
@@ -33,6 +34,7 @@ export async function configCommand() {
 
   if (added.length === 0 && removed.length === 0) {
     p.log.info(pc.dim("no changes"));
+    await maybePromptUnsyncedLocalSkillsBackup(selected);
     return;
   }
 
@@ -47,4 +49,5 @@ export async function configCommand() {
   }
 
   p.log.success(pc.dim("configuration saved"));
+  await maybePromptUnsyncedLocalSkillsBackup(selected);
 }

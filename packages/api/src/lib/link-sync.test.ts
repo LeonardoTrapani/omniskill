@@ -99,7 +99,8 @@ mock.module("@better-skills/db", () => {
 });
 
 // must import after mock setup
-const { MentionSyntaxError, MentionValidationError, syncAutoLinks } = await import("./link-sync");
+const { MentionSyntaxError, MentionValidationError, syncAutoLinks, syncAutoLinksForSources } =
+  await import("./link-sync");
 
 describe("syncAutoLinks", () => {
   const SKILL_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
@@ -232,5 +233,36 @@ describe("syncAutoLinks", () => {
 
     expect(deleteCalls).toHaveLength(0);
     expect(insertCalls).toHaveLength(0);
+  });
+
+  test("supports resource-source auto links", async () => {
+    const SOURCE_RESOURCE = "12345678-9abc-def0-1234-56789abcdef0";
+    const md = `[[skill:${TARGET_SKILL}]] [[resource:${TARGET_RESOURCE}]]`;
+
+    await syncAutoLinksForSources(
+      [
+        {
+          type: "resource",
+          sourceId: SOURCE_RESOURCE,
+          sourceOwnerUserId: OWNER,
+          markdown: md,
+        },
+      ],
+      USER_ID,
+    );
+
+    expect(deleteCalls).toHaveLength(1);
+    expect(insertCalls).toHaveLength(1);
+
+    const values = insertCalls[0]!.values as Array<{
+      sourceSkillId: string | null;
+      sourceResourceId: string | null;
+    }>;
+
+    expect(values).toHaveLength(2);
+    for (const value of values) {
+      expect(value.sourceSkillId).toBeNull();
+      expect(value.sourceResourceId).toBe(SOURCE_RESOURCE);
+    }
   });
 });

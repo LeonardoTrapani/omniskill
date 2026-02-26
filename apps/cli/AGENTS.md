@@ -19,3 +19,7 @@ This package is better-skills's command-line interface, built with `@clack/promp
 ## Required env
 
 - `SERVER_URL` (defaults to `http://localhost:3000`)
+
+## Additional guidance
+
+- `docs/mention-link-sync-flow.md`
