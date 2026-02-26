@@ -6,6 +6,7 @@ import { NodePreviewCard } from "@/components/skills/graph/node-preview-card";
 import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { buildResourceHref, type SkillResourceReference } from "@/lib/skills/resource-links";
+import { buildResourceTabHref } from "@/lib/skills/routes";
 
 export type ResourceLike = SkillResourceReference;
 
@@ -25,7 +26,10 @@ export function ResourceHoverLink({
   onNavigate?: (event: MouseEvent<HTMLElement>, href: ReturnType<typeof buildResourceHref>) => void;
 }) {
   const previewUnavailable = !canRenderResourceAsMarkdown(resource.path, resource.kind);
-  const href = buildResourceHref(skillId, resource.path);
+  const href =
+    typeof window !== "undefined" && window.innerWidth < 1024
+      ? buildResourceHref(skillId, resource.path)
+      : buildResourceTabHref(skillId, resource.path);
 
   return (
     <HoverCard>

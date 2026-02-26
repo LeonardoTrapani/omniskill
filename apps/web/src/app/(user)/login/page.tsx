@@ -70,11 +70,15 @@ function LoginPageContent() {
   const callbackURL = getSafeCallbackURL(searchParams.get("next"));
 
   if (!isHydrated || isPending) {
+<<<<<<<< HEAD:apps/web/src/app/(footer)/login/page.tsx
 <<<<<<<< HEAD:apps/web/src/app/(user)/login/page.tsx
     return <LoginLoadingState />;
 ========
     return <Loader />;
 >>>>>>>> 8f2bad4 (feat: complete redesign):apps/web/src/app/(footer)/login/page.tsx
+========
+    return <LoginLoadingState />;
+>>>>>>>> a3dbc08 (feat: tiny changes):apps/web/src/app/(user)/login/page.tsx
   }
 
   const signInWith = (provider: "google" | "github") => {
@@ -150,12 +154,17 @@ function LoginPageContent() {
               </Button>
             </div>
 
+<<<<<<<< HEAD:apps/web/src/app/(footer)/login/page.tsx
 <<<<<<<< HEAD:apps/web/src/app/(user)/login/page.tsx
             <p className="mt-6 inline-flex items-center gap-2 border-t border-dashed border-border pt-5 text-xs leading-5 text-muted-foreground">
               <ShieldCheck className="size-3.5" aria-hidden="true" />
 ========
             <p className="mt-6 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
 >>>>>>>> 8f2bad4 (feat: complete redesign):apps/web/src/app/(footer)/login/page.tsx
+========
+            <p className="mt-6 inline-flex items-center gap-2 border-t border-dashed border-border pt-5 text-xs leading-5 text-muted-foreground">
+              <ShieldCheck className="size-3.5" aria-hidden="true" />
+>>>>>>>> a3dbc08 (feat: tiny changes):apps/web/src/app/(user)/login/page.tsx
               You will be redirected back to your vault after authentication.
             </p>
           </div>

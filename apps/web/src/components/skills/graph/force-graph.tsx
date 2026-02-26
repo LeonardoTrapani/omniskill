@@ -8,7 +8,7 @@ import * as d3 from "d3";
 import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { NodePreviewCard } from "@/components/skills/graph/node-preview-card";
 import { buildResourceHref } from "@/lib/skills/resource-links";
-import { buildSkillHref } from "@/lib/skills/routes";
+import { buildResourceTabHref, buildSkillHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
 
 export interface GraphNode extends d3.SimulationNodeDatum {
@@ -297,7 +297,11 @@ export function ForceGraph({
           if (d.type === "skill") {
             router.push(buildSkillHref(d.id));
           } else if (d.parentSkillId) {
-            router.push(buildResourceHref(d.parentSkillId, d.label));
+            const href =
+              window.innerWidth < 1024
+                ? buildResourceHref(d.parentSkillId, d.label)
+                : buildResourceTabHref(d.parentSkillId, d.label);
+            router.push(href);
           }
         });
 
