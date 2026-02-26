@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import {
@@ -8,6 +7,7 @@ import {
   slugify,
 } from "../lib/skill-io";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(3);
@@ -33,7 +33,7 @@ export async function createCommand() {
   const { from, slug: slugOverride, isPublic } = parseArgs(process.argv);
 
   if (!from) {
-    p.log.error("usage: better-skills create --from <dir> [--slug <s>] [--public]");
+    ui.log.error("usage: better-skills create --from <dir> [--slug <s>] [--public]");
     process.exit(1);
   }
 
@@ -41,7 +41,7 @@ export async function createCommand() {
   try {
     draft = await loadLocalSkillDraft(from);
   } catch (error) {
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -51,7 +51,7 @@ export async function createCommand() {
     slugify(draft.name);
   const visibility = isPublic ? ("public" as const) : ("private" as const);
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("creating skill");
 
   let createdSkill: Awaited<ReturnType<typeof trpc.skills.create.mutate>> | null = null;
@@ -91,10 +91,10 @@ export async function createCommand() {
     s.stop(pc.red("creation failed"));
 
     if (createdSkill) {
-      p.log.error(`skill was created but finalization failed: ${createdSkill.id}`);
+      ui.log.error(`skill was created but finalization failed: ${createdSkill.id}`);
     }
 
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

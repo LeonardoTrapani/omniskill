@@ -77,7 +77,7 @@ Only proceed to Step 3 after the user confirms their selections.
 3. If the user chose to delete any vault-only skills:
 
    ```bash
-   better-skills delete <uuid>
+   better-skills delete <uuid> --yes
    ```
 
 4. `backup apply` behavior:

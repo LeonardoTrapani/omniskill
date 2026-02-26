@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import * as p from "@clack/prompts";
 import matter from "gray-matter";
 import pc from "picocolors";
 
@@ -12,6 +11,8 @@ import { getAgentSkillDir } from "./agents";
 import { createBackupPlan, writeBackupPlan } from "./backup-flow";
 import { readCliPreferences, saveCliPreferences } from "./config";
 import { readErrorMessage } from "./errors";
+import { isPlain } from "./output-mode";
+import * as ui from "./ui";
 
 const INSTALL_METADATA_FILE = ".better-skills-install.json";
 
@@ -180,6 +181,9 @@ async function copyToClipboard(input: string): Promise<boolean> {
 }
 
 async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[]): Promise<void> {
+  // skip entirely in non-interactive mode
+  if (isPlain) return;
+
   const preferences = readCliPreferences();
   if (preferences.skipUnsyncedBackupPrompt) {
     return;
@@ -190,36 +194,36 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
     return;
   }
 
-  const choice = await p.select({
+  const choice = await ui.select({
     message:
       "i found local skills that are not backed up to your better-skills vault yet. are you looking to back those up?",
     options: [
       {
-        value: "yes",
+        value: "yes" as const,
         label: "1. yes",
       },
       {
-        value: "no",
+        value: "no" as const,
         label: "2. no",
       },
       {
-        value: "never",
+        value: "never" as const,
         label: "3. no (never ask again)",
       },
     ],
   });
 
-  if (p.isCancel(choice) || choice === "no") {
+  if (ui.isCancel(choice) || choice === "no") {
     return;
   }
 
   if (choice === "never") {
     await saveCliPreferences({ skipUnsyncedBackupPrompt: true });
-    p.log.info(pc.dim("ok, i won't ask again"));
+    ui.log.info(pc.dim("ok, i won't ask again"));
     return;
   }
 
-  const spinner = p.spinner();
+  const spinner = ui.spinner();
   spinner.start("building backup plan");
 
   try {
@@ -231,23 +235,23 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
         `backup plan ready (${plan.summary.createCount} create, ${plan.summary.updateCount} update, ${plan.summary.skipCount} skip)`,
       ),
     );
-    p.log.info(pc.dim(`saved backup plan to: ${planPath}`));
+    ui.log.info(pc.dim(`saved backup plan to: ${planPath}`));
 
     const applyCommand = `better-skills backup apply --plan ${planPath}`;
     const copied = await copyToClipboard(applyCommand);
 
     if (copied) {
-      p.log.success("backup apply command copied to clipboard");
+      ui.log.success("backup apply command copied to clipboard");
     } else {
-      p.log.info(pc.dim(`next: ${applyCommand}`));
+      ui.log.info(pc.dim(`next: ${applyCommand}`));
     }
 
     if (plan.summary.actionableCount === 0) {
-      p.log.info(pc.dim("plan has no actionable create/update items"));
+      ui.log.info(pc.dim("plan has no actionable create/update items"));
     }
   } catch (error) {
     spinner.stop(pc.red("could not build backup plan"));
-    p.log.warn(pc.dim(`backup planning failed: ${readErrorMessage(error)}`));
+    ui.log.warn(pc.dim(`backup planning failed: ${readErrorMessage(error)}`));
   }
 }
 
@@ -257,6 +261,6 @@ export async function maybePromptUnsyncedLocalSkillsBackup(
   try {
     await maybePromptUnsyncedLocalSkillsBackupInner(agents);
   } catch (error) {
-    p.log.warn(pc.dim(`could not prepare local backup prompt: ${readErrorMessage(error)}`));
+    ui.log.warn(pc.dim(`could not prepare local backup prompt: ${readErrorMessage(error)}`));
   }
 }

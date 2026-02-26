@@ -1,8 +1,8 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 const DEFAULT_LIMIT = 5;
 
@@ -18,16 +18,16 @@ export async function searchCommand() {
   const query = queryArgs.join(" ");
 
   if (!query) {
-    p.log.error("usage: better-skills search <query> [--public] [--limit N]");
+    ui.log.error("usage: better-skills search <query> [--public] [--limit N]");
     process.exit(1);
   }
 
   if (isNaN(limit) || limit < 1) {
-    p.log.error("--limit must be a positive integer");
+    ui.log.error("--limit must be a positive integer");
     process.exit(1);
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("searching skills");
 
   try {
@@ -60,7 +60,7 @@ export async function searchCommand() {
     }
   } catch (error) {
     s.stop(pc.red("search failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

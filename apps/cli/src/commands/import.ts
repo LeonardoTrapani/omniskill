@@ -1,8 +1,8 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 import { UUID_RE } from "../lib/uuid";
 
 function parseArgs(argv: string[]) {
@@ -26,11 +26,11 @@ export async function importCommand() {
   const { identifier, slug: slugOverride } = parseArgs(process.argv);
 
   if (!identifier) {
-    p.log.error("usage: better-skills import <slug-or-uuid> [--slug <new-slug>]");
+    ui.log.error("usage: better-skills import <slug-or-uuid> [--slug <new-slug>]");
     process.exit(1);
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
 
   // resolve slug to UUID if needed
   let skillId: string;
@@ -45,7 +45,7 @@ export async function importCommand() {
       s.stop(pc.dim(`found ${found.name}`));
     } catch (error) {
       s.stop(pc.red("not found"));
-      p.log.error(readErrorMessage(error));
+      ui.log.error(readErrorMessage(error));
       process.exit(1);
     }
   }
@@ -70,7 +70,7 @@ export async function importCommand() {
     );
   } catch (error) {
     s.stop(pc.red("import failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

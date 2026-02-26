@@ -1,18 +1,18 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { env } from "@better-skills/env/cli";
 import { clearSession, readSessionSync } from "../lib/session";
+import * as ui from "../lib/ui";
 
 export async function logoutCommand() {
   const session = readSessionSync();
 
   if (!session) {
-    p.log.warn("not authenticated — nothing to do");
+    ui.log.warn("not authenticated — nothing to do");
     return;
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("signing out");
 
   try {

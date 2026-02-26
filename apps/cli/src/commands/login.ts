@@ -1,10 +1,10 @@
-import * as p from "@clack/prompts";
 import open from "open";
 import pc from "picocolors";
 
 import { authClient, CLI_DEVICE_CLIENT_ID } from "../lib/auth-client";
 import { getSessionFilePath, saveSession } from "../lib/session";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 const DEVICE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code";
 
@@ -55,7 +55,7 @@ function sleep(ms: number) {
 }
 
 export async function loginCommand() {
-  const setupSpinner = p.spinner();
+  const setupSpinner = ui.spinner();
   setupSpinner.start("requesting login code");
 
   const { data: codeData, error: codeError } = await authClient.device.code({
@@ -74,19 +74,19 @@ export async function loginCommand() {
   const verificationCompleteUrl = codeData.verification_uri_complete || verificationUrl;
   const formattedCode = formatUserCode(codeData.user_code);
 
-  p.log.message("attempting to open the browser for login");
-  p.log.message(pc.dim("if the browser does not open, open this url manually:"));
-  p.log.message(pc.cyan(verificationCompleteUrl));
-  p.log.message(`enter this code if prompted: ${pc.bold(formattedCode)}`);
+  ui.log.message("attempting to open the browser for login");
+  ui.log.message(pc.dim("if the browser does not open, open this url manually:"));
+  ui.log.message(pc.cyan(verificationCompleteUrl));
+  ui.log.message(`enter this code if prompted: ${pc.bold(formattedCode)}`);
 
   try {
     await open(verificationCompleteUrl);
   } catch {
-    p.log.warn(`unable to open browser automatically. use: ${verificationUrl}`);
+    ui.log.warn(`unable to open browser automatically. use: ${verificationUrl}`);
   }
 
   let pollingIntervalSeconds = Math.max(codeData.interval, 1);
-  const pollingSpinner = p.spinner();
+  const pollingSpinner = ui.spinner();
   pollingSpinner.start(`waiting for confirmation (polling every ${pollingIntervalSeconds}s)`);
 
   while (true) {
@@ -109,12 +109,12 @@ export async function loginCommand() {
 
       try {
         const me = await trpc.me.query();
-        p.log.success(`logged in as ${me.user.name ?? me.user.email}`);
+        ui.log.success(`logged in as ${me.user.name ?? me.user.email}`);
       } catch {
-        p.log.info("session saved, but profile fetch failed");
+        ui.log.info("session saved, but profile fetch failed");
       }
 
-      p.log.info(pc.dim(`session saved to ${getSessionFilePath()}`));
+      ui.log.info(pc.dim(`session saved to ${getSessionFilePath()}`));
       return;
     }
 

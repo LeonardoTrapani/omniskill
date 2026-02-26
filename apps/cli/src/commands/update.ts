@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import {
@@ -8,6 +7,7 @@ import {
   resolveNewResourceMentions,
 } from "../lib/skill-io";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 import { UUID_RE } from "../lib/uuid";
 
 function parseArgs(argv: string[]) {
@@ -53,7 +53,7 @@ export async function updateCommand() {
   const { identifier, from, slug, visibility: visibilityOverride } = parseArgs(process.argv);
 
   if (!identifier || !from) {
-    p.log.error(
+    ui.log.error(
       "usage: better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
     );
     process.exit(1);
@@ -63,11 +63,11 @@ export async function updateCommand() {
   try {
     draft = await loadLocalSkillDraft(from);
   } catch (error) {
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("loading skill");
 
   let targetSkill: Awaited<ReturnType<typeof trpc.skills.getById.query>>;
@@ -78,7 +78,7 @@ export async function updateCommand() {
     s.stop(pc.dim(`loaded ${targetSkill.slug}`));
   } catch (error) {
     s.stop(pc.red("load failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -125,10 +125,10 @@ export async function updateCommand() {
     s.stop(pc.red("update failed"));
 
     if (updatedSkill) {
-      p.log.error(`skill was updated but finalization failed: ${updatedSkill.id}`);
+      ui.log.error(`skill was updated but finalization failed: ${updatedSkill.id}`);
     }
 
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

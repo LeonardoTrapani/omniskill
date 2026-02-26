@@ -1,13 +1,13 @@
 import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import * as p from "@clack/prompts";
 import { parseMentions } from "@better-skills/api/lib/mentions";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
 import { type InstallableSkill, writeSkillFolder } from "../lib/skills-installer";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 import { UUID_RE } from "../lib/uuid";
 
 type SkillDetails = Awaited<ReturnType<typeof trpc.skills.getById.query>>;
@@ -170,11 +170,11 @@ export async function cloneCommand() {
   const { identifier, to, force } = parseArgs(process.argv);
 
   if (!identifier) {
-    p.log.error("usage: better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
+    ui.log.error("usage: better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
     process.exit(1);
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("loading skill");
 
   let skill: SkillDetails;
@@ -185,7 +185,7 @@ export async function cloneCommand() {
     s.stop(pc.dim(`loaded ${skill.slug}`));
   } catch (error) {
     s.stop(pc.red("load failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -197,7 +197,7 @@ export async function cloneCommand() {
     s.stop(pc.dim(`ready ${targetDir}`));
   } catch (error) {
     s.stop(pc.red("prepare failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -209,11 +209,11 @@ export async function cloneCommand() {
     s.stop(pc.green(`cloned ${skill.slug}`));
 
     if (result.skippedResources.length > 0) {
-      p.log.warn(`skipped unsafe resource path(s): ${result.skippedResources.join(", ")}`);
+      ui.log.warn(`skipped unsafe resource path(s): ${result.skippedResources.join(", ")}`);
     }
   } catch (error) {
     s.stop(pc.red("clone failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -238,5 +238,5 @@ export async function cloneCommand() {
     }
   }
 
-  p.log.info(pc.dim(`next: better-skills update ${skill.id} --from ${targetDir}`));
+  ui.log.info(pc.dim(`next: better-skills update ${skill.id} --from ${targetDir}`));
 }

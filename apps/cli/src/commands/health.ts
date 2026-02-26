@@ -1,11 +1,11 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 export async function healthCommand() {
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("checking server connection");
 
   try {

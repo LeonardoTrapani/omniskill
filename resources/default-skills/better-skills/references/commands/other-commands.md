@@ -28,8 +28,11 @@ Behavior for `list`:
 
 ```bash
 better-skills import <slug-or-uuid> [--slug <new-slug>]
-better-skills delete <uuid>
+better-skills delete <uuid> [--yes]
 ```
+
+`--yes` skips the interactive confirmation prompt. Required in non-interactive
+environments (agents, CI, piped input).
 
 ## Agent config and sync
 
@@ -41,7 +44,13 @@ better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
 better-skills backup apply --plan <file> [--keep-snapshot]
 ```
 
-## Automation notes
+## Non-interactive / agent usage
 
+The CLI auto-detects non-interactive environments (no TTY, `AGENT=1`,
+`OPENCODE=1`, `CI=true`) and suppresses spinners and decorative output.
+
+- Destructive commands like `delete` require `--yes` in non-interactive mode.
+- Interactive prompts (agent selection, backup suggestions) are skipped with
+  sensible defaults.
 - create/import/update print JSON on success (`id`, `slug`, `name`, `visibility`).
 - failures return non-zero and print actionable error text.

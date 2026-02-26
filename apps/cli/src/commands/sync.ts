@@ -1,4 +1,3 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { getAgentDisplayName, resolveInstallAgents } from "../lib/agents";
@@ -12,6 +11,7 @@ import {
 } from "../lib/skills-installer";
 import { maybePromptUnsyncedLocalSkillsBackup } from "../lib/unsynced-local-skills";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 const SYNC_PAGE_LIMIT = 100;
 
@@ -76,9 +76,9 @@ export async function syncPrivateSkills(
 ): Promise<SyncRunResult> {
   const promptUnsyncedBackup = options?.promptUnsyncedBackup ?? true;
 
-  p.log.info(`targets: ${selectedAgents.map((agent) => getAgentDisplayName(agent)).join(", ")}`);
+  ui.log.info(`targets: ${selectedAgents.map((agent) => getAgentDisplayName(agent)).join(", ")}`);
 
-  const authSpinner = p.spinner();
+  const authSpinner = ui.spinner();
   authSpinner.start("checking authentication");
 
   try {
@@ -96,7 +96,7 @@ export async function syncPrivateSkills(
     };
   }
 
-  const fetchSpinner = p.spinner();
+  const fetchSpinner = ui.spinner();
   fetchSpinner.start("loading private skills");
 
   let privateSkills: SkillListItem[];
@@ -137,7 +137,7 @@ export async function syncPrivateSkills(
   let failed = 0;
 
   for (const [index, item] of privateSkills.entries()) {
-    const spinner = p.spinner();
+    const spinner = ui.spinner();
     spinner.start(`syncing ${item.slug} (${index + 1}/${privateSkills.length})`);
 
     try {
@@ -161,7 +161,7 @@ export async function syncPrivateSkills(
 
   if (staleEntries.length > 0) {
     for (const [folder, entry] of staleEntries) {
-      const spinner = p.spinner();
+      const spinner = ui.spinner();
       spinner.start(`removing ${entry.slug}`);
 
       try {
@@ -173,10 +173,10 @@ export async function syncPrivateSkills(
       }
     }
 
-    p.log.info(pc.dim(`removed ${removedStaleSkills} skill(s) no longer on server`));
+    ui.log.info(pc.dim(`removed ${removedStaleSkills} skill(s) no longer on server`));
   }
 
-  p.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
+  ui.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
 
   if (promptUnsyncedBackup) {
     await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
@@ -196,7 +196,7 @@ export async function syncCommand() {
   const selectedAgents = await resolveInstallAgents();
 
   if (selectedAgents.length === 0) {
-    p.log.error("no agents selected");
+    ui.log.error("no agents selected");
     return;
   }
 

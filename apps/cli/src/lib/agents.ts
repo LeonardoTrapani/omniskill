@@ -1,10 +1,11 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readConfig, saveConfig } from "./config";
+import { isPlain } from "./output-mode";
+import * as ui from "./ui";
 
 const home = homedir();
 const configHome = process.env.XDG_CONFIG_HOME?.trim() || join(home, ".config");
@@ -70,7 +71,12 @@ export function getAgentSkillDir(agent: SupportedAgent): string {
 export async function promptAgentSelection(
   initial?: SupportedAgent[],
 ): Promise<SupportedAgent[] | null> {
-  const result = await p.multiselect({
+  if (isPlain) {
+    // non-interactive: return saved config or all agents as default
+    return initial ?? supportedAgents;
+  }
+
+  const result = await ui.multiselect({
     message: "which agents do you want to install skills to?",
     options: supportedAgents.map((key) => ({
       value: key,
@@ -80,7 +86,7 @@ export async function promptAgentSelection(
     required: true,
   });
 
-  if (p.isCancel(result)) {
+  if (ui.isCancel(result)) {
     return null;
   }
 
@@ -94,8 +100,13 @@ export async function resolveInstallAgents(): Promise<SupportedAgent[]> {
     return saved;
   }
 
-  // first run - prompt user to pick agents
-  p.log.info(pc.dim("no agent configuration found - let's set one up"));
+  if (isPlain) {
+    // non-interactive first run: use all agents and persist
+    await saveConfig(supportedAgents as unknown as SupportedAgent[]);
+    return [...supportedAgents];
+  }
+
+  ui.log.info(pc.dim("no agent configuration found - let's set one up"));
 
   const selected = await promptAgentSelection(supportedAgents);
 
@@ -104,7 +115,7 @@ export async function resolveInstallAgents(): Promise<SupportedAgent[]> {
   }
 
   await saveConfig(selected);
-  p.log.success(pc.dim("saved agent configuration"));
+  ui.log.success(pc.dim("saved agent configuration"));
 
   return selected;
 }

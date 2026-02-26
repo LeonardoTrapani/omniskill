@@ -1,19 +1,19 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 import { UUID_RE } from "../lib/uuid";
 
 export async function getCommand() {
   const identifier = process.argv[3];
 
   if (!identifier) {
-    p.log.error("usage: better-skills get <slug-or-uuid>");
+    ui.log.error("usage: better-skills get <slug-or-uuid>");
     process.exit(1);
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("fetching skill");
 
   try {
@@ -40,7 +40,7 @@ export async function getCommand() {
     console.log(skill.renderedMarkdown);
   } catch (error) {
     s.stop(pc.red("fetch failed"));
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

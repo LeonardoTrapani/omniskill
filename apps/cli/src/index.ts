@@ -1,5 +1,3 @@
-import * as p from "@clack/prompts";
-
 import { backupCommand } from "./commands/backup";
 import { cloneCommand } from "./commands/clone";
 import { configCommand } from "./commands/config";
@@ -17,6 +15,7 @@ import { updateCommand } from "./commands/update";
 import { validateCommand } from "./commands/validate";
 import { whoamiCommand } from "./commands/whoami";
 import { readErrorMessage } from "./lib/errors";
+import * as ui from "./lib/ui";
 import { getCliVersion } from "./lib/version";
 
 class UsageError extends Error {
@@ -27,32 +26,32 @@ class UsageError extends Error {
 }
 
 function printUsage() {
-  p.log.info("usage:");
-  p.log.info("  better-skills --version");
-  p.log.info("  better-skills --help");
-  p.log.info("  better-skills health");
-  p.log.info("  better-skills login");
-  p.log.info("  better-skills logout");
-  p.log.info("  better-skills whoami");
-  p.log.info("  better-skills sync");
-  p.log.info("  better-skills validate <dir>");
-  p.log.info("  better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]...");
-  p.log.info("  better-skills backup apply --plan <file> [--keep-snapshot]");
-  p.log.info("  better-skills list [search] [--all] [--limit N]");
-  p.log.info("  better-skills search <query> [--public] [--limit N]");
-  p.log.info("  better-skills get <slug-or-uuid>");
-  p.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
-  p.log.info("  better-skills config");
-  p.log.info("  better-skills create --from <dir> [--slug <s>] [--public]");
-  p.log.info(
+  ui.log.info("usage:");
+  ui.log.info("  better-skills --version");
+  ui.log.info("  better-skills --help");
+  ui.log.info("  better-skills health");
+  ui.log.info("  better-skills login");
+  ui.log.info("  better-skills logout");
+  ui.log.info("  better-skills whoami");
+  ui.log.info("  better-skills sync");
+  ui.log.info("  better-skills validate <dir>");
+  ui.log.info("  better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]...");
+  ui.log.info("  better-skills backup apply --plan <file> [--keep-snapshot]");
+  ui.log.info("  better-skills list [search] [--all] [--limit N]");
+  ui.log.info("  better-skills search <query> [--public] [--limit N]");
+  ui.log.info("  better-skills get <slug-or-uuid>");
+  ui.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
+  ui.log.info("  better-skills config");
+  ui.log.info("  better-skills create --from <dir> [--slug <s>] [--public]");
+  ui.log.info(
     "  better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
   );
-  p.log.info("  better-skills delete <uuid>");
-  p.log.info("  better-skills import <slug-or-uuid> [--slug <new-slug>]");
+  ui.log.info("  better-skills delete <uuid> [--yes]");
+  ui.log.info("  better-skills import <slug-or-uuid> [--slug <new-slug>]");
 }
 
 function printVersion() {
-  p.log.info(`better-skills ${getCliVersion()}`);
+  ui.log.info(`better-skills ${getCliVersion()}`);
 }
 
 async function run(args: string[]) {
@@ -126,7 +125,7 @@ async function main() {
   try {
     await run(process.argv.slice(2));
   } catch (error) {
-    p.log.error(readErrorMessage(error));
+    ui.log.error(readErrorMessage(error));
 
     if (error instanceof UsageError) {
       printUsage();

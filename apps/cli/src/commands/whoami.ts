@@ -1,16 +1,16 @@
-import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { readSessionSync } from "../lib/session";
 import { trpc } from "../lib/trpc";
+import * as ui from "../lib/ui";
 
 export async function whoamiCommand() {
   if (!readSessionSync()) {
-    p.log.warn("not authenticated — run login first");
+    ui.log.warn("not authenticated — run login first");
     return;
   }
 
-  const s = p.spinner();
+  const s = ui.spinner();
   s.start("fetching session");
 
   try {
