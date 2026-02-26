@@ -21,10 +21,9 @@ These are the canonical storage format in `skill.skill_markdown` and resource `c
 
 ### Draft-local mentions (path based)
 
-- `[[skill:new:path/to/file]]`
 - `[[resource:new:path/to/file]]`
 
-These are used while authoring local skill files. They are resolved to UUID mentions
+This is used while authoring local skill files. It is resolved to UUID mentions
 when resources are created and IDs are known.
 
 ### Escaped mentions

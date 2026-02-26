@@ -4,7 +4,7 @@ Use this for auth, connectivity, discovery commands, import/clone/delete, sync, 
 
 ## Read first
 
-- [[skill:new:references/commands/other-commands.md]]
+- [[resource:new:references/commands/other-commands.md]]
 
 ## Steps
 

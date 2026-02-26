@@ -1,31 +1,26 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 import matter from "gray-matter";
 import pc from "picocolors";
 
 import type { SupportedAgent } from "./agents";
-import { getAgentSkillDir } from "./agents";
-import { createBackupPlan, writeBackupPlan } from "./backup-flow";
+import { getAgentDisplayName, getAgentSkillDir } from "./agents";
 import { readCliPreferences, saveCliPreferences } from "./config";
 import { readErrorMessage } from "./errors";
 import { isPlain } from "./output-mode";
 import * as ui from "./ui";
 
+const HOME_DIR = homedir();
 const INSTALL_METADATA_FILE = ".better-skills-install.json";
+const UNSYNCED_PROMPT_FILE_PREFIX = "better-skills-unsynced-local-skills";
 
-type UnsyncedSkillOccurrence = {
-  agent: SupportedAgent;
-  folder: string;
-  path: string;
-};
-
-type UnsyncedSkillGroup = {
-  folders: string[];
-  name: string;
-  occurrences: UnsyncedSkillOccurrence[];
+type UnsyncedSkillsByAgent = {
+  displayName: string;
+  skillsDir: string;
+  slugs: string[];
 };
 
 type ClipboardCommand = {
@@ -67,34 +62,47 @@ const CLIPBOARD_COMMANDS: ClipboardCommand[] = [
   },
 ];
 
-async function readSkillName(skillMarkdown: string, fallback: string): Promise<string> {
+function readSkillSlug(skillMarkdown: string, fallback: string): string {
   try {
     const { data } = matter(skillMarkdown);
-    const parsed = typeof data.name === "string" ? data.name.trim() : "";
+    const parsed = typeof data.slug === "string" ? data.slug.trim() : "";
     return parsed || fallback;
   } catch {
     return fallback;
   }
 }
 
-function hashSkillContent(skillMarkdown: string): string {
-  return createHash("sha1").update(skillMarkdown).digest("hex");
+function formatTimestamp(): string {
+  return new Date().toISOString().replace(/[:.]/g, "-");
 }
 
-async function findUnsyncedLocalSkills(agents: SupportedAgent[]): Promise<UnsyncedSkillGroup[]> {
+function formatPathForDisplay(pathValue: string): string {
+  if (pathValue === HOME_DIR) {
+    return "~";
+  }
+
+  if (pathValue.startsWith(`${HOME_DIR}/`)) {
+    return `~/${pathValue.slice(HOME_DIR.length + 1)}`;
+  }
+
+  return pathValue;
+}
+
+async function findUnsyncedLocalSkills(agents: SupportedAgent[]): Promise<UnsyncedSkillsByAgent[]> {
   const uniqueAgents = [...new Set(agents)];
-  const grouped = new Map<string, UnsyncedSkillGroup>();
+  const grouped: UnsyncedSkillsByAgent[] = [];
 
   for (const agent of uniqueAgents) {
-    const agentDir = getAgentSkillDir(agent);
-    const entries = await readdir(agentDir, { withFileTypes: true }).catch(() => []);
+    const skillsDir = getAgentSkillDir(agent);
+    const entries = await readdir(skillsDir, { withFileTypes: true }).catch(() => []);
+    const slugs = new Set<string>();
 
     for (const entry of entries) {
       if (!entry.isDirectory() && !entry.isSymbolicLink()) {
         continue;
       }
 
-      const skillDir = join(agentDir, entry.name);
+      const skillDir = join(skillsDir, entry.name);
       const skillMarkdown = await readFile(join(skillDir, "SKILL.md"), "utf8").catch(() => null);
       if (!skillMarkdown) {
         continue;
@@ -108,28 +116,43 @@ async function findUnsyncedLocalSkills(agents: SupportedAgent[]): Promise<Unsync
         continue;
       }
 
-      const skillName = await readSkillName(skillMarkdown, entry.name);
-      const key = hashSkillContent(skillMarkdown);
-      const existing = grouped.get(key);
-
-      if (existing) {
-        if (!existing.folders.includes(entry.name)) {
-          existing.folders.push(entry.name);
-        }
-
-        existing.occurrences.push({ agent, folder: entry.name, path: skillDir });
-        continue;
-      }
-
-      grouped.set(key, {
-        folders: [entry.name],
-        name: skillName,
-        occurrences: [{ agent, folder: entry.name, path: skillDir }],
-      });
+      slugs.add(readSkillSlug(skillMarkdown, entry.name));
     }
+
+    grouped.push({
+      displayName: getAgentDisplayName(agent),
+      skillsDir,
+      slugs: [...slugs].sort((a, b) => a.localeCompare(b)),
+    });
   }
 
-  return [...grouped.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return grouped;
+}
+
+function countUnsyncedSkills(groups: UnsyncedSkillsByAgent[]): number {
+  return groups.reduce((total, group) => total + group.slugs.length, 0);
+}
+
+function renderUnsyncedAgentSection(group: UnsyncedSkillsByAgent): string {
+  const lines = group.slugs.length === 0 ? ["- none"] : group.slugs.map((slug) => `- ${slug}`);
+
+  return [`${group.displayName} (${formatPathForDisplay(group.skillsDir)})`, ...lines].join("\n");
+}
+
+function renderVaultMergePrompt(groups: UnsyncedSkillsByAgent[]): string {
+  return [
+    "Use the `better-skills` skill and follow `Flow: Upload Local Skills to Better-Skills Vault` to back up these skills.",
+    "",
+    "Here are the unsynced skills for each selected agent:",
+    "",
+    groups.map((group) => renderUnsyncedAgentSection(group)).join("\n\n"),
+  ].join("\n");
+}
+
+async function writePromptToTempFile(prompt: string): Promise<string> {
+  const promptPath = join(tmpdir(), `${UNSYNCED_PROMPT_FILE_PREFIX}-${formatTimestamp()}.md`);
+  await writeFile(promptPath, `${prompt}\n`, "utf8");
+  return promptPath;
 }
 
 async function runClipboardCommand(
@@ -190,13 +213,15 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
   }
 
   const unsynced = await findUnsyncedLocalSkills(agents);
-  if (unsynced.length === 0) {
+  const unsyncedCount = countUnsyncedSkills(unsynced);
+
+  if (unsyncedCount === 0) {
     return;
   }
 
   const choice = await ui.select({
     message:
-      "i found local skills that are not backed up to your better-skills vault yet. are you looking to back those up?",
+      "i found local skills in the selected folders that are not managed by better-skills yet. are you looking to put them in your vault?",
     options: [
       {
         value: "yes" as const,
@@ -224,34 +249,26 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
   }
 
   const spinner = ui.spinner();
-  spinner.start("building backup plan");
+  spinner.start("preparing vault merge handoff");
 
   try {
-    const plan = await createBackupPlan({ agents });
-    const planPath = await writeBackupPlan(plan);
+    const prompt = renderVaultMergePrompt(unsynced);
+    const promptPath = await writePromptToTempFile(prompt);
 
-    spinner.stop(
-      pc.green(
-        `backup plan ready (${plan.summary.createCount} create, ${plan.summary.updateCount} update, ${plan.summary.skipCount} skip)`,
-      ),
-    );
-    ui.log.info(pc.dim(`saved backup plan to: ${planPath}`));
+    spinner.stop(pc.green(`vault handoff ready (${unsyncedCount} unsynced skill(s))`));
+    ui.log.info(pc.dim(`saved agent prompt to: ${promptPath}`));
 
-    const applyCommand = `better-skills backup apply --plan ${planPath}`;
-    const copied = await copyToClipboard(applyCommand);
+    const copied = await copyToClipboard(prompt);
 
     if (copied) {
-      ui.log.success("backup apply command copied to clipboard");
+      ui.log.success("vault merge prompt copied to clipboard");
     } else {
-      ui.log.info(pc.dim(`next: ${applyCommand}`));
-    }
-
-    if (plan.summary.actionableCount === 0) {
-      ui.log.info(pc.dim("plan has no actionable create/update items"));
+      ui.log.warn(pc.dim("could not copy prompt to clipboard"));
+      ui.log.info(pc.dim(`use prompt file: ${promptPath}`));
     }
   } catch (error) {
-    spinner.stop(pc.red("could not build backup plan"));
-    ui.log.warn(pc.dim(`backup planning failed: ${readErrorMessage(error)}`));
+    spinner.stop(pc.red("could not prepare vault merge handoff"));
+    ui.log.warn(pc.dim(`handoff preparation failed: ${readErrorMessage(error)}`));
   }
 }
 
@@ -261,6 +278,6 @@ export async function maybePromptUnsyncedLocalSkillsBackup(
   try {
     await maybePromptUnsyncedLocalSkillsBackupInner(agents);
   } catch (error) {
-    ui.log.warn(pc.dim(`could not prepare local backup prompt: ${readErrorMessage(error)}`));
+    ui.log.warn(pc.dim(`could not prepare local vault merge prompt: ${readErrorMessage(error)}`));
   }
 }

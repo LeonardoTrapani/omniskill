@@ -4,9 +4,9 @@ Use this when user wants to create a new skill from a local folder.
 
 ## Read first
 
-- [[skill:new:references/guidelines/authoring.md]]
-- [[skill:new:references/guidelines/mention-linking.md]]
-- [[skill:new:references/commands/create-update.md]]
+- [[resource:new:references/guidelines/authoring.md]]
+- [[resource:new:references/guidelines/mention-linking.md]]
+- [[resource:new:references/commands/create-update.md]]
 
 ## Steps
 
