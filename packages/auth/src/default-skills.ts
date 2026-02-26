@@ -3,18 +3,39 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, dirname, extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import matter from "gray-matter";
 
 import { db } from "@better-skills/db";
-import { skill, skillResource } from "@better-skills/db/schema/skills";
+import { skill, skillLink, skillResource } from "@better-skills/db/schema/skills";
 import {
   collectNewResourceMentionPaths,
   normalizeResourcePath,
   resolveNewResourceMentionsToUuids,
 } from "@better-skills/markdown/new-resource-mentions";
+import { transformOutsideMarkdownCode } from "@better-skills/markdown/transform-outside-markdown-code";
 
 type ResourceKind = (typeof skillResource.$inferInsert)["kind"];
+type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+type PersistedMentionType = "skill" | "resource";
+
+interface PersistedMention {
+  type: PersistedMentionType;
+  targetId: string;
+}
+
+type AutoLinkSource =
+  | {
+      type: "skill";
+      sourceId: string;
+      markdown: string;
+    }
+  | {
+      type: "resource";
+      sourceId: string;
+      markdown: string;
+    };
 
 interface SkillTemplateResource {
   path: string;
@@ -97,6 +118,169 @@ const BINARY_EXTENSIONS = new Set([
 ]);
 
 const NEW_MENTION_MARKDOWN_EXTENSIONS = new Set([".md", ".mdx", ".txt"]);
+const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const PERSISTED_MENTION_RE = new RegExp(
+  String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`,
+  "gi",
+);
+
+function parsePersistedMentions(markdown: string): PersistedMention[] {
+  const seen = new Set<string>();
+  const mentions: PersistedMention[] = [];
+
+  transformOutsideMarkdownCode(markdown, (segment) => {
+    let match: RegExpExecArray | null;
+    PERSISTED_MENTION_RE.lastIndex = 0;
+
+    while ((match = PERSISTED_MENTION_RE.exec(segment)) !== null) {
+      const type = match[1]!.toLowerCase() as PersistedMentionType;
+      const targetId = match[2]!.toLowerCase();
+      const mentionKey = `${type}:${targetId}`;
+
+      if (seen.has(mentionKey)) {
+        continue;
+      }
+
+      seen.add(mentionKey);
+      mentions.push({ type, targetId });
+    }
+
+    return segment;
+  });
+
+  return mentions;
+}
+
+async function syncMarkdownAutoLinksForSources(
+  tx: DbTx,
+  sources: AutoLinkSource[],
+  createdByUserId: string | null,
+): Promise<void> {
+  if (sources.length === 0) {
+    return;
+  }
+
+  const dedupedSources = new Map<string, AutoLinkSource>();
+
+  for (const source of sources) {
+    const sourceId = source.sourceId.toLowerCase();
+
+    dedupedSources.set(`${source.type}:${sourceId}`, {
+      ...source,
+      sourceId,
+    });
+  }
+
+  for (const source of dedupedSources.values()) {
+    const sourceCondition =
+      source.type === "skill"
+        ? eq(skillLink.sourceSkillId, source.sourceId)
+        : eq(skillLink.sourceResourceId, source.sourceId);
+
+    await tx
+      .delete(skillLink)
+      .where(and(sourceCondition, sql`${skillLink.metadata}->>'origin' = 'markdown-auto'`));
+
+    const mentions = parsePersistedMentions(source.markdown);
+
+    if (mentions.length === 0) {
+      continue;
+    }
+
+    await tx.insert(skillLink).values(
+      mentions.map((mention) => ({
+        sourceSkillId: source.type === "skill" ? source.sourceId : null,
+        sourceResourceId: source.type === "resource" ? source.sourceId : null,
+        targetSkillId: mention.type === "skill" ? mention.targetId : null,
+        targetResourceId: mention.type === "resource" ? mention.targetId : null,
+        kind: "mention",
+        metadata: { origin: "markdown-auto" } as Record<string, unknown>,
+        createdByUserId,
+      })),
+    );
+  }
+}
+
+async function resyncMarkdownAutoLinksForSkill(
+  tx: DbTx,
+  sourceSkillId: string,
+  sourceOwnerUserId: string | null,
+): Promise<void> {
+  const sourceSkillRows = await tx
+    .select({ id: skill.id, skillMarkdown: skill.skillMarkdown })
+    .from(skill)
+    .where(eq(skill.id, sourceSkillId))
+    .limit(1);
+
+  const sourceSkill = sourceSkillRows[0];
+
+  if (!sourceSkill) {
+    return;
+  }
+
+  const sourceResources = await tx
+    .select({ id: skillResource.id, path: skillResource.path, content: skillResource.content })
+    .from(skillResource)
+    .where(eq(skillResource.skillId, sourceSkill.id));
+
+  const resourceIdByPath = new Map(
+    sourceResources.map((sourceResource) => [
+      normalizeResourcePath(sourceResource.path),
+      sourceResource.id,
+    ]),
+  );
+
+  const resolvedSkillMentions = resolveNewResourceMentionsToUuids(
+    sourceSkill.skillMarkdown,
+    resourceIdByPath,
+  );
+
+  if (resolvedSkillMentions.markdown !== sourceSkill.skillMarkdown) {
+    await tx
+      .update(skill)
+      .set({ skillMarkdown: resolvedSkillMentions.markdown, updatedAt: new Date() })
+      .where(eq(skill.id, sourceSkill.id));
+  }
+
+  const linkSyncSources: AutoLinkSource[] = [
+    {
+      type: "skill",
+      sourceId: sourceSkill.id,
+      markdown: resolvedSkillMentions.markdown,
+    },
+  ];
+
+  for (const sourceResource of sourceResources) {
+    if (!shouldResolveNewMentionsInResource(sourceResource.path)) {
+      linkSyncSources.push({
+        type: "resource",
+        sourceId: sourceResource.id,
+        markdown: sourceResource.content,
+      });
+      continue;
+    }
+
+    const resolvedResourceMentions = resolveNewResourceMentionsToUuids(
+      sourceResource.content,
+      resourceIdByPath,
+    );
+
+    if (resolvedResourceMentions.markdown !== sourceResource.content) {
+      await tx
+        .update(skillResource)
+        .set({ content: resolvedResourceMentions.markdown })
+        .where(eq(skillResource.id, sourceResource.id));
+    }
+
+    linkSyncSources.push({
+      type: "resource",
+      sourceId: sourceResource.id,
+      markdown: resolvedResourceMentions.markdown,
+    });
+  }
+
+  await syncMarkdownAutoLinksForSources(tx, linkSyncSources, sourceOwnerUserId);
+}
 
 function withDefaultTemplateVersion(
   metadata: Record<string, unknown>,
@@ -486,6 +670,8 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
             .set({ skillMarkdown: resolvedMentions.skillMarkdown, updatedAt: new Date() })
             .where(eq(skill.id, createdSkill.id));
         }
+
+        await resyncMarkdownAutoLinksForSkill(tx, createdSkill.id, userId);
       });
 
       created++;
@@ -501,12 +687,17 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
 async function syncExistingDefaultSkill(
   existingSkill: {
     id: string;
+    ownerUserId: string | null;
     metadata: Record<string, unknown>;
   },
   template: SkillTemplate,
   templateVersion: string,
 ): Promise<"updated" | "skipped"> {
   if (getDefaultTemplateVersion(existingSkill.metadata) === templateVersion) {
+    await db.transaction(async (tx) => {
+      await resyncMarkdownAutoLinksForSkill(tx, existingSkill.id, existingSkill.ownerUserId);
+    });
+
     return "skipped";
   }
 
@@ -613,6 +804,8 @@ async function syncExistingDefaultSkill(
         updatedAt: new Date(),
       })
       .where(eq(skill.id, existingSkill.id));
+
+    await resyncMarkdownAutoLinksForSkill(tx, existingSkill.id, existingSkill.ownerUserId);
   });
 
   return "updated";
@@ -657,6 +850,7 @@ export async function syncDefaultSkillsForAllUsers(): Promise<SyncDefaultSkillsR
           const outcome = await syncExistingDefaultSkill(
             {
               id: existingSkill.id,
+              ownerUserId: existingSkill.ownerUserId,
               metadata: normalizeMetadata(existingSkill.metadata),
             },
             template,

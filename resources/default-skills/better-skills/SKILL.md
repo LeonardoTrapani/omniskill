@@ -13,9 +13,9 @@ description: |
 
 - To create a skill -> [[resource:new:references/flows/create-skill.md]]
 - To edit a skill -> [[resource:new:references/flows/edit-skill.md]]
-- To upload local skills to vault + curate links -> [[resource:new:references/flows/upload-local-skills-to-vault.md]]
+- To back up local skills to tmp and route vault upload -> [[resource:new:references/flows/upload-local-skills-to-vault.md]]
 - To search and propose imports/links -> [[resource:new:references/flows/search-and-propose.md]]
-- To run other CLI operations -> [[resource:new:references/flows/operations.md]]
+- To run other CLI operations -> [[resource:new:references/commands/other-commands.md]]
 - General guidelines for writing skills -> [[resource:new:references/guidelines/authoring.md]]
 - Mention and linking rules -> [[resource:new:references/guidelines/mention-linking.md]]
 

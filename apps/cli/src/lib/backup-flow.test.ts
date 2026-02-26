@@ -1,106 +1,55 @@
 import { describe, expect, test } from "bun:test";
 
-import { decideBackupAction } from "./backup-flow";
+import { rewriteInlineLinksToDraftMentions } from "./backup-flow";
 
-describe("decideBackupAction", () => {
-  test("returns skip when local validation failed", () => {
-    const result = decideBackupAction(
-      {
-        name: "my skill",
-        slug: "my-skill",
-        validationOk: false,
-      },
-      [],
-    );
+describe("rewriteInlineLinksToDraftMentions", () => {
+  test("rewrites local references links", () => {
+    const input = "Read [create](references/flows/create-skill.md) first.";
 
-    expect(result.action).toBe("skip");
-    expect(result.confidence).toBe("low");
+    const result = rewriteInlineLinksToDraftMentions(input);
+
+    expect(result.replacementCount).toBe(1);
+    expect(result.markdown).toContain("[[resource:new:references/flows/create-skill.md]]");
   });
 
-  test("returns update on exact slug match", () => {
-    const result = decideBackupAction(
-      {
-        name: "my skill",
-        slug: "my-skill",
-        validationOk: true,
-      },
-      [
-        {
-          id: "1",
-          slug: "my-skill",
-          name: "something else",
-        },
-      ],
-    );
+  test("normalizes draft mention path while rewriting", () => {
+    const input = "Read [guide](<./references/guide.md#top>) first.";
 
-    expect(result.action).toBe("update");
-    expect(result.confidence).toBe("high");
-    expect(result.target?.id).toBe("1");
+    const result = rewriteInlineLinksToDraftMentions(input);
+
+    expect(result.replacementCount).toBe(1);
+    expect(result.markdown).toContain("[[resource:new:references/guide.md]]");
   });
 
-  test("returns update on unique name match", () => {
-    const result = decideBackupAction(
-      {
-        name: "my skill",
-        slug: "new-slug",
-        validationOk: true,
-      },
-      [
-        {
-          id: "2",
-          slug: "existing-slug",
-          name: "my skill",
-        },
-      ],
-    );
+  test("ignores web links, anchors, and images", () => {
+    const input = [
+      "[web](https://example.com)",
+      "[anchor](#overview)",
+      "![image](references/diagram.png)",
+    ].join("\n");
 
-    expect(result.action).toBe("update");
-    expect(result.confidence).toBe("medium");
-    expect(result.target?.id).toBe("2");
+    const result = rewriteInlineLinksToDraftMentions(input);
+
+    expect(result.replacementCount).toBe(0);
+    expect(result.markdown).toBe(input);
   });
 
-  test("returns create when there is no match", () => {
-    const result = decideBackupAction(
-      {
-        name: "new skill",
-        slug: "new-skill",
-        validationOk: true,
-      },
-      [
-        {
-          id: "3",
-          slug: "another",
-          name: "another",
-        },
-      ],
-    );
+  test("ignores links inside inline and fenced code", () => {
+    const input = [
+      "Inline code: `[doc](references/guide.md)`",
+      "",
+      "```md",
+      "[doc](references/guide.md)",
+      "```",
+      "",
+      "Outside: [doc](references/guide.md)",
+    ].join("\n");
 
-    expect(result.action).toBe("create");
-    expect(result.confidence).toBe("high");
-  });
+    const result = rewriteInlineLinksToDraftMentions(input);
 
-  test("returns skip when multiple slug matches exist", () => {
-    const result = decideBackupAction(
-      {
-        name: "duplicate",
-        slug: "same",
-        validationOk: true,
-      },
-      [
-        {
-          id: "4",
-          slug: "same",
-          name: "a",
-        },
-        {
-          id: "5",
-          slug: "same",
-          name: "b",
-        },
-      ],
-    );
-
-    expect(result.action).toBe("skip");
-    expect(result.confidence).toBe("low");
+    expect(result.replacementCount).toBe(1);
+    expect(result.markdown).toContain("Outside: [[resource:new:references/guide.md]]");
+    expect(result.markdown).toContain("Inline code: `[doc](references/guide.md)`");
+    expect(result.markdown).toContain("```md\n[doc](references/guide.md)\n```");
   });
 });

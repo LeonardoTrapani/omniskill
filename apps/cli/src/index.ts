@@ -35,8 +35,7 @@ function printUsage() {
   ui.log.info("  better-skills whoami");
   ui.log.info("  better-skills sync");
   ui.log.info("  better-skills validate <dir>");
-  ui.log.info("  better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]...");
-  ui.log.info("  better-skills backup apply --plan <file> [--keep-snapshot]");
+  ui.log.info("  better-skills backup [--source <dir>] [--out <tmp-dir>] [--agent <agent>]...");
   ui.log.info("  better-skills list [search] [--all] [--limit N]");
   ui.log.info("  better-skills search <query> [--public] [--limit N]");
   ui.log.info("  better-skills get <slug-or-uuid>");

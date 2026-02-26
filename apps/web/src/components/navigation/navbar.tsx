@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { X, Menu, Settings, Hexagon, Globe } from "lucide-react";
+import { Hexagon, Globe } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 
@@ -30,7 +30,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdInitialSearch, setCmdInitialSearch] = useState("");
   const [cmdInitialMode, setCmdInitialMode] = useState<PaletteMode>("command");
@@ -48,13 +47,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
 
   // read ?q= param to auto-open palette
   useEffect(() => {

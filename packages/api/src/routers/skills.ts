@@ -1265,6 +1265,22 @@ export const skillsRouter = router({
         }
       }
 
+      if (resources.length > 0) {
+        for (const resource of resources) {
+          const remappedResourceMarkdown = remapMentionTargetIds(resource.content, mentionIdMap);
+          if (remappedResourceMarkdown === resource.content) {
+            continue;
+          }
+
+          await db
+            .update(skillResource)
+            .set({ content: remappedResourceMarkdown })
+            .where(eq(skillResource.id, resource.id));
+        }
+      }
+
+      const duplicatedResources = await loadSkillResources(createdSkill.id);
+
       try {
         await syncAutoLinksForSources(
           [
@@ -1272,8 +1288,14 @@ export const skillsRouter = router({
               type: "skill",
               sourceId: createdSkill.id,
               sourceOwnerUserId: createdSkill.ownerUserId,
-              markdown: remappedMarkdown,
+              markdown: createdSkill.skillMarkdown,
             },
+            ...duplicatedResources.map((resource) => ({
+              type: "resource" as const,
+              sourceId: resource.id,
+              sourceOwnerUserId: createdSkill.ownerUserId,
+              markdown: resource.content,
+            })),
           ],
           userId,
         );
@@ -1281,7 +1303,7 @@ export const skillsRouter = router({
         throwMentionValidationError(error);
       }
 
-      return await toSkillOutput(createdSkill, resources);
+      return await toSkillOutput(createdSkill, duplicatedResources);
     }),
 
   delete: protectedProcedure

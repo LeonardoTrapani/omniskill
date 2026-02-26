@@ -141,7 +141,7 @@ function renderUnsyncedAgentSection(group: UnsyncedSkillsByAgent): string {
 
 function renderVaultMergePrompt(groups: UnsyncedSkillsByAgent[]): string {
   return [
-    "Use the `better-skills` skill and follow `Flow: Upload Local Skills to Better-Skills Vault` to back up these skills.",
+    "Use the `better-skills` skill and follow `Flow: Upload Local Skills to Better-Skills Vault`.",
     "",
     "Here are the unsynced skills for each selected agent:",
     "",
@@ -262,6 +262,7 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
 
     if (copied) {
       ui.log.success("vault merge prompt copied to clipboard");
+      ui.log.info(pc.dim("open your favorite coding agent and use that prompt"));
     } else {
       ui.log.warn(pc.dim("could not copy prompt to clipboard"));
       ui.log.info(pc.dim(`use prompt file: ${promptPath}`));

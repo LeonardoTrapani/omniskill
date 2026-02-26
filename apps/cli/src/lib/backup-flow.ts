@@ -1,145 +1,66 @@
-import { createHash } from "node:crypto";
-import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
+import { basename, join, resolve } from "node:path";
 
-import { parseMentions } from "@better-skills/api/lib/mentions";
-import matter from "gray-matter";
+import { transformOutsideMarkdownCode } from "@better-skills/markdown/transform-outside-markdown-code";
 
 import type { SupportedAgent } from "./agents";
 import { getAgentDisplayName, getAgentSkillDir } from "./agents";
 import { readErrorMessage } from "./errors";
-import { collectNewResourceMentionPaths } from "./new-resource-mentions";
-import {
-  buildUpdateResourcesPayload,
-  loadLocalSkillDraft,
-  resolveNewResourceMentions,
-  slugify,
-} from "./skill-io";
-import { trpc } from "./trpc";
-import type { SkillFolderValidationResult } from "./validate-skill-folder";
-import { validateSkillFolder } from "./validate-skill-folder";
+import { normalizeResourcePath } from "./new-resource-mentions";
 
 const INSTALL_METADATA_FILE = ".better-skills-install.json";
-const PLAN_VERSION = 1 as const;
-const LIST_PAGE_LIMIT = 100;
-
-type OwnedSkillsPage = Awaited<ReturnType<typeof trpc.skills.listByOwner.query>>;
-type OwnedSkill = OwnedSkillsPage["items"][number];
-
-export type BackupPlanAction = "create" | "update" | "skip";
-export type BackupPlanConfidence = "high" | "medium" | "low";
-
-export type BackupPlanOccurrence = {
-  path: string;
-  folder: string;
-  root: string;
-  source: string;
-  cleanupEligible: boolean;
-};
-
-export type BackupPlanItem = {
-  id: string;
-  name: string;
-  slug: string;
-  canonicalPath: string;
-  action: BackupPlanAction;
-  confidence: BackupPlanConfidence;
-  reason: string;
-  targetSkillId: string | null;
-  targetSkillSlug: string | null;
-  validation: {
-    ok: boolean;
-    errors: string[];
-    warnings: string[];
-    resources: number;
-    newMentionPaths: number;
-  };
-  mentionSummary: {
-    persistedSkillMentions: number;
-    persistedResourceMentions: number;
-    draftMentionPaths: number;
-  };
-  occurrences: BackupPlanOccurrence[];
-};
-
-export type BackupPlanSummary = {
-  uniqueSkills: number;
-  createCount: number;
-  updateCount: number;
-  skipCount: number;
-  actionableCount: number;
-  dedupedOccurrences: number;
-};
-
-export type BackupPlan = {
-  version: typeof PLAN_VERSION;
-  createdAt: string;
-  linkPolicy: "preserve-current-links-only";
-  source: {
-    mode: "auto" | "custom";
-    providedSource: string | null;
-    roots: string[];
-  };
-  summary: BackupPlanSummary;
-  skippedFolders: {
-    path: string;
-    reason: string;
-  }[];
-  items: BackupPlanItem[];
-};
-
-export type BackupPlanOptions = {
-  sourceDir?: string;
-  agents?: SupportedAgent[];
-};
-
-export type BackupActionDecision = {
-  action: BackupPlanAction;
-  confidence: BackupPlanConfidence;
-  reason: string;
-  target: Pick<OwnedSkill, "id" | "slug" | "name"> | null;
-};
-
-export type BackupApplyItemResult = {
-  id: string;
-  name: string;
-  action: BackupPlanAction;
-  status: "created" | "updated" | "skipped" | "failed";
-  message: string;
-  skillId: string | null;
-  slug: string | null;
-  snapshotPath: string | null;
-};
-
-export type BackupApplyResult = {
-  startedAt: string;
-  finishedAt: string;
-  snapshotDir: string;
-  createdCount: number;
-  updatedCount: number;
-  skippedCount: number;
-  failedCount: number;
-  removedLocalFolders: string[];
-  cleanupWarnings: string[];
-  results: BackupApplyItemResult[];
-};
+const MARKDOWN_LINK_RE = /(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)/g;
+const URI_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+const LOCAL_RESOURCE_PREFIXES = ["references/", "scripts/", "assets/"] as const;
 
 type DiscoveryRoot = {
   path: string;
   label: string;
-  cleanupEligible: boolean;
   includeSelf: boolean;
 };
 
-type CandidateGroup = {
-  fingerprint: string;
-  name: string;
-  slug: string;
-  canonicalPath: string;
-  validation: SkillFolderValidationResult;
-  mentionSummary: BackupPlanItem["mentionSummary"];
-  occurrences: BackupPlanOccurrence[];
+export type BackupSkippedFolder = {
+  path: string;
+  reason: string;
+};
+
+export type BackupCopyItem = {
+  source: string;
+  sourcePath: string;
+  rawPath: string;
+  workPath: string;
+  inlineLinksRewritten: number;
+};
+
+export type BackupCopyFailure = {
+  sourcePath: string;
+  rawPath: string;
+  workPath: string;
+  message: string;
+};
+
+export type BackupCopyResult = {
+  startedAt: string;
+  finishedAt: string;
+  backupDir: string;
+  rawDir: string;
+  workDir: string;
+  discoveredCount: number;
+  copiedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  inlineLinksRewritten: number;
+  roots: string[];
+  items: BackupCopyItem[];
+  skippedFolders: BackupSkippedFolder[];
+  failures: BackupCopyFailure[];
+};
+
+export type BackupCopyOptions = {
+  sourceDir?: string;
+  outputDir?: string;
+  agents?: SupportedAgent[];
 };
 
 function formatTimestamp(): string {
@@ -156,14 +77,6 @@ function expandPath(pathValue: string): string {
   }
 
   return resolve(process.cwd(), pathValue);
-}
-
-function toFingerprint(skillMarkdown: string): string {
-  return createHash("sha1").update(skillMarkdown).digest("hex");
-}
-
-function normalizeText(value: string): string {
-  return value.trim().toLowerCase();
 }
 
 function uniqueBy<T>(items: T[], keyFn: (item: T) => string): T[] {
@@ -183,118 +96,113 @@ function uniqueBy<T>(items: T[], keyFn: (item: T) => string): T[] {
   return unique;
 }
 
-function readSkillIdentity(
-  skillMarkdown: string,
-  fallbackFolder: string,
-): { name: string; slug: string } {
-  try {
-    const { data } = matter(skillMarkdown);
-    const name =
-      typeof data.name === "string" && data.name.trim() ? data.name.trim() : fallbackFolder;
-    const slug =
-      typeof data.slug === "string" && data.slug.trim()
-        ? data.slug.trim()
-        : slugify(name || fallbackFolder);
-
-    return {
-      name,
-      slug: slug || slugify(fallbackFolder),
-    };
-  } catch {
-    return {
-      name: fallbackFolder,
-      slug: slugify(fallbackFolder),
-    };
+function extractMarkdownLinkTarget(rawDestination: string): string | null {
+  const trimmed = rawDestination.trim();
+  if (!trimmed) {
+    return null;
   }
+
+  if (trimmed.startsWith("<")) {
+    const closingBracketIndex = trimmed.indexOf(">");
+    if (closingBracketIndex <= 1) {
+      return null;
+    }
+
+    return trimmed.slice(1, closingBracketIndex);
+  }
+
+  const firstWhitespace = trimmed.search(/\s/);
+  if (firstWhitespace === -1) {
+    return trimmed;
+  }
+
+  return trimmed.slice(0, firstWhitespace);
 }
 
-function summarizeMentions(skillMarkdown: string): BackupPlanItem["mentionSummary"] {
-  const mentions = parseMentions(skillMarkdown);
+function isLocalResourceLinkTarget(target: string): boolean {
+  if (!target || target.startsWith("#") || target.startsWith("//") || URI_SCHEME_RE.test(target)) {
+    return false;
+  }
+
+  const normalizedTarget = normalizeResourcePath(target);
+  if (!normalizedTarget) {
+    return false;
+  }
+
+  const pathSegments = normalizedTarget.split("/");
+  if (pathSegments.includes("..")) {
+    return false;
+  }
+
+  return LOCAL_RESOURCE_PREFIXES.some((prefix) => normalizedTarget.startsWith(prefix));
+}
+
+export function rewriteInlineLinksToDraftMentions(markdown: string): {
+  markdown: string;
+  replacementCount: number;
+} {
+  let replacementCount = 0;
+
+  const rewrittenMarkdown = transformOutsideMarkdownCode(markdown, (segment) => {
+    return segment.replace(MARKDOWN_LINK_RE, (match, rawDestination: string) => {
+      const target = extractMarkdownLinkTarget(rawDestination);
+
+      if (!target || !isLocalResourceLinkTarget(target)) {
+        return match;
+      }
+
+      replacementCount += 1;
+      return `[[resource:new:${normalizeResourcePath(target)}]]`;
+    });
+  });
 
   return {
-    persistedSkillMentions: mentions.filter((mention) => mention.type === "skill").length,
-    persistedResourceMentions: mentions.filter((mention) => mention.type === "resource").length,
-    draftMentionPaths: collectNewResourceMentionPaths(skillMarkdown).length,
+    markdown: rewrittenMarkdown,
+    replacementCount,
   };
 }
 
-async function fetchAllOwnedSkills(): Promise<OwnedSkill[]> {
-  const items: OwnedSkill[] = [];
-  let cursor: string | undefined;
-
-  for (;;) {
-    const page = await trpc.skills.listByOwner.query({
-      limit: LIST_PAGE_LIMIT,
-      cursor,
-    });
-
-    items.push(...page.items);
-
-    if (!page.nextCursor) {
-      return items;
-    }
-
-    cursor = page.nextCursor;
-  }
-}
-
-function resolveDiscoveryRoots(options: BackupPlanOptions): DiscoveryRoot[] {
+function resolveDiscoveryRoots(options: BackupCopyOptions): DiscoveryRoot[] {
   if (options.sourceDir) {
-    const sourcePath = expandPath(options.sourceDir);
-
     return [
       {
-        path: sourcePath,
+        path: expandPath(options.sourceDir),
         label: "custom source",
-        cleanupEligible: false,
         includeSelf: true,
       },
     ];
   }
 
-  const roots: DiscoveryRoot[] = [];
-
   if (options.agents && options.agents.length > 0) {
-    for (const agent of uniqueBy(options.agents, (entry) => entry)) {
-      roots.push({
-        path: getAgentSkillDir(agent),
-        label: getAgentDisplayName(agent),
-        cleanupEligible: true,
-        includeSelf: false,
-      });
-    }
-
-    return roots;
+    return uniqueBy(options.agents, (entry) => entry).map((agent) => ({
+      path: getAgentSkillDir(agent),
+      label: getAgentDisplayName(agent),
+      includeSelf: false,
+    }));
   }
 
-  roots.push(
+  return [
     {
       path: getAgentSkillDir("opencode"),
       label: getAgentDisplayName("opencode"),
-      cleanupEligible: true,
       includeSelf: false,
     },
     {
       path: getAgentSkillDir("claude-code"),
       label: getAgentDisplayName("claude-code"),
-      cleanupEligible: true,
       includeSelf: false,
     },
     {
       path: getAgentSkillDir("cursor"),
       label: getAgentDisplayName("cursor"),
-      cleanupEligible: true,
       includeSelf: false,
     },
     {
       path: join(process.cwd(), ".agents", "skills"),
       label: "workspace .agents/skills",
-      cleanupEligible: true,
       includeSelf: false,
     },
-  );
-
-  return roots;
+  ];
 }
 
 async function listSkillDirs(root: DiscoveryRoot): Promise<string[]> {
@@ -331,97 +239,34 @@ async function listSkillDirs(root: DiscoveryRoot): Promise<string[]> {
   return folders;
 }
 
-export function decideBackupAction(
-  input: { name: string; slug: string; validationOk: boolean },
-  ownedSkills: Pick<OwnedSkill, "id" | "slug" | "name">[],
-): BackupActionDecision {
-  if (!input.validationOk) {
-    return {
-      action: "skip",
-      confidence: "low",
-      reason: "local folder validation failed",
-      target: null,
-    };
-  }
-
-  const slugMatches = ownedSkills.filter(
-    (skill) => normalizeText(skill.slug) === normalizeText(input.slug),
-  );
-
-  if (slugMatches.length === 1) {
-    return {
-      action: "update",
-      confidence: "high",
-      reason: "matched existing skill by slug",
-      target: slugMatches[0] ?? null,
-    };
-  }
-
-  if (slugMatches.length > 1) {
-    return {
-      action: "skip",
-      confidence: "low",
-      reason: "multiple existing skills share this slug",
-      target: null,
-    };
-  }
-
-  const normalizedName = normalizeText(input.name);
-  const nameMatches = ownedSkills.filter((skill) => normalizeText(skill.name) === normalizedName);
-
-  if (nameMatches.length === 1) {
-    return {
-      action: "update",
-      confidence: "medium",
-      reason: "matched existing skill by name",
-      target: nameMatches[0] ?? null,
-    };
-  }
-
-  if (nameMatches.length > 1) {
-    return {
-      action: "skip",
-      confidence: "low",
-      reason: "multiple existing skills share this name",
-      target: null,
-    };
-  }
-
-  return {
-    action: "create",
-    confidence: "high",
-    reason: "no matching skill found in your vault",
-    target: null,
-  };
+function toBackupFolderName(index: number, folderPath: string): string {
+  return `${String(index).padStart(3, "0")}-${basename(folderPath)}`;
 }
 
-function summarizePlan(items: BackupPlanItem[]): BackupPlanSummary {
-  const createCount = items.filter((item) => item.action === "create").length;
-  const updateCount = items.filter((item) => item.action === "update").length;
-  const skipCount = items.filter((item) => item.action === "skip").length;
-  const dedupedOccurrences = items.reduce(
-    (total, item) => total + Math.max(0, item.occurrences.length - 1),
-    0,
-  );
-
-  return {
-    uniqueSkills: items.length,
-    createCount,
-    updateCount,
-    skipCount,
-    actionableCount: createCount + updateCount,
-    dedupedOccurrences,
-  };
-}
-
-export async function createBackupPlan(options: BackupPlanOptions = {}): Promise<BackupPlan> {
+export async function copyLocalSkillsToBackupTmp(
+  options: BackupCopyOptions = {},
+): Promise<BackupCopyResult> {
+  const startedAt = new Date().toISOString();
   const roots = resolveDiscoveryRoots(options);
-  const groups = new Map<string, CandidateGroup>();
-  const skippedFolders: BackupPlan["skippedFolders"] = [];
-  const ownedSkills = await fetchAllOwnedSkills();
+  const backupDir = options.outputDir
+    ? expandPath(options.outputDir)
+    : join(tmpdir(), "better-skills-backup", formatTimestamp());
+  const rawDir = join(backupDir, "raw");
+  const workDir = join(backupDir, "work");
+
+  await mkdir(rawDir, { recursive: true });
+  await mkdir(workDir, { recursive: true });
+
+  const items: BackupCopyItem[] = [];
+  const skippedFolders: BackupSkippedFolder[] = [];
+  const failures: BackupCopyFailure[] = [];
+
+  let discoveredCount = 0;
+  let inlineLinksRewritten = 0;
 
   for (const root of roots) {
     const skillDirs = await listSkillDirs(root);
+    discoveredCount += skillDirs.length;
 
     for (const skillDir of skillDirs) {
       const installMetadata = await readFile(join(skillDir, INSTALL_METADATA_FILE), "utf8").catch(
@@ -446,410 +291,54 @@ export async function createBackupPlan(options: BackupPlanOptions = {}): Promise
         continue;
       }
 
-      const fingerprint = toFingerprint(skillMarkdown);
-      const existingGroup = groups.get(fingerprint);
-      const occurrence: BackupPlanOccurrence = {
-        path: skillDir,
-        folder: basename(skillDir),
-        root: root.path,
-        source: root.label,
-        cleanupEligible: root.cleanupEligible,
-      };
-
-      if (existingGroup) {
-        existingGroup.occurrences.push(occurrence);
-        continue;
-      }
-
-      const identity = readSkillIdentity(skillMarkdown, basename(skillDir));
-      const validation = await validateSkillFolder(skillDir);
-
-      groups.set(fingerprint, {
-        fingerprint,
-        name: identity.name,
-        slug: identity.slug,
-        canonicalPath: skillDir,
-        validation,
-        mentionSummary: summarizeMentions(skillMarkdown),
-        occurrences: [occurrence],
-      });
-    }
-  }
-
-  const items: BackupPlanItem[] = [...groups.values()]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((group) => {
-      const decision = decideBackupAction(
-        {
-          name: group.name,
-          slug: group.slug,
-          validationOk: group.validation.ok,
-        },
-        ownedSkills,
-      );
-
-      const dedupeSuffix =
-        group.occurrences.length > 1
-          ? `; deduped ${group.occurrences.length} local copies into one backup source`
-          : "";
-
-      return {
-        id: group.fingerprint,
-        name: group.name,
-        slug: group.slug,
-        canonicalPath: group.canonicalPath,
-        action: decision.action,
-        confidence: decision.confidence,
-        reason: `${decision.reason}${dedupeSuffix}`,
-        targetSkillId: decision.target?.id ?? null,
-        targetSkillSlug: decision.target?.slug ?? null,
-        validation: {
-          ok: group.validation.ok,
-          errors: group.validation.errors,
-          warnings: group.validation.warnings,
-          resources: group.validation.resourceCount,
-          newMentionPaths: group.validation.newMentionPathCount,
-        },
-        mentionSummary: group.mentionSummary,
-        occurrences: group.occurrences,
-      };
-    });
-
-  return {
-    version: PLAN_VERSION,
-    createdAt: new Date().toISOString(),
-    linkPolicy: "preserve-current-links-only",
-    source: {
-      mode: options.sourceDir ? "custom" : "auto",
-      providedSource: options.sourceDir ? expandPath(options.sourceDir) : null,
-      roots: roots.map((root) => root.path),
-    },
-    summary: summarizePlan(items),
-    skippedFolders,
-    items,
-  };
-}
-
-export async function writeBackupPlan(plan: BackupPlan, outputPath?: string): Promise<string> {
-  const planPath = outputPath
-    ? expandPath(outputPath)
-    : join(homedir(), ".better-skills", "backups", formatTimestamp(), "plan.json");
-
-  await mkdir(dirname(planPath), { recursive: true });
-  await writeFile(planPath, `${JSON.stringify(plan, null, 2)}\n`, "utf8");
-
-  return planPath;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-export async function readBackupPlan(planPath: string): Promise<BackupPlan> {
-  const resolvedPath = expandPath(planPath);
-  const raw = await readFile(resolvedPath, "utf8");
-  const parsed: unknown = JSON.parse(raw);
-
-  if (!isRecord(parsed)) {
-    throw new Error("invalid backup plan file");
-  }
-
-  if (parsed.version !== PLAN_VERSION) {
-    throw new Error(`unsupported backup plan version: ${String(parsed.version)}`);
-  }
-
-  if (!Array.isArray(parsed.items)) {
-    throw new Error("invalid backup plan: missing items array");
-  }
-
-  return parsed as BackupPlan;
-}
-
-function sanitizePathSegment(value: string): string {
-  const sanitized = value
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return sanitized || "skill";
-}
-
-function isSlugConflictError(message: string): boolean {
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes("slug") &&
-    (normalized.includes("duplicate") || normalized.includes("unique"))
-  );
-}
-
-async function createSkillFromFolder(folder: string, preferredSlug: string) {
-  const draft = await loadLocalSkillDraft(folder);
-  const baseSlug = preferredSlug || slugify(draft.name);
-  const attempts = [baseSlug, `${baseSlug}-2`, `${baseSlug}-3`, `${baseSlug}-4`, `${baseSlug}-5`];
-
-  let lastError: unknown = null;
-
-  for (const slug of attempts) {
-    let createdSkill: Awaited<ReturnType<typeof trpc.skills.create.mutate>> | null = null;
-
-    try {
-      createdSkill = await trpc.skills.create.mutate({
-        slug,
-        name: draft.name,
-        description: draft.description,
-        skillMarkdown: draft.markdownForMutation,
-        visibility: "private",
-        frontmatter: draft.frontmatter,
-        resources: draft.resources,
-      });
-
-      if (draft.newResourcePaths.length > 0) {
-        const resolved = await resolveNewResourceMentions(
-          createdSkill.id,
-          draft,
-          createdSkill.resources,
-        );
-        if (resolved) {
-          createdSkill = resolved;
-        }
-      }
-
-      return {
-        createdSkill,
-        slugUsed: slug,
-      };
-    } catch (error) {
-      if (createdSkill) {
-        throw new Error(`skill was created but finalization failed: ${createdSkill.id}`);
-      }
-
-      const message = readErrorMessage(error);
-      lastError = error;
-
-      if (isSlugConflictError(message)) {
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  if (lastError instanceof Error) {
-    throw lastError;
-  }
-
-  throw new Error(`could not create skill for ${folder}`);
-}
-
-async function updateSkillFromFolder(skillId: string, folder: string) {
-  const draft = await loadLocalSkillDraft(folder);
-  const targetSkill = await trpc.skills.getById.query({ id: skillId, linkMentions: false });
-  const resourcesPayload = buildUpdateResourcesPayload(targetSkill.resources, draft.resources);
-
-  let updatedSkill = await trpc.skills.update.mutate({
-    id: targetSkill.id,
-    name: draft.name,
-    description: draft.description,
-    skillMarkdown: draft.markdownForMutation,
-    visibility: targetSkill.visibility,
-    frontmatter: draft.frontmatter,
-    resources: resourcesPayload,
-  });
-
-  if (draft.newResourcePaths.length > 0) {
-    const resolved = await resolveNewResourceMentions(
-      updatedSkill.id,
-      draft,
-      updatedSkill.resources,
-    );
-    if (resolved) {
-      updatedSkill = resolved;
-    }
-  }
-
-  return updatedSkill;
-}
-
-function isSafeCleanupPath(occurrence: BackupPlanOccurrence): boolean {
-  const resolvedPath = resolve(occurrence.path);
-  const resolvedRoot = resolve(occurrence.root);
-
-  if (resolvedPath === "/") {
-    return false;
-  }
-
-  return resolvedPath === resolvedRoot || resolvedPath.startsWith(`${resolvedRoot}/`);
-}
-
-export async function applyBackupPlan(
-  plan: BackupPlan,
-  options: {
-    planPath?: string;
-  } = {},
-): Promise<BackupApplyResult> {
-  const startedAt = new Date().toISOString();
-  const baseDir = options.planPath
-    ? dirname(expandPath(options.planPath))
-    : join(homedir(), ".better-skills", "backups", formatTimestamp());
-  const snapshotDir = join(baseDir, `snapshot-${formatTimestamp()}`);
-
-  await mkdir(snapshotDir, { recursive: true });
-
-  const results: BackupApplyItemResult[] = [];
-  const cleanupCandidates: BackupPlanItem[] = [];
-
-  let snapshotIndex = 0;
-
-  for (const item of plan.items) {
-    if (item.action === "skip") {
-      results.push({
-        id: item.id,
-        name: item.name,
-        action: item.action,
-        status: "skipped",
-        message: item.reason,
-        skillId: item.targetSkillId,
-        slug: item.targetSkillSlug,
-        snapshotPath: null,
-      });
-      continue;
-    }
-
-    if (item.action === "update" && !item.targetSkillId) {
-      results.push({
-        id: item.id,
-        name: item.name,
-        action: item.action,
-        status: "failed",
-        message: "plan item is missing targetSkillId for update",
-        skillId: null,
-        slug: null,
-        snapshotPath: null,
-      });
-      continue;
-    }
-
-    snapshotIndex += 1;
-    const snapshotPath = join(
-      snapshotDir,
-      `${String(snapshotIndex).padStart(2, "0")}-${sanitizePathSegment(item.slug)}`,
-    );
-
-    try {
-      await cp(item.canonicalPath, snapshotPath, { recursive: true, dereference: true });
-    } catch (error) {
-      results.push({
-        id: item.id,
-        name: item.name,
-        action: item.action,
-        status: "failed",
-        message: `failed to create snapshot: ${readErrorMessage(error)}`,
-        skillId: null,
-        slug: null,
-        snapshotPath,
-      });
-      continue;
-    }
-
-    try {
-      if (item.action === "create") {
-        const { createdSkill, slugUsed } = await createSkillFromFolder(snapshotPath, item.slug);
-        cleanupCandidates.push(item);
-
-        results.push({
-          id: item.id,
-          name: item.name,
-          action: item.action,
-          status: "created",
-          message: slugUsed === item.slug ? "created" : `created with adjusted slug ${slugUsed}`,
-          skillId: createdSkill.id,
-          slug: createdSkill.slug,
-          snapshotPath,
-        });
-
-        continue;
-      }
-
-      const updatedSkill = await updateSkillFromFolder(item.targetSkillId!, snapshotPath);
-      cleanupCandidates.push(item);
-
-      results.push({
-        id: item.id,
-        name: item.name,
-        action: item.action,
-        status: "updated",
-        message: "updated",
-        skillId: updatedSkill.id,
-        slug: updatedSkill.slug,
-        snapshotPath,
-      });
-    } catch (error) {
-      results.push({
-        id: item.id,
-        name: item.name,
-        action: item.action,
-        status: "failed",
-        message: readErrorMessage(error),
-        skillId: null,
-        slug: null,
-        snapshotPath,
-      });
-    }
-  }
-
-  const removedLocalFolders: string[] = [];
-  const cleanupWarnings: string[] = [];
-  const removedSet = new Set<string>();
-
-  for (const item of cleanupCandidates) {
-    for (const occurrence of item.occurrences) {
-      if (!occurrence.cleanupEligible || removedSet.has(occurrence.path)) {
-        continue;
-      }
-
-      if (!isSafeCleanupPath(occurrence)) {
-        cleanupWarnings.push(`skipped unsafe cleanup path: ${occurrence.path}`);
-        continue;
-      }
-
-      const skillFile = await stat(join(occurrence.path, "SKILL.md")).catch(() => null);
-      if (!skillFile?.isFile()) {
-        continue;
-      }
-
-      const installMetadata = await readFile(
-        join(occurrence.path, INSTALL_METADATA_FILE),
-        "utf8",
-      ).catch(() => null);
-      if (installMetadata) {
-        continue;
-      }
+      const index = items.length + failures.length + 1;
+      const folderName = toBackupFolderName(index, skillDir);
+      const rawPath = join(rawDir, folderName);
+      const workPath = join(workDir, folderName);
 
       try {
-        await rm(occurrence.path, { recursive: true, force: true });
-        removedSet.add(occurrence.path);
-        removedLocalFolders.push(occurrence.path);
+        await cp(skillDir, rawPath, { recursive: true, dereference: true });
+        await cp(rawPath, workPath, { recursive: true, dereference: true });
+
+        const rewritten = rewriteInlineLinksToDraftMentions(skillMarkdown);
+        if (rewritten.replacementCount > 0 && rewritten.markdown !== skillMarkdown) {
+          await writeFile(join(workPath, "SKILL.md"), rewritten.markdown, "utf8");
+        }
+
+        inlineLinksRewritten += rewritten.replacementCount;
+
+        items.push({
+          source: root.label,
+          sourcePath: skillDir,
+          rawPath,
+          workPath,
+          inlineLinksRewritten: rewritten.replacementCount,
+        });
       } catch (error) {
-        cleanupWarnings.push(`${occurrence.path}: ${readErrorMessage(error)}`);
+        failures.push({
+          sourcePath: skillDir,
+          rawPath,
+          workPath,
+          message: readErrorMessage(error),
+        });
       }
     }
   }
-
-  const createdCount = results.filter((result) => result.status === "created").length;
-  const updatedCount = results.filter((result) => result.status === "updated").length;
-  const skippedCount = results.filter((result) => result.status === "skipped").length;
-  const failedCount = results.filter((result) => result.status === "failed").length;
 
   return {
     startedAt,
     finishedAt: new Date().toISOString(),
-    snapshotDir,
-    createdCount,
-    updatedCount,
-    skippedCount,
-    failedCount,
-    removedLocalFolders,
-    cleanupWarnings,
-    results,
+    backupDir,
+    rawDir,
+    workDir,
+    discoveredCount,
+    copiedCount: items.length,
+    skippedCount: skippedFolders.length,
+    failedCount: failures.length,
+    inlineLinksRewritten,
+    roots: roots.map((root) => root.path),
+    items,
+    skippedFolders,
+    failures,
   };
 }
