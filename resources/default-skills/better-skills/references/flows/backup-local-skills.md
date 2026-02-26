@@ -29,60 +29,43 @@ Do not mutate in pass 1.
 
 ## Pass 1: analyze and propose
 
-1. For each candidate, read `SKILL.md` and resource structure.
-2. Extract:
-   - identity (`name`, likely slug, short purpose)
-   - current links (`[[skill:*]]`, `[[resource:*]]`, and escaped examples)
-   - likely relationship signals (dependencies, extensions, companion tools)
-3. Check vault status:
-   - existing candidate in private vault (search/get)
-   - likely duplicate/overlap candidates
-4. Build concise proposal with:
-   - backup plan: create vs update vs skip
-   - dedupe plan: which folders are the same skill and should be backed up once
-   - link plan: exact suggested edges + one-line reason each
-   - confidence label: `high`, `medium`, or `low`
-5. If linking policy is unclear, present clean options:
-   - curated links only (recommended)
-   - preserve current links only
-   - connect everything (only if user explicitly wants dense graph)
+1. Build the backup plan JSON (no mutation):
+
+```bash
+better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
+```
+
+2. Review the plan and return concise proposal:
+   - create/update/skip decisions
+   - dedupe summary (same skill seen in multiple folders)
+   - confidence (`high`/`medium`/`low`) and skip reasons
+   - explicit plan path for pass 2
+
+3. Link policy default in automated backup is `preserve-current-links-only`.
+   - If user asks for link curation, propose exact edits separately before mutating.
 
 ## Pass 2: execute after approval
 
-1. Create a safety backup snapshot first:
-   - create a temporary folder outside agent skill roots
-   - copy each candidate local skill folder into it
-   - use those copied folders as mutation sources
-
-2. Backup/import from the snapshot:
+1. Execute the approved plan:
 
 ```bash
-python scripts/validate_skill_folder.py <backup-folder>/<skill-folder>
-better-skills create --from <backup-folder>/<skill-folder> [--slug <slug>] [--public]
-better-skills update <slug-or-uuid> --from <backup-folder>/<skill-folder> [--slug <slug>] [--public|--private]
-better-skills get <slug-or-uuid>
+better-skills backup apply --plan <plan-file>
 ```
 
-3. Link curation pass:
-   - clone each target skill to local folder
-   - edit markdown to use final UUID mention forms:
-     - `[[skill:<uuid>]]`
-     - `[[resource:<uuid>]]`
-   - do not use `[[skill:new:<path>]]` for cross-skill links
-   - validate folder, then update skill
+2. `backup apply` behavior:
+   - creates snapshot copies outside agent skill roots
+   - validates each folder before mutation
+   - runs create/update using snapshot sources
+   - removes unmanaged local skill copies that were successfully backed up
+   - runs `better-skills sync`
+   - deletes snapshot on successful sync (unless keep flag is used)
+   - keeps snapshot on sync failure for recovery
 
-4. Reconcile local agent folders and sync:
-   - for each skill successfully backed up, delete unmanaged copies from local agent skill folders before running sync
-   - run `better-skills sync`
-   - after successful sync, delete the temporary backup snapshot folder
-   - if sync fails, keep snapshot folder and report recovery steps
-
-5. Return concise recap:
+3. Return concise recap:
    - counts: created/updated/skipped
    - local cleanup: removed folders + retained snapshot path (if any)
    - sync result: success/failure
-   - links: added/updated/left-as-suggestion
-   - unresolved low-confidence edges
+   - failures and manual recovery steps (if any)
 
 ## Link heuristics
 

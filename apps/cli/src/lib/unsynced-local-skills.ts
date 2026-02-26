@@ -1,25 +1,19 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import * as p from "@clack/prompts";
 import matter from "gray-matter";
 import pc from "picocolors";
 
 import type { SupportedAgent } from "./agents";
-import { getAgentDisplayName, getAgentSkillDir } from "./agents";
+import { getAgentSkillDir } from "./agents";
+import { createBackupPlan, writeBackupPlan } from "./backup-flow";
 import { readCliPreferences, saveCliPreferences } from "./config";
 import { readErrorMessage } from "./errors";
 
 const INSTALL_METADATA_FILE = ".better-skills-install.json";
-const BACKUP_PROMPT_PATH = join(
-  homedir(),
-  ".better-skills",
-  "prompts",
-  "unsynced-local-skills-prompt.md",
-);
 
 type UnsyncedSkillOccurrence = {
   agent: SupportedAgent;
@@ -137,45 +131,6 @@ async function findUnsyncedLocalSkills(agents: SupportedAgent[]): Promise<Unsync
   return [...grouped.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function buildBackupPrompt(skills: UnsyncedSkillGroup[]): string {
-  const skillLines = skills.flatMap((skill) => {
-    const agents = [
-      ...new Set(skill.occurrences.map((item) => getAgentDisplayName(item.agent))),
-    ].sort();
-    const folders = [...new Set(skill.folders)].sort();
-    const locationLabel =
-      skill.occurrences.length === 1 ? "1 location" : `${skill.occurrences.length} locations`;
-
-    return [
-      `- ${skill.name} (backup once; seen in ${locationLabel}; folders: ${folders.join(", ")}; agents: ${agents.join(", ")})`,
-      ...skill.occurrences.map(
-        (item) => `  - ${getAgentDisplayName(item.agent)} folder: ${item.path}`,
-      ),
-    ];
-  });
-
-  return [
-    "Use the `better-skills` skill to back up my local skills into my better-skills vault.",
-    "",
-    "Before mutating, identify which local folders are the same skill across agents.",
-    "If a skill appears multiple times, back up one canonical copy only once and avoid duplicates.",
-    "Then propose create/update/skip decisions for each unique skill.",
-    "",
-    "In pass 2, first copy each local skill folder to a temporary backup folder outside agent directories.",
-    "Use that backup folder as the source for create/update operations.",
-    "For skills successfully backed up, delete unmanaged copies from local agent skill folders before running `better-skills sync`.",
-    "Run `better-skills sync`.",
-    "After sync succeeds, delete the temporary backup folder.",
-    "",
-    'Follow the "Flow: Backup Local Skills" in two passes:',
-    "1. Pass 1: inspect and propose create/update/skip + link plan. Do not mutate.",
-    "2. Pass 2: only after approval, execute create/update and link curation.",
-    "",
-    "These local skills are not synced yet:",
-    ...skillLines,
-  ].join("\n");
-}
-
 async function runClipboardCommand(
   command: string,
   args: string[],
@@ -224,16 +179,6 @@ async function copyToClipboard(input: string): Promise<boolean> {
   return false;
 }
 
-async function writeBackupPromptFile(prompt: string): Promise<string | null> {
-  try {
-    await mkdir(dirname(BACKUP_PROMPT_PATH), { recursive: true });
-    await writeFile(BACKUP_PROMPT_PATH, `${prompt}\n`, "utf8");
-    return BACKUP_PROMPT_PATH;
-  } catch {
-    return null;
-  }
-}
-
 async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[]): Promise<void> {
   const preferences = readCliPreferences();
   if (preferences.skipUnsyncedBackupPrompt) {
@@ -274,21 +219,36 @@ async function maybePromptUnsyncedLocalSkillsBackupInner(agents: SupportedAgent[
     return;
   }
 
-  const prompt = buildBackupPrompt(unsynced);
-  const copied = await copyToClipboard(prompt);
-  if (copied) {
-    p.log.success("backup prompt copied to clipboard");
-    return;
-  }
+  const spinner = p.spinner();
+  spinner.start("building backup plan");
 
-  const promptFilePath = await writeBackupPromptFile(prompt);
-  if (promptFilePath) {
-    p.log.warn(pc.dim("could not copy prompt to clipboard"));
-    p.log.info(pc.dim(`saved prompt to: ${promptFilePath}`));
-    return;
-  }
+  try {
+    const plan = await createBackupPlan({ agents });
+    const planPath = await writeBackupPlan(plan);
 
-  p.log.warn(pc.dim("could not copy prompt to clipboard or save it to a file"));
+    spinner.stop(
+      pc.green(
+        `backup plan ready (${plan.summary.createCount} create, ${plan.summary.updateCount} update, ${plan.summary.skipCount} skip)`,
+      ),
+    );
+    p.log.info(pc.dim(`saved backup plan to: ${planPath}`));
+
+    const applyCommand = `better-skills backup apply --plan ${planPath}`;
+    const copied = await copyToClipboard(applyCommand);
+
+    if (copied) {
+      p.log.success("backup apply command copied to clipboard");
+    } else {
+      p.log.info(pc.dim(`next: ${applyCommand}`));
+    }
+
+    if (plan.summary.actionableCount === 0) {
+      p.log.info(pc.dim("plan has no actionable create/update items"));
+    }
+  } catch (error) {
+    spinner.stop(pc.red("could not build backup plan"));
+    p.log.warn(pc.dim(`backup planning failed: ${readErrorMessage(error)}`));
+  }
 }
 
 export async function maybePromptUnsyncedLocalSkillsBackup(

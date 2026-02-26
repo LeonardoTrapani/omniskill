@@ -45,7 +45,7 @@ If you need new files while editing, create them locally (example `references/ne
 ## Folder validation helper
 
 ```bash
-python scripts/validate_skill_folder.py <dir>
+better-skills validate <dir>
 ```
 
 Checks `SKILL.md`, frontmatter fields, and local `:new:` mention targets.

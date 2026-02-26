@@ -23,7 +23,7 @@ If adding a new file, create it under `references/`, `scripts/`, or `assets/`, t
 3. Validate folder:
 
 ```bash
-python scripts/validate_skill_folder.py <folder>
+better-skills validate <folder>
 ```
 
 4. Update skill:

@@ -1,5 +1,6 @@
 import * as p from "@clack/prompts";
 
+import { backupCommand } from "./commands/backup";
 import { cloneCommand } from "./commands/clone";
 import { configCommand } from "./commands/config";
 import { createCommand } from "./commands/create";
@@ -12,6 +13,7 @@ import { logoutCommand } from "./commands/logout";
 import { searchCommand } from "./commands/search";
 import { syncCommand } from "./commands/sync";
 import { updateCommand } from "./commands/update";
+import { validateCommand } from "./commands/validate";
 import { whoamiCommand } from "./commands/whoami";
 import { readErrorMessage } from "./lib/errors";
 import { getCliVersion } from "./lib/version";
@@ -32,6 +34,9 @@ function printUsage() {
   p.log.info("  better-skills logout");
   p.log.info("  better-skills whoami");
   p.log.info("  better-skills sync");
+  p.log.info("  better-skills validate <dir>");
+  p.log.info("  better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]...");
+  p.log.info("  better-skills backup apply --plan <file> [--keep-snapshot]");
   p.log.info("  better-skills search <query> [--public] [--limit N]");
   p.log.info("  better-skills get <slug-or-uuid>");
   p.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
@@ -76,6 +81,12 @@ async function run(args: string[]) {
       return;
     case "sync":
       await syncCommand();
+      return;
+    case "validate":
+      await validateCommand();
+      return;
+    case "backup":
+      await backupCommand();
       return;
     case "search":
       await searchCommand();

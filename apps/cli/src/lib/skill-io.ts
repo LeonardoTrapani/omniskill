@@ -10,6 +10,7 @@ import {
   stripNewResourceMentionsForCreate,
 } from "./new-resource-mentions";
 import { trpc } from "./trpc";
+import { assertValidSkillFolder } from "./validate-skill-folder";
 
 export { readErrorMessage } from "./errors";
 
@@ -93,6 +94,8 @@ export async function loadLocalSkillDraft(from: string): Promise<LocalSkillDraft
   if (!dirStat?.isDirectory()) {
     throw new Error(dirStat ? `not a directory: ${from}` : `directory not found: ${from}`);
   }
+
+  await assertValidSkillFolder(from);
 
   const skillMdPath = join(from, "SKILL.md");
   let rawContent: string;

@@ -2,6 +2,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { getAgentDisplayName, resolveInstallAgents } from "../lib/agents";
+import type { SupportedAgent } from "../lib/agents";
 import { readErrorMessage } from "../lib/errors";
 import {
   installSkill,
@@ -17,6 +18,15 @@ const SYNC_PAGE_LIMIT = 100;
 type SkillListOutput = Awaited<ReturnType<typeof trpc.skills.list.query>>;
 type SkillListItem = SkillListOutput["items"][number];
 type SkillDetails = Awaited<ReturnType<typeof trpc.skills.getBySlug.query>>;
+
+export type SyncRunResult = {
+  ok: boolean;
+  authenticated: boolean;
+  totalPrivateSkills: number;
+  syncedSkills: number;
+  failedSkills: number;
+  removedStaleSkills: number;
+};
 
 function toInstallableSkill(skill: SkillDetails): InstallableSkill {
   return {
@@ -58,13 +68,13 @@ async function fetchAllPrivateSkills(): Promise<SkillListItem[]> {
   }
 }
 
-export async function syncCommand() {
-  const selectedAgents = await resolveInstallAgents();
-
-  if (selectedAgents.length === 0) {
-    p.log.error("no agents selected");
-    return;
-  }
+export async function syncPrivateSkills(
+  selectedAgents: SupportedAgent[],
+  options?: {
+    promptUnsyncedBackup?: boolean;
+  },
+): Promise<SyncRunResult> {
+  const promptUnsyncedBackup = options?.promptUnsyncedBackup ?? true;
 
   p.log.info(`targets: ${selectedAgents.map((agent) => getAgentDisplayName(agent)).join(", ")}`);
 
@@ -76,7 +86,14 @@ export async function syncCommand() {
     authSpinner.stop(pc.green("authenticated"));
   } catch {
     authSpinner.stop(pc.red("not authenticated - run better-skills login"));
-    return;
+    return {
+      ok: false,
+      authenticated: false,
+      totalPrivateSkills: 0,
+      syncedSkills: 0,
+      failedSkills: 0,
+      removedStaleSkills: 0,
+    };
   }
 
   const fetchSpinner = p.spinner();
@@ -87,21 +104,37 @@ export async function syncCommand() {
     privateSkills = await fetchAllPrivateSkills();
   } catch (error) {
     fetchSpinner.stop(pc.red(`failed to load private skills: ${readErrorMessage(error)}`));
-    return;
+    return {
+      ok: false,
+      authenticated: true,
+      totalPrivateSkills: 0,
+      syncedSkills: 0,
+      failedSkills: 0,
+      removedStaleSkills: 0,
+    };
   }
 
   if (privateSkills.length === 0) {
     fetchSpinner.stop(pc.dim("no private skills to sync"));
-    await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
-    return;
+    if (promptUnsyncedBackup) {
+      await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
+    }
+    return {
+      ok: true,
+      authenticated: true,
+      totalPrivateSkills: 0,
+      syncedSkills: 0,
+      failedSkills: 0,
+      removedStaleSkills: 0,
+    };
   }
 
   fetchSpinner.stop(pc.green(`syncing ${privateSkills.length} private skill(s)`));
 
-  const lock = await readInstallLock();
   const serverSkillIds = new Set(privateSkills.map((s) => s.id));
 
   let synced = 0;
+  let failed = 0;
 
   for (const [index, item] of privateSkills.entries()) {
     const spinner = p.spinner();
@@ -113,14 +146,18 @@ export async function syncCommand() {
       synced += 1;
       spinner.stop(pc.green(`synced ${item.slug}`));
     } catch (error) {
+      failed += 1;
       spinner.stop(pc.red(`failed ${item.slug}: ${readErrorMessage(error)}`));
     }
   }
 
   // prune skills that no longer exist on the server
-  const staleEntries = Object.entries(lock.skills).filter(
+  const latestLock = await readInstallLock();
+  const staleEntries = Object.entries(latestLock.skills).filter(
     ([, entry]) => !serverSkillIds.has(entry.skillId),
   );
+
+  let removedStaleSkills = 0;
 
   if (staleEntries.length > 0) {
     for (const [folder, entry] of staleEntries) {
@@ -129,16 +166,39 @@ export async function syncCommand() {
 
       try {
         await uninstallSkill(folder);
+        removedStaleSkills += 1;
         spinner.stop(pc.green(`removed ${entry.slug}`));
       } catch (error) {
         spinner.stop(pc.red(`failed to remove ${entry.slug}: ${readErrorMessage(error)}`));
       }
     }
 
-    p.log.info(pc.dim(`removed ${staleEntries.length} skill(s) no longer on server`));
+    p.log.info(pc.dim(`removed ${removedStaleSkills} skill(s) no longer on server`));
   }
 
   p.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
 
-  await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
+  if (promptUnsyncedBackup) {
+    await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
+  }
+
+  return {
+    ok: failed === 0,
+    authenticated: true,
+    totalPrivateSkills: privateSkills.length,
+    syncedSkills: synced,
+    failedSkills: failed,
+    removedStaleSkills,
+  };
+}
+
+export async function syncCommand() {
+  const selectedAgents = await resolveInstallAgents();
+
+  if (selectedAgents.length === 0) {
+    p.log.error("no agents selected");
+    return;
+  }
+
+  await syncPrivateSkills(selectedAgents, { promptUnsyncedBackup: true });
 }

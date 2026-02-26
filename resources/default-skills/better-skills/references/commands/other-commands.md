@@ -29,6 +29,9 @@ better-skills delete <uuid>
 ```bash
 better-skills config
 better-skills sync
+better-skills validate <dir>
+better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
+better-skills backup apply --plan <file> [--keep-snapshot]
 ```
 
 ## Automation notes

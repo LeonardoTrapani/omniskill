@@ -13,7 +13,7 @@ Use this when user wants to create a new skill from a local folder.
 1. Validate folder:
 
 ```bash
-python scripts/validate_skill_folder.py <folder>
+better-skills validate <folder>
 ```
 
 2. Create skill:
