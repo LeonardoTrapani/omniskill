@@ -106,7 +106,7 @@ export function NodePreviewCard({ data, className }: NodePreviewCardProps) {
           </div>
         ) : (
           <div className="flex items-center justify-center px-3.5 py-4">
-            <p className="text-[11px] font-mono text-muted-foreground/50">No content</p>
+            <p className="text-[11px] font-mono text-neutral-300">No content</p>
           </div>
         )}
       </div>

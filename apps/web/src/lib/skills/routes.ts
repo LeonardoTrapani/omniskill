@@ -23,6 +23,16 @@ export function buildResourceTabHref(skillId: string, resourcePath: string) {
   return `${buildSkillHref(skillId)}?${query.toString()}` as Route;
 }
 
+export function buildResourceResponsiveHref(
+  skillId: string,
+  resourcePath: string,
+  isDesktopLg: boolean,
+) {
+  return isDesktopLg
+    ? buildResourceTabHref(skillId, resourcePath)
+    : buildResourceHref(skillId, resourcePath);
+}
+
 export function buildLoginHref(nextPath?: string) {
   if (!nextPath) {
     return "/login" as Route;

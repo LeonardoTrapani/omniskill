@@ -116,7 +116,7 @@ export function SkillDetailHeader({
 
         {/* INFO section */}
         <div>
-          <h3 className="uppercase font-mono text-[10px] text-muted-foreground/50 tracking-wider mb-2.5">
+          <h3 className="uppercase font-mono text-[10px] text-neutral-300 tracking-wider mb-2.5">
             Info
           </h3>
           <div className="space-y-2 text-[11px]">
