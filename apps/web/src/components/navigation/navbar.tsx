@@ -24,10 +24,7 @@ const publicNav: NavItem[] = [
   { label: "Github", href: "#github", kind: "hash" },
 ];
 
-const appNav: NavItem[] = [
-  { label: "My Vault", href: "/vault" as Route, kind: "route" },
-  { label: "Explore", href: "/skills", kind: "route" },
-];
+const appNav: NavItem[] = [];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -163,101 +160,9 @@ export default function Navbar() {
             {mounted && !isPending && session && (
               <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
             )}
-            <button
-              className="text-foreground"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
           </div>
         </div>
       </nav>
-
-      {mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-black/60 lg:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-[70] lg:hidden">
-            <div className="bg-background border-t border-border mx-2 mb-2 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                  <span>BETTER-SKILLS</span>
-                </span>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center border border-border text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Close menu"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="border border-border mb-4">
-                {navItems.map((item, i) =>
-                  item.kind === "route" ? (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
-                        i < navItems.length - 1 ? "border-b border-border" : ""
-                      }`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        {item.label === "My Vault" ? <Hexagon className="size-4" /> : null}
-                        {item.label === "Explore" ? <Globe className="size-4" /> : null}
-                        {item.label}
-                      </span>
-                    </Link>
-                  ) : (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors ${
-                        i < navItems.length - 1 ? "border-b border-border" : ""
-                      }`}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <span>{item.label}</span>
-                    </a>
-                  ),
-                )}
-              </div>
-
-              {mounted && !isPending && session && (
-                <div className="border border-border mb-4">
-                  <Link
-                    href="/settings"
-                    className="flex items-center justify-between px-4 py-3.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Settings className="size-4" />
-                      Settings
-                    </span>
-                  </Link>
-                </div>
-              )}
-
-              {mounted && !isPending && !session && (
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/login"
-                    className="w-full text-center py-3 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
       {/* single palette instance */}
       {mounted && !isPending && session && (
         <SkillCommandPalette
