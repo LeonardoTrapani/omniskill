@@ -12,10 +12,17 @@ better-skills logout
 ## Discovery
 
 ```bash
+better-skills list [search] [--all] [--limit N]
 better-skills search "<query>" [--public] [--limit N]
 better-skills get <slug-or-uuid>
 better-skills clone <slug-or-uuid> [--to <dir>] [--force]
 ```
+
+Behavior for `list`:
+
+- Lists the authenticated user's skills (requires login).
+- Optional positional `search` text filters by name/slug (ILIKE).
+- `--limit N` caps results (default 20). `--all` fetches every skill.
 
 ## Import and delete
 

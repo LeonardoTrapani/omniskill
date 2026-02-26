@@ -8,6 +8,7 @@ import { deleteCommand } from "./commands/delete";
 import { getCommand } from "./commands/get";
 import { importCommand } from "./commands/import";
 import { healthCommand } from "./commands/health";
+import { listCommand } from "./commands/list";
 import { loginCommand } from "./commands/login";
 import { logoutCommand } from "./commands/logout";
 import { searchCommand } from "./commands/search";
@@ -37,6 +38,7 @@ function printUsage() {
   p.log.info("  better-skills validate <dir>");
   p.log.info("  better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]...");
   p.log.info("  better-skills backup apply --plan <file> [--keep-snapshot]");
+  p.log.info("  better-skills list [search] [--all] [--limit N]");
   p.log.info("  better-skills search <query> [--public] [--limit N]");
   p.log.info("  better-skills get <slug-or-uuid>");
   p.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
@@ -87,6 +89,9 @@ async function run(args: string[]) {
       return;
     case "backup":
       await backupCommand();
+      return;
+    case "list":
+      await listCommand();
       return;
     case "search":
       await searchCommand();
