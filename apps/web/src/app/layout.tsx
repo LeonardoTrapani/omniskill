@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 
-import { Fira_Mono, Geist } from "next/font/google";
+import { Fira_Mono, Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
-import Navbar from "@/features/navigation/components/navbar";
-import Providers from "@/shared/providers/providers";
+import Navbar from "@/components/navigation/navbar";
+import Providers from "@/providers/providers";
 
 const geistSans = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
 });
 
 const firaMono = Fira_Mono({
@@ -31,7 +36,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.className} ${geistSans.variable} ${firaMono.variable} antialiased`}
+        className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${firaMono.variable} antialiased`}
       >
         <Providers>
           <Navbar />
