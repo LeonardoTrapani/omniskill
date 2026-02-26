@@ -13,13 +13,14 @@ export function buildSkillEditHref(skillId: string) {
 }
 
 export function buildResourceHref(skillId: string, resourcePath: string) {
-  const encodedPath = resourcePath
-    .split("/")
-    .filter(Boolean)
-    .map((part) => encodeURIComponent(part))
-    .join("/");
+  const encodedPath = encodeResourcePath(resourcePath);
 
   return `${buildSkillHref(skillId)}/resources/${encodedPath}` as Route;
+}
+
+export function buildResourceTabHref(skillId: string, resourcePath: string) {
+  const query = new URLSearchParams({ resource: resourcePath });
+  return `${buildSkillHref(skillId)}?${query.toString()}` as Route;
 }
 
 export function buildLoginHref(nextPath?: string) {
@@ -28,6 +29,14 @@ export function buildLoginHref(nextPath?: string) {
   }
 
   return `/login?next=${encodeURIComponent(nextPath)}` as Route;
+}
+
+function encodeResourcePath(resourcePath: string) {
+  return resourcePath
+    .split("/")
+    .filter(Boolean)
+    .map((part) => encodeURIComponent(part))
+    .join("/");
 }
 
 export function buildDeviceAuthorizationHref(userCode?: string) {

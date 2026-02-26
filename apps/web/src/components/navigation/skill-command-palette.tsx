@@ -32,6 +32,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSkillSearch, useDebouncedValue } from "@/hooks/skills/use-skill-search";
 import { authClient } from "@/lib/auth/auth-client";
 import { trpc } from "@/lib/api/trpc";
+import { buildResourceHref, buildResourceTabHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -199,6 +200,22 @@ export function SkillCommandPalette({
   const rowRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const navigateTo = useCallback(
+    (href: Route | string) => {
+      const target = String(href);
+      const current = `${window.location.pathname}${window.location.search}`;
+
+      if (current === target) {
+        // Force a real navigation when selecting the current URL
+        window.location.assign(target);
+        return;
+      }
+
+      router.push(target as Route);
+    },
+    [router],
+  );
+
   // ── Close helper ────────────────────────────────────────────────────────────
 
   const close = useCallback(() => {
@@ -294,7 +311,7 @@ export function SkillCommandPalette({
         description: "Account & preferences",
         icon: <Settings className="size-4" />,
         keywords: ["settings", "account", "preferences", "profile"],
-        action: () => runAndClose(() => window.location.assign("/settings")),
+        action: () => runAndClose(() => navigateTo("/settings")),
       },
       {
         id: "switch-theme",
@@ -321,7 +338,7 @@ export function SkillCommandPalette({
           ),
       },
     ],
-    [isDark, setTheme, close, runAndClose, router],
+    [isDark, setTheme, close, runAndClose, router, navigateTo],
   );
 
   // ── Vault search (skills + resources via searchMentions) ───────────────────
@@ -413,7 +430,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           });
         }
       }
@@ -446,7 +463,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
             sectionLabel: items.length === 0 ? "Your skills" : undefined,
           });
         }
@@ -464,7 +481,7 @@ export function SkillCommandPalette({
           label: skill.label,
           subtitle: skill.subtitle ?? "",
           icon: <BookOpen className="size-4" />,
-          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+          action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           sectionLabel: items.length === 0 ? "Skills" : undefined,
         });
       }
@@ -477,9 +494,15 @@ export function SkillCommandPalette({
           subtitle: res.subtitle ?? "",
           icon: <FileText className="size-4" />,
           action: () =>
-            runAndClose(() =>
-              router.push(`/vault/skills/${res.parentSkillId}/resources/${res.label}` as Route),
-            ),
+            runAndClose(() => {
+              if (!res.parentSkillId) return;
+
+              const href =
+                window.innerWidth < 1024
+                  ? buildResourceHref(res.parentSkillId, res.label)
+                  : buildResourceTabHref(res.parentSkillId, res.label);
+              navigateTo(href);
+            }),
           sectionLabel:
             items.length === skills.length && resources.indexOf(res) === 0
               ? "Resources"
@@ -503,7 +526,7 @@ export function SkillCommandPalette({
               ? skill.snippet
               : (skill.description ?? ""),
           icon: <BookOpen className="size-4" />,
-          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+          action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           sectionLabel: items.length === 0 ? "Public skills" : undefined,
         });
       }
@@ -523,6 +546,7 @@ export function SkillCommandPalette({
     marketplaceItems,
     runAndClose,
     router,
+    navigateTo,
   ]);
 
   // ── Reset selection when items change ──────────────────────────────────────
@@ -577,7 +601,8 @@ export function SkillCommandPalette({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((i) => {
-          const next = Math.min(i + 1, flatItems.length - 1);
+          if (flatItems.length === 0) return 0;
+          const next = i >= flatItems.length - 1 ? 0 : i + 1;
           // load more in marketplace
           if (
             mode === "marketplace" &&
@@ -594,7 +619,10 @@ export function SkillCommandPalette({
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((i) => Math.max(i - 1, 0));
+        setSelectedIndex((i) => {
+          if (flatItems.length === 0) return 0;
+          return i === 0 ? flatItems.length - 1 : i - 1;
+        });
         return;
       }
 
