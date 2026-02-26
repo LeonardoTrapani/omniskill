@@ -171,7 +171,7 @@ def validate(folder: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate Omniskill local skill folder"
+        description="Validate Better Skills local skill folder"
     )
     parser.add_argument("folder", help="Path to local skill folder")
     args = parser.parse_args()
