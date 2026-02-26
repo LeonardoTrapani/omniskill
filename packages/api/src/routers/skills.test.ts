@@ -1237,7 +1237,7 @@ describe("rendering", () => {
     const result = await anonCaller().skills.getById({ id: source.id, linkMentions: true });
 
     expect(result.renderedMarkdown).toContain(
-      `/dashboard/skills/${target.id}?mention=skill%3A${target.id}`,
+      `/vault/skills/${target.id}?mention=skill%3A${target.id}`,
     );
   });
 

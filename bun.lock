@@ -7,6 +7,7 @@
       "dependencies": {
         "@better-skills/env": "workspace:*",
         "dotenv": "catalog:",
+        "lucide": "^0.575.0",
         "motion": "^12.34.3",
         "zod": "catalog:",
       },
@@ -26,6 +27,7 @@
       "dependencies": {
         "@better-skills/api": "workspace:*",
         "@better-skills/env": "workspace:*",
+        "@better-skills/markdown": "workspace:*",
         "@clack/prompts": "^1.0.1",
         "@trpc/client": "catalog:",
         "better-auth": "^1.4.18",
@@ -130,6 +132,7 @@
       "dependencies": {
         "@better-skills/db": "workspace:*",
         "@better-skills/env": "workspace:*",
+        "@better-skills/markdown": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
@@ -1515,6 +1518,8 @@
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
 
     "lru-cache": ["lru-cache@5.1.1", "", { "dependencies": { "yallist": "^3.0.2" } }, "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w=="],
+
+    "lucide": ["lucide@0.575.0", "", {}, "sha512-+xwqZpvrqPioU8bSH49zH2xARfnKyZgIjdnfbex0CrURB3q4wNFhinYN1Z9Q3lE16Q/6N9iEXnStvyS3c70RKw=="],
 
     "lucide-react": ["lucide-react@0.575.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-VuXgKZrk0uiDlWjGGXmKV6MSk9Yy4l10qgVvzGn2AWBx1Ylt0iBexKOAoA6I7JO3m+M9oeovJd3yYENfkUbOeg=="],
 

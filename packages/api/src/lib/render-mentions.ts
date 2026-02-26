@@ -28,7 +28,7 @@ function buildMentionQuery(type: "skill" | "resource", id: string) {
 }
 
 function buildSkillHref(skillId: string) {
-  return `/dashboard/skills/${encodeURIComponent(skillId)}${buildMentionQuery("skill", skillId)}`;
+  return `/vault/skills/${encodeURIComponent(skillId)}${buildMentionQuery("skill", skillId)}`;
 }
 
 function buildResourceHref(skillId: string, resourcePath: string, resourceId: string) {
@@ -38,7 +38,7 @@ function buildResourceHref(skillId: string, resourcePath: string, resourceId: st
     .map((part) => encodeURIComponent(part))
     .join("/");
 
-  return `/dashboard/skills/${encodeURIComponent(skillId)}/resources/${encodedPath}${buildMentionQuery("resource", resourceId)}`;
+  return `/vault/skills/${encodeURIComponent(skillId)}/resources/${encodedPath}${buildMentionQuery("resource", resourceId)}`;
 }
 
 export async function renderMentions(

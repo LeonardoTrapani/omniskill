@@ -158,9 +158,9 @@ describe("renderMentions", () => {
   test("renders linked markdown when linkMentions is true", async () => {
     const md = `See [[skill:${SKILL_A_ID}]] and [[resource:${RESOURCE_ID}]].`;
     const result = await renderMentions(md, { linkMentions: true, currentSkillId: SKILL_A_ID });
-    expect(result).toContain(`/dashboard/skills/${SKILL_A_ID}?mention=skill%3A${SKILL_A_ID}`);
+    expect(result).toContain(`/vault/skills/${SKILL_A_ID}?mention=skill%3A${SKILL_A_ID}`);
     expect(result).toContain(
-      `/dashboard/skills/${SKILL_A_ID}/resources/examples/hooks.ts?mention=resource%3A${RESOURCE_ID}`,
+      `/vault/skills/${SKILL_A_ID}/resources/examples/hooks.ts?mention=resource%3A${RESOURCE_ID}`,
     );
   });
 
