@@ -1,19 +1,44 @@
 import { transformOutsideMarkdownCode } from "./transform-outside-markdown-code";
 
 const NEW_RESOURCE_MENTION_RE = new RegExp(
-  String.raw`(?<!\\)\[\[(skill|resource):new:([^\]\n]+)\]\]`,
+  String.raw`(?<!\\)\[\[resource:new:([^\]\n]+)\]\]`,
   "gi",
 );
 
 function replaceOutsideMarkdownCode(
   markdown: string,
-  replacer: (match: string, type: string, resourcePath: string) => string,
+  mentionPattern: RegExp,
+  replacer: (match: string, resourcePath: string) => string,
 ): string {
-  const mentionPattern = new RegExp(NEW_RESOURCE_MENTION_RE.source, "gi");
+  const pattern = new RegExp(mentionPattern.source, "gi");
 
   return transformOutsideMarkdownCode(markdown, (segment) => {
-    return segment.replace(mentionPattern, replacer);
+    return segment.replace(pattern, replacer);
   });
+}
+
+function collectMentionPaths(markdown: string, mentionPattern: RegExp): string[] {
+  const seen = new Set<string>();
+  const paths: string[] = [];
+  const pattern = new RegExp(mentionPattern.source, "gi");
+
+  transformOutsideMarkdownCode(markdown, (segment) => {
+    let match: RegExpExecArray | null;
+    pattern.lastIndex = 0;
+
+    while ((match = pattern.exec(segment)) !== null) {
+      const normalizedPath = normalizeResourcePath(match[1] ?? "");
+
+      if (!seen.has(normalizedPath)) {
+        seen.add(normalizedPath);
+        paths.push(normalizedPath);
+      }
+    }
+
+    return segment;
+  });
+
+  return paths;
 }
 
 export function normalizeResourcePath(path: string): string {
@@ -43,25 +68,15 @@ export function normalizeResourcePath(path: string): string {
 }
 
 export function collectNewResourceMentionPaths(markdown: string): string[] {
-  const seen = new Set<string>();
-  const paths: string[] = [];
-
-  replaceOutsideMarkdownCode(markdown, (_match, _type, resourcePath) => {
-    const normalizedPath = normalizeResourcePath(resourcePath);
-    if (!seen.has(normalizedPath)) {
-      seen.add(normalizedPath);
-      paths.push(normalizedPath);
-    }
-    return _match;
-  });
-
-  return paths;
+  return collectMentionPaths(markdown, NEW_RESOURCE_MENTION_RE);
 }
 
 export function stripNewResourceMentionsForCreate(markdown: string): string {
-  return replaceOutsideMarkdownCode(markdown, (_match, _type, resourcePath) => {
-    return `\`${normalizeResourcePath(resourcePath)}\``;
-  });
+  return replaceOutsideMarkdownCode(
+    markdown,
+    NEW_RESOURCE_MENTION_RE,
+    (_match, resourcePath) => `\`${normalizeResourcePath(resourcePath)}\``,
+  );
 }
 
 export function resolveNewResourceMentionsToUuids(
@@ -70,17 +85,21 @@ export function resolveNewResourceMentionsToUuids(
 ): { markdown: string; missingPaths: string[] } {
   const missing = new Set<string>();
 
-  const resolvedMarkdown = replaceOutsideMarkdownCode(markdown, (match, _type, resourcePath) => {
-    const normalizedPath = normalizeResourcePath(resourcePath);
-    const resourceId = resourceIdByPath.get(normalizedPath);
+  const resolvedMarkdown = replaceOutsideMarkdownCode(
+    markdown,
+    NEW_RESOURCE_MENTION_RE,
+    (match, resourcePath) => {
+      const normalizedPath = normalizeResourcePath(resourcePath);
+      const resourceId = resourceIdByPath.get(normalizedPath);
 
-    if (!resourceId) {
-      missing.add(normalizedPath);
-      return match;
-    }
+      if (!resourceId) {
+        missing.add(normalizedPath);
+        return match;
+      }
 
-    return `[[resource:${resourceId.toLowerCase()}]]`;
-  });
+      return `[[resource:${resourceId.toLowerCase()}]]`;
+    },
+  );
 
   return {
     markdown: resolvedMarkdown,

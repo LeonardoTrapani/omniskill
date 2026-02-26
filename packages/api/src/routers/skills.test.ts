@@ -870,6 +870,46 @@ describe("skills.getResourceByPath", () => {
       }),
     ).rejects.toThrow();
   });
+
+  test("returns renderedContent with mention links", async () => {
+    const s = seedSkill({ visibility: "public", slug: "pub-with-mentions" });
+    const target = seedResource(s.id, { path: "references/guidelines.md" });
+    seedResource(s.id, {
+      path: "references/flow.md",
+      content: `Read [[resource:${target.id}]]`,
+    });
+
+    const result = await anonCaller().skills.getResourceByPath({
+      skillSlug: "pub-with-mentions",
+      resourcePath: "references/flow.md",
+    });
+
+    expect(result.content).toBe(`Read [[resource:${target.id}]]`);
+    expect(result.renderedContent).toContain(
+      `/vault/skills/${s.id}/resources/references/guidelines.md?mention=resource%3A${target.id}`,
+    );
+  });
+});
+
+describe("skills.getResourceBySkillIdAndPath", () => {
+  test("returns renderedContent with mention links", async () => {
+    const s = seedSkill({ visibility: "public" });
+    const target = seedResource(s.id, { path: "references/checklist.md" });
+    seedResource(s.id, {
+      path: "references/create.md",
+      content: `See [[resource:${target.id}]]`,
+    });
+
+    const result = await anonCaller().skills.getResourceBySkillIdAndPath({
+      skillId: s.id,
+      resourcePath: "references/create.md",
+    });
+
+    expect(result.content).toBe(`See [[resource:${target.id}]]`);
+    expect(result.renderedContent).toContain(
+      `/vault/skills/${s.id}/resources/references/checklist.md?mention=resource%3A${target.id}`,
+    );
+  });
 });
 
 // ============================================================
@@ -1039,6 +1079,44 @@ describe("skills.duplicate", () => {
 
     expect(autoLinks.some((link) => link.targetSkillId === result.id)).toBe(true);
     expect(autoLinks.some((link) => link.targetResourceId === duplicatedResource.id)).toBe(true);
+  });
+
+  test("remaps internal mentions inside duplicated resources and syncs resource links", async () => {
+    const source = seedSkill({
+      visibility: "public",
+      ownerUserId: USER_A,
+    });
+    const sourceResourceA = seedResource(source.id, { path: "references/target.md" });
+    const sourceResourceB = seedResource(source.id, {
+      path: "references/source.md",
+      content: `See [[skill:${source.id}]] and [[resource:${sourceResourceA.id}]]`,
+    });
+
+    const result = await authedCaller(USER_B).skills.duplicate({ id: source.id });
+
+    const duplicatedResourceA = result.resources.find(
+      (resource) => resource.path === sourceResourceA.path,
+    );
+    const duplicatedResourceB = result.resources.find(
+      (resource) => resource.path === sourceResourceB.path,
+    );
+
+    expect(duplicatedResourceA).toBeDefined();
+    expect(duplicatedResourceB).toBeDefined();
+    if (!duplicatedResourceA || !duplicatedResourceB) return;
+
+    expect(duplicatedResourceB.content).toBe(
+      `See [[skill:${result.id}]] and [[resource:${duplicatedResourceA.id}]]`,
+    );
+
+    const autoLinks = links.filter(
+      (link) =>
+        link.sourceResourceId === duplicatedResourceB.id &&
+        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
+    );
+
+    expect(autoLinks.some((link) => link.targetSkillId === result.id)).toBe(true);
+    expect(autoLinks.some((link) => link.targetResourceId === duplicatedResourceA.id)).toBe(true);
   });
 });
 
@@ -1250,6 +1328,64 @@ describe("rendering", () => {
 
     const result = await anonCaller().skills.getById({ id: s.id });
     expect(result.renderedMarkdown).toContain("`(unknown skill)`");
+  });
+});
+
+// ============================================================
+// GRAPH — link shapes
+// ============================================================
+
+describe("graph links", () => {
+  test("graphForSkill includes skill/resource link combinations", async () => {
+    const skillA = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "A" });
+    const skillB = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "B" });
+    const resourceA = seedResource(skillA.id, { path: "references/a.md" });
+    const resourceB = seedResource(skillB.id, { path: "references/b.md" });
+
+    const skillToSkill = seedLink({ sourceSkillId: skillA.id, targetSkillId: skillB.id });
+    const skillToResource = seedLink({ sourceSkillId: skillA.id, targetResourceId: resourceB.id });
+    const resourceToSkill = seedLink({ sourceResourceId: resourceA.id, targetSkillId: skillB.id });
+    const resourceToResource = seedLink({
+      sourceResourceId: resourceA.id,
+      targetResourceId: resourceB.id,
+    });
+
+    const result = await authedCaller(USER_A).skills.graphForSkill({ skillId: skillA.id });
+
+    const nodeIds = new Set(result.nodes.map((node) => node.id));
+    expect(nodeIds.has(skillA.id)).toBe(true);
+    expect(nodeIds.has(skillB.id)).toBe(true);
+    expect(nodeIds.has(resourceA.id)).toBe(true);
+    expect(nodeIds.has(resourceB.id)).toBe(true);
+
+    const edgeIds = new Set(result.edges.map((edge) => edge.id));
+    expect(edgeIds.has(skillToSkill.id)).toBe(true);
+    expect(edgeIds.has(skillToResource.id)).toBe(true);
+    expect(edgeIds.has(resourceToSkill.id)).toBe(true);
+    expect(edgeIds.has(resourceToResource.id)).toBe(true);
+  });
+
+  test("graph includes skill/resource link combinations for caller vault", async () => {
+    const skillA = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "A" });
+    const skillB = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "B" });
+    const resourceA = seedResource(skillA.id, { path: "references/a.md" });
+    const resourceB = seedResource(skillB.id, { path: "references/b.md" });
+
+    const skillToSkill = seedLink({ sourceSkillId: skillA.id, targetSkillId: skillB.id });
+    const skillToResource = seedLink({ sourceSkillId: skillA.id, targetResourceId: resourceB.id });
+    const resourceToSkill = seedLink({ sourceResourceId: resourceA.id, targetSkillId: skillB.id });
+    const resourceToResource = seedLink({
+      sourceResourceId: resourceA.id,
+      targetResourceId: resourceB.id,
+    });
+
+    const result = await authedCaller(USER_A).skills.graph();
+    const edgeIds = new Set(result.edges.map((edge) => edge.id));
+
+    expect(edgeIds.has(skillToSkill.id)).toBe(true);
+    expect(edgeIds.has(skillToResource.id)).toBe(true);
+    expect(edgeIds.has(resourceToSkill.id)).toBe(true);
+    expect(edgeIds.has(resourceToResource.id)).toBe(true);
   });
 });
 

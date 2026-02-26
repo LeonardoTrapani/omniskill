@@ -15,7 +15,7 @@ describe("new resource mentions", () => {
 
   test("collects deduplicated paths from new tokens", () => {
     const markdown = [
-      "See [[skill:new:references/guide.md]]",
+      "First [[resource:new:references/guide.md]]",
       "Again [[resource:new:./references/guide.md#top]]",
       "And [[resource:new:scripts/setup.ts]]",
     ].join("\n");
@@ -27,13 +27,14 @@ describe("new resource mentions", () => {
   });
 
   test("strips new tokens into non-mention placeholders for create", () => {
-    const markdown = "Use [[skill:new:references/guide.md]] first";
+    const markdown = "Use [[resource:new:references/guide.md]] first";
 
     expect(stripNewResourceMentionsForCreate(markdown)).toBe("Use `references/guide.md` first");
   });
 
   test("resolves new tokens into resource uuid mentions", () => {
-    const markdown = "Use [[resource:new:references/guide.md]] and [[skill:new:scripts/setup.ts]]";
+    const markdown =
+      "Use [[resource:new:references/guide.md]] and [[resource:new:scripts/setup.ts]]";
     const map = new Map([
       ["references/guide.md", "A1B2C3D4-E5F6-7890-ABCD-EF1234567890"],
       ["scripts/setup.ts", "b2c3d4e5-f6a7-8901-bcde-f12345678901"],
@@ -67,9 +68,9 @@ describe("new resource mentions", () => {
   test("ignores new mention examples in fenced code blocks", () => {
     const markdown = [
       "```md",
-      "[[skill:new:references/example.md]]",
+      "[[resource:new:references/example.md]]",
       "```",
-      "Actual: [[skill:new:references/real.md]]",
+      "Actual: [[resource:new:references/real.md]]",
     ].join("\n");
 
     expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
@@ -81,16 +82,25 @@ describe("new resource mentions", () => {
     expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
   });
 
-  test("does not replace escaped new mention tokens", () => {
-    const markdown = String.raw`Literal \[[skill:new:references/example.md]] and active [[skill:new:references/real.md]]`;
-    const result = resolveNewResourceMentionsToUuids(
-      markdown,
-      new Map([["references/real.md", "c3d4e5f6-a7b8-9012-cdef-123456789012"]]),
+  test("ignores unknown token prefixes", () => {
+    const markdown =
+      "Unknown [[thing:new:references/guide.md]] and active [[resource:new:scripts/setup.ts]]";
+
+    expect(collectNewResourceMentionPaths(markdown)).toEqual(["scripts/setup.ts"]);
+
+    const stripped = stripNewResourceMentionsForCreate(markdown);
+    expect(stripped).toBe(
+      "Unknown [[thing:new:references/guide.md]] and active `scripts/setup.ts`",
     );
 
-    expect(result.markdown).toBe(
-      String.raw`Literal \[[skill:new:references/example.md]] and active [[resource:c3d4e5f6-a7b8-9012-cdef-123456789012]]`,
+    const resolved = resolveNewResourceMentionsToUuids(
+      markdown,
+      new Map([["scripts/setup.ts", "c3d4e5f6-a7b8-9012-cdef-123456789012"]]),
     );
-    expect(result.missingPaths).toEqual([]);
+
+    expect(resolved.markdown).toBe(
+      "Unknown [[thing:new:references/guide.md]] and active [[resource:c3d4e5f6-a7b8-9012-cdef-123456789012]]",
+    );
+    expect(resolved.missingPaths).toEqual([]);
   });
 });

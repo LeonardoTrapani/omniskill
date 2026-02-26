@@ -50,7 +50,9 @@ export function SkillPanel({
   );
 
   return (
-    <div className={`border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}>
+    <div
+      className={`md:border-t border border-border bg-background/90 backdrop-blur-sm ${className ?? ""}`}
+    >
       {collapsible ? (
         <button
           type="button"

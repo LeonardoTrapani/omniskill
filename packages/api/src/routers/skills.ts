@@ -48,6 +48,13 @@ const resourceInput = z.object({
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
+const resourceReadOutput = resourceOutput.extend({
+  renderedContent: z.string(),
+  skillId: z.string().uuid(),
+  skillSlug: z.string(),
+  skillName: z.string(),
+});
+
 // -- skill output --
 
 const skillOutput = z.object({
@@ -704,13 +711,7 @@ export const skillsRouter = router({
         resourcePath: z.string().min(1),
       }),
     )
-    .output(
-      resourceOutput.extend({
-        skillId: z.string().uuid(),
-        skillSlug: z.string(),
-        skillName: z.string(),
-      }),
-    )
+    .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
       const skillRows = await db
         .select()
@@ -723,9 +724,14 @@ export const skillsRouter = router({
       }
 
       const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
+      const renderedContent = await renderMentions(resource.content, {
+        currentSkillId: skillRow.id,
+        linkMentions: true,
+      });
 
       return {
         ...resource,
+        renderedContent,
         skillId: skillRow.id,
         skillSlug: skillRow.slug,
         skillName: skillRow.name,
@@ -739,13 +745,7 @@ export const skillsRouter = router({
         resourcePath: z.string().min(1),
       }),
     )
-    .output(
-      resourceOutput.extend({
-        skillId: z.string().uuid(),
-        skillSlug: z.string(),
-        skillName: z.string(),
-      }),
-    )
+    .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
       const skillRows = await db
         .select()
@@ -758,9 +758,14 @@ export const skillsRouter = router({
       }
 
       const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
+      const renderedContent = await renderMentions(resource.content, {
+        currentSkillId: skillRow.id,
+        linkMentions: true,
+      });
 
       return {
         ...resource,
+        renderedContent,
         skillId: skillRow.id,
         skillSlug: skillRow.slug,
         skillName: skillRow.name,
@@ -1265,6 +1270,22 @@ export const skillsRouter = router({
         }
       }
 
+      if (resources.length > 0) {
+        for (const resource of resources) {
+          const remappedResourceMarkdown = remapMentionTargetIds(resource.content, mentionIdMap);
+          if (remappedResourceMarkdown === resource.content) {
+            continue;
+          }
+
+          await db
+            .update(skillResource)
+            .set({ content: remappedResourceMarkdown })
+            .where(eq(skillResource.id, resource.id));
+        }
+      }
+
+      const duplicatedResources = await loadSkillResources(createdSkill.id);
+
       try {
         await syncAutoLinksForSources(
           [
@@ -1272,8 +1293,14 @@ export const skillsRouter = router({
               type: "skill",
               sourceId: createdSkill.id,
               sourceOwnerUserId: createdSkill.ownerUserId,
-              markdown: remappedMarkdown,
+              markdown: createdSkill.skillMarkdown,
             },
+            ...duplicatedResources.map((resource) => ({
+              type: "resource" as const,
+              sourceId: resource.id,
+              sourceOwnerUserId: createdSkill.ownerUserId,
+              markdown: resource.content,
+            })),
           ],
           userId,
         );
@@ -1281,7 +1308,7 @@ export const skillsRouter = router({
         throwMentionValidationError(error);
       }
 
-      return await toSkillOutput(createdSkill, resources);
+      return await toSkillOutput(createdSkill, duplicatedResources);
     }),
 
   delete: protectedProcedure

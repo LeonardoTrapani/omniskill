@@ -21,10 +21,9 @@ These are the canonical storage format in `skill.skill_markdown` and resource `c
 
 ### Draft-local mentions (path based)
 
-- `[[skill:new:path/to/file]]`
 - `[[resource:new:path/to/file]]`
 
-These are used while authoring local skill files. They are resolved to UUID mentions
+This is used while authoring local skill files. It is resolved to UUID mentions
 when resources are created and IDs are known.
 
 ### Escaped mentions
@@ -154,11 +153,11 @@ Current behavior:
 - upserts default skill/resources for each matched user skill
 - resolves `:new:` mentions in top-level `SKILL.md`
 - resolves `:new:` mentions in markdown resources (`.md`, `.mdx`, `.txt`)
-
-Current limitation:
-
-- it does not yet rebuild auto links from all markdown sources through
-  `syncAutoLinksForSources`
+- re-resolves lingering persisted `:new:` mentions before rebuilding links
+- rebuilds `markdown-auto` links for each default skill source after seed/sync
+  (skill markdown + all persisted resources)
+- still rebuilds links when template version is unchanged, so link rows can be
+  repaired without forcing a content version bump
 
 Intentional boundary:
 
@@ -170,13 +169,15 @@ Intentional boundary:
 What is already centralized:
 
 - `:new:` mention utilities are shared in `packages/markdown` and reused by CLI/auth.
-- auto-link DB writes are centralized in `packages/api/src/lib/link-sync.ts`.
+- API create/update/duplicate auto-link writes are centralized in
+  `packages/api/src/lib/link-sync.ts`.
 
 What is still duplicated (known tech debt):
 
 - UUID mention token regex/constants exist in multiple places:
   - `packages/api/src/lib/mentions.ts`
   - `packages/api/src/lib/render-mentions.ts`
+  - `packages/auth/src/default-skills.ts`
   - `apps/web/src/features/skills/components/mention-markdown.ts`
 
 Reason today:

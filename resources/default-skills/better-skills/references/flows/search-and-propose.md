@@ -4,8 +4,8 @@ Use this for discovery, recommendations, import proposals, and linking suggestio
 
 ## Read first
 
-- [[skill:new:references/commands/other-commands.md]]
-- [[skill:new:references/guidelines/mention-linking.md]]
+- [[resource:new:references/commands/other-commands.md]]
+- [[resource:new:references/guidelines/mention-linking.md]]
 
 ## Search steps
 

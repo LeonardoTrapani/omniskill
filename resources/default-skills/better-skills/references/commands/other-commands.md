@@ -40,9 +40,16 @@ environments (agents, CI, piped input).
 better-skills config
 better-skills sync
 better-skills validate <dir>
-better-skills backup plan [--source <dir>] [--out <file>] [--agent <agent>]
-better-skills backup apply --plan <file> [--keep-snapshot]
+better-skills backup [--source <dir>] [--out <tmp-dir>] [--agent <agent>]
 ```
+
+`backup` copies unmanaged local skills into a tmp folder with two copies:
+
+- `raw/` exact backup copy (restore only)
+- `work/` editable copy where local inline resource links in `SKILL.md` are
+  rewritten to draft mentions (`[[resource:new:...]]`)
+
+Use `work/` for create/update workflows.
 
 ## Non-interactive / agent usage
 

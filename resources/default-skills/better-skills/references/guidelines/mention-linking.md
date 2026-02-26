@@ -11,8 +11,9 @@ Final persisted mentions:
 
 Local authoring draft mentions (CLI resolves):
 
-- \[[skill:new:path/to/file]]
 - \[[resource:new:path/to/file]]
+
+Use only `[[resource:new:<path>]]` for local files under `references/`, `scripts/`, or `assets/`.
 
 ## Draft mention rules
 
@@ -23,7 +24,7 @@ Local authoring draft mentions (CLI resolves):
 ## Parsing nuance
 
 - Mention examples inside inline code or fenced code blocks are documentation, not active mentions.
-- A leading backslash escapes a mention token (example: \[[skill:new:path/to/file]]).
+- A leading backslash escapes a mention token (example: \[[resource:new:path/to/file]]).
 - Escaped mention tokens are ignored for parsing/replacement; rendered markdown drops that backslash.
 - Use code blocks freely for examples.
 
