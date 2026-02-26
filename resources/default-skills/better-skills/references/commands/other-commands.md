@@ -43,13 +43,15 @@ better-skills validate <dir>
 better-skills backup [--source <dir>] [--out <tmp-dir>] [--agent <agent>]
 ```
 
-`backup` copies unmanaged local skills into a tmp folder with two copies:
+`backup` copies unmanaged local skills into a tmp folder with two identical
+copies:
 
-- `raw/` exact backup copy (restore only)
-- `work/` editable copy where local inline resource links in `SKILL.md` are
-  rewritten to draft mentions (`[[resource:new:...]]`)
+- `raw/` immutable backup copy (restore only)
+- `work/` editable copy for the agent to prepare before uploading
 
-Use `work/` for create/update workflows.
+Both copies are plain, unmodified. The agent is responsible for editing
+`work/` files (rewriting inline links to draft mentions, verifying frontmatter,
+etc.) before running create/update workflows.
 
 ## Non-interactive / agent usage
 

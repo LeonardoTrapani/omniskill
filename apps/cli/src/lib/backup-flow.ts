@@ -1,18 +1,12 @@
-import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, stat } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
-
-import { transformOutsideMarkdownCode } from "@better-skills/markdown/transform-outside-markdown-code";
 
 import type { SupportedAgent } from "./agents";
 import { getAgentDisplayName, getAgentSkillDir } from "./agents";
 import { readErrorMessage } from "./errors";
-import { normalizeResourcePath } from "./new-resource-mentions";
 
 const INSTALL_METADATA_FILE = ".better-skills-install.json";
-const MARKDOWN_LINK_RE = /(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)/g;
-const URI_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
-const LOCAL_RESOURCE_PREFIXES = ["references/", "scripts/", "assets/"] as const;
 
 type DiscoveryRoot = {
   path: string;
@@ -30,7 +24,6 @@ export type BackupCopyItem = {
   sourcePath: string;
   rawPath: string;
   workPath: string;
-  inlineLinksRewritten: number;
 };
 
 export type BackupCopyFailure = {
@@ -50,7 +43,6 @@ export type BackupCopyResult = {
   copiedCount: number;
   skippedCount: number;
   failedCount: number;
-  inlineLinksRewritten: number;
   roots: string[];
   items: BackupCopyItem[];
   skippedFolders: BackupSkippedFolder[];
@@ -94,72 +86,6 @@ function uniqueBy<T>(items: T[], keyFn: (item: T) => string): T[] {
   }
 
   return unique;
-}
-
-function extractMarkdownLinkTarget(rawDestination: string): string | null {
-  const trimmed = rawDestination.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith("<")) {
-    const closingBracketIndex = trimmed.indexOf(">");
-    if (closingBracketIndex <= 1) {
-      return null;
-    }
-
-    return trimmed.slice(1, closingBracketIndex);
-  }
-
-  const firstWhitespace = trimmed.search(/\s/);
-  if (firstWhitespace === -1) {
-    return trimmed;
-  }
-
-  return trimmed.slice(0, firstWhitespace);
-}
-
-function isLocalResourceLinkTarget(target: string): boolean {
-  if (!target || target.startsWith("#") || target.startsWith("//") || URI_SCHEME_RE.test(target)) {
-    return false;
-  }
-
-  const normalizedTarget = normalizeResourcePath(target);
-  if (!normalizedTarget) {
-    return false;
-  }
-
-  const pathSegments = normalizedTarget.split("/");
-  if (pathSegments.includes("..")) {
-    return false;
-  }
-
-  return LOCAL_RESOURCE_PREFIXES.some((prefix) => normalizedTarget.startsWith(prefix));
-}
-
-export function rewriteInlineLinksToDraftMentions(markdown: string): {
-  markdown: string;
-  replacementCount: number;
-} {
-  let replacementCount = 0;
-
-  const rewrittenMarkdown = transformOutsideMarkdownCode(markdown, (segment) => {
-    return segment.replace(MARKDOWN_LINK_RE, (match, rawDestination: string) => {
-      const target = extractMarkdownLinkTarget(rawDestination);
-
-      if (!target || !isLocalResourceLinkTarget(target)) {
-        return match;
-      }
-
-      replacementCount += 1;
-      return `[[resource:new:${normalizeResourcePath(target)}]]`;
-    });
-  });
-
-  return {
-    markdown: rewrittenMarkdown,
-    replacementCount,
-  };
 }
 
 function resolveDiscoveryRoots(options: BackupCopyOptions): DiscoveryRoot[] {
@@ -262,31 +188,20 @@ export async function copyLocalSkillsToBackupTmp(
   const failures: BackupCopyFailure[] = [];
 
   let discoveredCount = 0;
-  let inlineLinksRewritten = 0;
 
   for (const root of roots) {
     const skillDirs = await listSkillDirs(root);
     discoveredCount += skillDirs.length;
 
     for (const skillDir of skillDirs) {
-      const installMetadata = await readFile(join(skillDir, INSTALL_METADATA_FILE), "utf8").catch(
+      const hasInstallMetadata = await stat(join(skillDir, INSTALL_METADATA_FILE)).catch(
         () => null,
       );
 
-      if (installMetadata) {
+      if (hasInstallMetadata) {
         skippedFolders.push({
           path: skillDir,
           reason: "managed by better-skills sync",
-        });
-        continue;
-      }
-
-      const skillMarkdown = await readFile(join(skillDir, "SKILL.md"), "utf8").catch(() => null);
-
-      if (!skillMarkdown) {
-        skippedFolders.push({
-          path: skillDir,
-          reason: "could not read SKILL.md",
         });
         continue;
       }
@@ -300,19 +215,11 @@ export async function copyLocalSkillsToBackupTmp(
         await cp(skillDir, rawPath, { recursive: true, dereference: true });
         await cp(rawPath, workPath, { recursive: true, dereference: true });
 
-        const rewritten = rewriteInlineLinksToDraftMentions(skillMarkdown);
-        if (rewritten.replacementCount > 0 && rewritten.markdown !== skillMarkdown) {
-          await writeFile(join(workPath, "SKILL.md"), rewritten.markdown, "utf8");
-        }
-
-        inlineLinksRewritten += rewritten.replacementCount;
-
         items.push({
           source: root.label,
           sourcePath: skillDir,
           rawPath,
           workPath,
-          inlineLinksRewritten: rewritten.replacementCount,
         });
       } catch (error) {
         failures.push({
@@ -335,7 +242,6 @@ export async function copyLocalSkillsToBackupTmp(
     copiedCount: items.length,
     skippedCount: skippedFolders.length,
     failedCount: failures.length,
-    inlineLinksRewritten,
     roots: roots.map((root) => root.path),
     items,
     skippedFolders,

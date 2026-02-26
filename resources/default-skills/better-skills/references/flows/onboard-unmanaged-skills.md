@@ -1,4 +1,4 @@
-# Flow: Upload Local Skills to Better-Skills Vault
+# Flow: Onboard unmanaged skills
 
 Use this when user asks to bring unmanaged local skills into the vault.
 
@@ -37,12 +37,29 @@ Expected output paths:
 
 - `tmp` backup root
 - `raw/` immutable copy (restore only)
-- `work/` editable copy (upload source)
+- `work/` identical editable copy (upload source)
 
-`work/` has local inline resource links rewritten to draft mentions
-(`[[resource:new:...]]`) so it is ready for create/update flows.
+Both `raw/` and `work/` are plain copies. `raw/` is for restore; `work/` is
+for the agent to edit before uploading.
 
-## Step 3: Route selected `work/` skill folders
+## Step 3: Prepare selected `work/` skill folders
+
+For each skill the user selected in Step 1, open the `work/` copy and edit it
+so it conforms to the authoring and mention-linking guidelines:
+
+1. Read the `SKILL.md` in the `work/` folder.
+2. Rewrite any local inline markdown links that point to `references/`,
+   `scripts/`, or `assets/` paths into draft mention form
+   (`[[resource:new:<path>]]`). Strip leading `./` prefixes, `#fragment`
+   suffixes, and `<>` angle-bracket wrapping during normalization.
+3. Verify frontmatter has required `name` and `description` fields. Ensure
+   `name` matches the skill slug (lowercase, hyphens, no consecutive hyphens).
+4. Ensure `description` follows authoring guidelines (third person, includes
+   trigger phrases and negative triggers).
+5. Check the folder structure matches the expected layout (`SKILL.md` +
+   optional `references/`, `scripts/`, `assets/`).
+
+## Step 4: Route selected `work/` skill folders
 
 Only process the skills the user selected in Step 1.
 
@@ -52,7 +69,7 @@ Only process the skills the user selected in Step 1.
 
 Do not duplicate create/update logic in this flow. Reuse those flow references.
 
-## Step 4: Optional cleanup
+## Step 5: Optional cleanup
 
 Only if user explicitly asked to delete unselected skills in Step 1:
 
@@ -64,7 +81,16 @@ For vault-only deletions, only if user explicitly asks:
 
 Never delete without explicit confirmation.
 
-## Step 5: Report
+## Step 6: Sync
+
+Run sync to install the newly created/updated vault skills into local agent
+directories:
+
+```bash
+better-skills sync
+```
+
+## Step 7: Report
 
 Return concise recap:
 
@@ -72,6 +98,7 @@ Return concise recap:
 - counts: copied / skipped / failed backup folders
 - selected vs total: how many were chosen for upload
 - counts from create/edit actions
+- sync result
 - local deletions (if any)
 - vault deletions (if any)
 

@@ -20,19 +20,25 @@ better-skills clone <slug-or-uuid> --to <folder>
 
 If adding a new file, create it under `references/`, `scripts/`, or `assets/`, then mention it with draft token form like `[[resource:new:references/new-file.md]]`.
 
-3. Validate folder:
+3. Verify all local resource links in `SKILL.md` use draft mention form.
+   Scan for any remaining bare markdown links pointing to `references/`,
+   `scripts/`, or `assets/` paths (e.g. `[text](references/foo.md)`) and
+   replace them with `[[resource:new:<path>]]`. No bare local links should
+   survive into the update step.
+
+4. Validate folder:
 
 ```bash
 better-skills validate <folder>
 ```
 
-4. Update skill:
+5. Update skill:
 
 ```bash
 better-skills update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
 ```
 
-5. Confirm with:
+6. Confirm with:
 
 ```bash
 better-skills get <slug-or-uuid>

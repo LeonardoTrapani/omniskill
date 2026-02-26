@@ -20,25 +20,31 @@ mkdir -p "$skill_dir"
 
 Create `SKILL.md` at `"$skill_dir/SKILL.md"` and any resources inside `"$skill_dir"`.
 
-2. Validate folder:
+2. Verify all local resource links in `SKILL.md` use draft mention form.
+   Scan for any remaining bare markdown links pointing to `references/`,
+   `scripts/`, or `assets/` paths (e.g. `[text](references/foo.md)`) and
+   replace them with `[[resource:new:<path>]]`. No bare local links should
+   survive into the create step.
+
+3. Validate folder:
 
 ```bash
 better-skills validate <skill_dir>
 ```
 
-3. Create skill:
+4. Create skill:
 
 ```bash
 better-skills create --from <skill_dir> [--slug <slug>] [--public]
 ```
 
-4. Confirm with:
+5. Confirm with:
 
 ```bash
 better-skills get <slug-or-uuid>
 ```
 
-5. Clean up temp files after reporting results:
+6. Clean up temp files after reporting results:
 
 ```bash
 rm -rf "$tmp_root"

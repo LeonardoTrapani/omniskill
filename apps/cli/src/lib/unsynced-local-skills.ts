@@ -141,7 +141,7 @@ function renderUnsyncedAgentSection(group: UnsyncedSkillsByAgent): string {
 
 function renderVaultMergePrompt(groups: UnsyncedSkillsByAgent[]): string {
   return [
-    "Use the `better-skills` skill and follow `Flow: Upload Local Skills to Better-Skills Vault`.",
+    "Use the `better-skills` skill and follow `Flow: Onboard unmanaged skills`.",
     "",
     "Here are the unsynced skills for each selected agent:",
     "",
