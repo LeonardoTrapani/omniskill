@@ -48,6 +48,13 @@ const resourceInput = z.object({
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
+const resourceReadOutput = resourceOutput.extend({
+  renderedContent: z.string(),
+  skillId: z.string().uuid(),
+  skillSlug: z.string(),
+  skillName: z.string(),
+});
+
 // -- skill output --
 
 const skillOutput = z.object({
@@ -704,13 +711,7 @@ export const skillsRouter = router({
         resourcePath: z.string().min(1),
       }),
     )
-    .output(
-      resourceOutput.extend({
-        skillId: z.string().uuid(),
-        skillSlug: z.string(),
-        skillName: z.string(),
-      }),
-    )
+    .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
       const skillRows = await db
         .select()
@@ -723,9 +724,14 @@ export const skillsRouter = router({
       }
 
       const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
+      const renderedContent = await renderMentions(resource.content, {
+        currentSkillId: skillRow.id,
+        linkMentions: true,
+      });
 
       return {
         ...resource,
+        renderedContent,
         skillId: skillRow.id,
         skillSlug: skillRow.slug,
         skillName: skillRow.name,
@@ -739,13 +745,7 @@ export const skillsRouter = router({
         resourcePath: z.string().min(1),
       }),
     )
-    .output(
-      resourceOutput.extend({
-        skillId: z.string().uuid(),
-        skillSlug: z.string(),
-        skillName: z.string(),
-      }),
-    )
+    .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
       const skillRows = await db
         .select()
@@ -758,9 +758,14 @@ export const skillsRouter = router({
       }
 
       const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
+      const renderedContent = await renderMentions(resource.content, {
+        currentSkillId: skillRow.id,
+        linkMentions: true,
+      });
 
       return {
         ...resource,
+        renderedContent,
         skillId: skillRow.id,
         skillSlug: skillRow.slug,
         skillName: skillRow.name,

@@ -105,7 +105,8 @@ export default function ResourceDetail({
 
           <ResourceContentPanel
             canRenderMarkdown={canRenderMarkdown}
-            content={resource.content}
+            content={resource.renderedContent || resource.content}
+            downloadContent={resource.content}
             markdownComponents={markdownComponents}
             downloadName={resourceDownloadName}
             mimeType={resourceMimeType}

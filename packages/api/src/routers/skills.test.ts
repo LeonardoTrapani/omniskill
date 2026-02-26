@@ -870,6 +870,46 @@ describe("skills.getResourceByPath", () => {
       }),
     ).rejects.toThrow();
   });
+
+  test("returns renderedContent with mention links", async () => {
+    const s = seedSkill({ visibility: "public", slug: "pub-with-mentions" });
+    const target = seedResource(s.id, { path: "references/guidelines.md" });
+    seedResource(s.id, {
+      path: "references/flow.md",
+      content: `Read [[resource:${target.id}]]`,
+    });
+
+    const result = await anonCaller().skills.getResourceByPath({
+      skillSlug: "pub-with-mentions",
+      resourcePath: "references/flow.md",
+    });
+
+    expect(result.content).toBe(`Read [[resource:${target.id}]]`);
+    expect(result.renderedContent).toContain(
+      `/vault/skills/${s.id}/resources/references/guidelines.md?mention=resource%3A${target.id}`,
+    );
+  });
+});
+
+describe("skills.getResourceBySkillIdAndPath", () => {
+  test("returns renderedContent with mention links", async () => {
+    const s = seedSkill({ visibility: "public" });
+    const target = seedResource(s.id, { path: "references/checklist.md" });
+    seedResource(s.id, {
+      path: "references/create.md",
+      content: `See [[resource:${target.id}]]`,
+    });
+
+    const result = await anonCaller().skills.getResourceBySkillIdAndPath({
+      skillId: s.id,
+      resourcePath: "references/create.md",
+    });
+
+    expect(result.content).toBe(`See [[resource:${target.id}]]`);
+    expect(result.renderedContent).toContain(
+      `/vault/skills/${s.id}/resources/references/checklist.md?mention=resource%3A${target.id}`,
+    );
+  });
 });
 
 // ============================================================
