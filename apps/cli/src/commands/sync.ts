@@ -6,8 +6,8 @@ import { readErrorMessage } from "../lib/errors";
 import {
   installSkill,
   readInstallLock,
-  toInstallableSkill,
   uninstallSkill,
+  type InstallableSkill,
 } from "../lib/skills-installer";
 import { maybePromptUnsyncedLocalSkillsBackup } from "../lib/unsynced-local-skills";
 import { trpc } from "../lib/trpc";
@@ -15,10 +15,11 @@ import * as ui from "../lib/ui";
 
 const SYNC_PAGE_LIMIT = 100;
 
-type SkillListOutput = Awaited<ReturnType<typeof trpc.skills.list.query>>;
+type SkillListOutput = Awaited<ReturnType<typeof trpc.skills.listByOwner.query>>;
 type SkillListItem = SkillListOutput["items"][number];
+type SkillDetails = Awaited<ReturnType<typeof trpc.skills.getBySlug.query>>;
 
-type SyncRunResult = {
+export type SyncRunResult = {
   ok: boolean;
   authenticated: boolean;
   totalSkills: number;
@@ -27,12 +28,30 @@ type SyncRunResult = {
   removedStaleSkills: number;
 };
 
+function toInstallableSkill(skill: SkillDetails): InstallableSkill {
+  return {
+    id: skill.id,
+    slug: skill.slug,
+    name: skill.name,
+    description: skill.description,
+    originalMarkdown: skill.originalMarkdown,
+    renderedMarkdown: skill.renderedMarkdown,
+    frontmatter: skill.frontmatter,
+    resources: skill.resources.map((resource) => ({
+      path: resource.path,
+      content: resource.content,
+    })),
+    sourceUrl: skill.sourceUrl,
+    sourceIdentifier: skill.sourceIdentifier,
+  };
+}
+
 async function fetchAllSkills(): Promise<SkillListItem[]> {
   const items: SkillListItem[] = [];
   let cursor: string | undefined;
 
   for (;;) {
-    const result = await trpc.skills.list.query({
+    const result = await trpc.skills.listByOwner.query({
       limit: SYNC_PAGE_LIMIT,
       cursor,
     });
@@ -47,7 +66,7 @@ async function fetchAllSkills(): Promise<SkillListItem[]> {
   }
 }
 
-async function syncSkills(
+export async function syncSkills(
   selectedAgents: SupportedAgent[],
   options?: {
     promptUnsyncedBackup?: boolean;

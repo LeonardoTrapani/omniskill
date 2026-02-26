@@ -31,54 +31,23 @@ export type InstallableSkill = {
   sourceIdentifier: string | null;
 };
 
-type SkillDetails = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  originalMarkdown: string;
-  renderedMarkdown: string;
-  frontmatter: Record<string, unknown>;
-  resources: { path: string; content: string }[];
-  sourceUrl: string | null;
-  sourceIdentifier: string | null;
-};
+export type SkillMarkdownVariant = "rendered" | "original";
 
-export function toInstallableSkill(skill: SkillDetails): InstallableSkill {
-  return {
-    id: skill.id,
-    slug: skill.slug,
-    name: skill.name,
-    description: skill.description,
-    originalMarkdown: skill.originalMarkdown,
-    renderedMarkdown: skill.renderedMarkdown,
-    frontmatter: skill.frontmatter,
-    resources: skill.resources.map((resource) => ({
-      path: resource.path,
-      content: resource.content,
-    })),
-    sourceUrl: skill.sourceUrl,
-    sourceIdentifier: skill.sourceIdentifier,
-  };
-}
-
-type SkillMarkdownVariant = "rendered" | "original";
-
-type AgentInstallResult = {
+export type AgentInstallResult = {
   agent: SupportedAgent;
   path: string;
   mode: "symlink" | "copy";
   symlinkFailed: boolean;
 };
 
-type InstallSkillResult = {
+export type InstallSkillResult = {
   slug: string;
   canonicalPath: string;
   skippedResources: string[];
   targets: AgentInstallResult[];
 };
 
-type InstallLock = {
+export type InstallLock = {
   version: 1;
   updatedAt: string;
   skills: Record<string, InstallLockSkillEntry>;

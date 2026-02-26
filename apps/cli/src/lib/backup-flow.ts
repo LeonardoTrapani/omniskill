@@ -14,26 +14,26 @@ type DiscoveryRoot = {
   includeSelf: boolean;
 };
 
-type BackupSkippedFolder = {
+export type BackupSkippedFolder = {
   path: string;
   reason: string;
 };
 
-type BackupCopyItem = {
+export type BackupCopyItem = {
   source: string;
   sourcePath: string;
   rawPath: string;
   workPath: string;
 };
 
-type BackupCopyFailure = {
+export type BackupCopyFailure = {
   sourcePath: string;
   rawPath: string;
   workPath: string;
   message: string;
 };
 
-type BackupCopyResult = {
+export type BackupCopyResult = {
   startedAt: string;
   finishedAt: string;
   backupDir: string;
@@ -49,7 +49,7 @@ type BackupCopyResult = {
   failures: BackupCopyFailure[];
 };
 
-type BackupCopyOptions = {
+export type BackupCopyOptions = {
   sourceDir?: string;
   outputDir?: string;
   agents?: SupportedAgent[];
@@ -99,11 +99,36 @@ function resolveDiscoveryRoots(options: BackupCopyOptions): DiscoveryRoot[] {
     ];
   }
 
-  return uniqueBy(options.agents ?? [], (entry) => entry).map((agent) => ({
-    path: getAgentSkillDir(agent),
-    label: getAgentDisplayName(agent),
-    includeSelf: false,
-  }));
+  if (options.agents && options.agents.length > 0) {
+    return uniqueBy(options.agents, (entry) => entry).map((agent) => ({
+      path: getAgentSkillDir(agent),
+      label: getAgentDisplayName(agent),
+      includeSelf: false,
+    }));
+  }
+
+  return [
+    {
+      path: getAgentSkillDir("opencode"),
+      label: getAgentDisplayName("opencode"),
+      includeSelf: false,
+    },
+    {
+      path: getAgentSkillDir("claude-code"),
+      label: getAgentDisplayName("claude-code"),
+      includeSelf: false,
+    },
+    {
+      path: getAgentSkillDir("cursor"),
+      label: getAgentDisplayName("cursor"),
+      includeSelf: false,
+    },
+    {
+      path: join(process.cwd(), ".agents", "skills"),
+      label: "workspace .agents/skills",
+      includeSelf: false,
+    },
+  ];
 }
 
 async function listSkillDirs(root: DiscoveryRoot): Promise<string[]> {

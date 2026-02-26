@@ -13,7 +13,6 @@ import {
   normalizeResourcePath,
   resolveNewResourceMentionsToUuids,
 } from "@better-skills/markdown/new-resource-mentions";
-import { transformOutsideMarkdownCode } from "@better-skills/markdown/transform-outside-markdown-code";
 
 type ResourceKind = (typeof skillResource.$inferInsert)["kind"];
 type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -128,25 +127,21 @@ function parsePersistedMentions(markdown: string): PersistedMention[] {
   const seen = new Set<string>();
   const mentions: PersistedMention[] = [];
 
-  transformOutsideMarkdownCode(markdown, (segment) => {
-    let match: RegExpExecArray | null;
-    PERSISTED_MENTION_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  PERSISTED_MENTION_RE.lastIndex = 0;
 
-    while ((match = PERSISTED_MENTION_RE.exec(segment)) !== null) {
-      const type = match[1]!.toLowerCase() as PersistedMentionType;
-      const targetId = match[2]!.toLowerCase();
-      const mentionKey = `${type}:${targetId}`;
+  while ((match = PERSISTED_MENTION_RE.exec(markdown)) !== null) {
+    const type = match[1]!.toLowerCase() as PersistedMentionType;
+    const targetId = match[2]!.toLowerCase();
+    const mentionKey = `${type}:${targetId}`;
 
-      if (seen.has(mentionKey)) {
-        continue;
-      }
-
-      seen.add(mentionKey);
-      mentions.push({ type, targetId });
+    if (seen.has(mentionKey)) {
+      continue;
     }
 
-    return segment;
-  });
+    seen.add(mentionKey);
+    mentions.push({ type, targetId });
+  }
 
   return mentions;
 }

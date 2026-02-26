@@ -1,36 +1,51 @@
 # Create a Skill
 
-## Step 1: Load authoring rules
+Use this when user wants to create a new skill.
 
-Read [[resource:new:references/authoring.md]] now. All decisions below depend
-on those rules.
+## Read first
 
-## Step 2: Gather input
+- [[resource:new:references/authoring.md]]
 
-The user provides one of:
+## Step 1: Obtain `$skill_dir`
 
-- Detailed written instructions
-- Choices/patterns extracted from the current session
-- A URL to a public repo or skill (e.g. GitHub, skills.sh)
+Every path below must produce a `$skill_dir` folder containing at least a
+`SKILL.md`. All later steps apply identically regardless of source.
 
-If a URL is given, fetch the repo content first, then continue.
+### A. skills.sh URL
 
-## Step 3: Discovery (optional)
+URL pattern: `https://skills.sh/<org>/<repo>/<skill-name>`
 
-If the intent is broad or the skill might already exist, search the vault
-before creating a duplicate:
+The path segments map directly to a GitHub repo and subfolder:
 
 ```bash
-better-skills search "<query>"
-better-skills get <slug-or-uuid>
+tmp_root="$(mktemp -d)"
+git clone --depth 1 https://github.com/<org>/<repo>.git "$tmp_root/repo"
+skill_dir="$tmp_root/<skill-name>"
+cp -r "$tmp_root/repo/<skill-name>" "$skill_dir"
 ```
 
-If a matching skill exists, confirm with the user: create a new one anyway,
-or switch to the edit flow?
+### B. GitHub URL
 
-## Step 4: Draft in a temp folder
+Clone the repo and locate the skill folder:
 
-Never write directly into the repo.
+```bash
+tmp_root="$(mktemp -d)"
+git clone --depth 1 <repo-url> "$tmp_root/repo"
+```
+
+If the URL points to a subdirectory, copy that subfolder out as `$skill_dir`.
+
+### C. Other URL (blog post, docs page, npm package, etc.)
+
+1. WebFetch the URL to extract the content.
+2. If the page references a source repo (e.g. npm → GitHub link), clone that
+   repo instead and follow path B.
+3. If no repo is available, use the fetched content as reference material and
+   draft the skill manually (see path D).
+
+### D. Written instructions or session context
+
+Draft from scratch:
 
 ```bash
 tmp_root="$(mktemp -d)"
@@ -41,24 +56,25 @@ mkdir -p "$skill_dir/references"
 Create `SKILL.md` at `"$skill_dir/SKILL.md"` and resource files inside
 `"$skill_dir/references/"` (or `scripts/`, `assets/`).
 
-## Step 5: Wire mentions
+## Step 2: Wire mentions
 
-For every resource file, add a `[[resource:new:<path>]]` mention in SKILL.md
-or in another resource file. No resource should exist without a matching
-mention.
+Follow [[resource:new:references/linking.md]]. In short:
 
-Replace any bare markdown links to local resources
-(e.g. `[text](references/foo.md)`) with `[[resource:new:references/foo.md]]`.
+1. For every resource file, add a `\[[resource:new:<path>]]` mention in
+   SKILL.md or in another resource file.
 
-## Step 6: Validate
+2. Replace any bare markdown links to local resources
+   (e.g. `[text](references/foo.md)`) with `\[[resource:new:references/foo.md]]`.
+
+## Step 3: Validate
 
 ```bash
 better-skills validate "$skill_dir"
 ```
 
-Fix all errors and warnings before proceeding.
+Fix any errors and warnings before proceeding.
 
-## Step 7: Create
+## Step 4: Create
 
 ```bash
 better-skills create --from "$skill_dir" [--slug <slug>]
@@ -66,12 +82,13 @@ better-skills create --from "$skill_dir" [--slug <slug>]
 
 The CLI will:
 
-- Read SKILL.md and scan resource files
+- Read `SKILL.md` and scan resource files
 - Validate `:new:` mention paths
 - Create the skill and resources on the server
-- Resolve `[[resource:new:...]]` to `[[resource:<uuid>]]` in all content
+- Resolve `\[[resource:new:...]]` mentions to `\[[resource:<uuid>]]` in both
+  SKILL.md and resource file content
 
-## Step 8: Confirm and clean up
+## Step 5: Confirm and clean up
 
 ```bash
 better-skills get <slug-or-uuid>

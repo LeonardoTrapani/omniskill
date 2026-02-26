@@ -39,8 +39,8 @@ Escaped tokens are treated as literal text and never become links.
 
 Shared markdown-safe primitives:
 
-- `transformOutsideMarkdownCode` skips fenced/inline code regions.
 - `new-resource-mentions` handles `:new:` path collection/normalization/resolution.
+- All mention regexes use `(?<!\\)` negative lookbehind to skip backslash-escaped tokens.
 
 ### `packages/api`
 

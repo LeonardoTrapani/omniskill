@@ -20,14 +20,14 @@ const RESOURCE_DIRS: Record<string, "reference" | "script" | "asset"> = {
   assets: "asset",
 };
 
-type ResourceInput = {
+export type ResourceInput = {
   path: string;
   kind: "reference" | "script" | "asset" | "other";
   content: string;
   metadata: Record<string, unknown>;
 };
 
-type LocalSkillDraft = {
+export type LocalSkillDraft = {
   name: string;
   description: string;
   markdown: string;
@@ -40,7 +40,7 @@ type LocalSkillDraft = {
   resourcesForMutation: ResourceInput[];
 };
 
-type UpdateResourcePayload = {
+export type UpdateResourcePayload = {
   id?: string;
   delete?: boolean;
   path: string;
@@ -56,7 +56,7 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-async function scanResources(baseDir: string): Promise<ResourceInput[]> {
+export async function scanResources(baseDir: string): Promise<ResourceInput[]> {
   const resources: ResourceInput[] = [];
 
   for (const [dirName, kind] of Object.entries(RESOURCE_DIRS)) {
