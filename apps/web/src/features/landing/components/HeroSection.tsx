@@ -278,7 +278,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
 
   const handleInstallCommandCopy = async () => {
     try {
-      await navigator.clipboard.writeText("curl -fsSL https://better-skills.sh/install | bash");
+      await navigator.clipboard.writeText("curl -fsSL https://better-skills.dev/install | bash");
       setDidCopyInstallCommand(true);
       window.setTimeout(() => setDidCopyInstallCommand(false), 1500);
     } catch {
@@ -294,7 +294,11 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
           <pre
             aria-hidden="true"
             className="mx-auto w-fit whitespace-pre text-[5px] md:text-[6.5px] text-primary/[0.5] [font-variant-ligatures:none]"
-            style={{ fontFamily: ASCII_FONT_STACK, lineHeight: 1.15, letterSpacing: 0 }}
+            style={{
+              fontFamily: ASCII_FONT_STACK,
+              lineHeight: 1.15,
+              letterSpacing: 0,
+            }}
           >
             {brainFrames[brainFrameIndex]}
           </pre>
@@ -395,7 +399,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
-                curl -fsSL https://better-skills.sh/install | bash
+                curl -fsSL https://better-skills.dev/install | bash
                 {didCopyInstallCommand ? (
                   <span className="text-xs text-primary" aria-live="polite">
                     copied
