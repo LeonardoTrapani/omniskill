@@ -1,22 +1,14 @@
 # Edit a Skill
 
-## Step 1: Load authoring rules
+Use this when user wants to update an existing skill.
 
-Read [[resource:new:references/authoring.md]] now. All decisions below depend
-on those rules.
+## Read first
 
-## Step 2: Identify the target
+- [[resource:new:references/authoring.md]]
 
-Determine which skill to edit. If the user is vague, search the vault first:
+## Steps
 
-```bash
-better-skills search "<query>"
-better-skills get <slug-or-uuid>
-```
-
-Confirm the correct skill with the user before proceeding.
-
-## Step 3: Clone to a local folder
+1. Clone the current skill to a local folder:
 
 ```bash
 better-skills clone <slug-or-uuid> --to <folder> [--force]
@@ -26,28 +18,22 @@ The clone writes the folder in update-ready format: `SKILL.md` +
 `references/` + `scripts/` + `assets/`. It prints a link context table
 (`uuid -> resource path`) for existing mentions.
 
-## Step 4: Apply changes
+2. Edit local files (`SKILL.md` and resources).
 
-Edit local files (`SKILL.md` and resources).
+3. Wire mentions per [[resource:new:references/linking.md]]. If adding a new
+   file, create it under `references/`, `scripts/`, or `assets/` and add a
+   `\[[resource:new:<path>]]` mention. Replace any bare markdown links with
+   mention tokens.
 
-If adding a new file, create it under `references/`, `scripts/`, or `assets/`,
-then reference it with `[[resource:new:references/new-file.md]]` in SKILL.md
-or another resource file.
-
-## Step 5: Wire mentions
-
-Verify all resource files have a `[[resource:new:...]]` mention somewhere.
-Replace any bare markdown links to local resources with the mention form.
-
-## Step 6: Validate
+4. Validate the folder:
 
 ```bash
 better-skills validate <folder>
 ```
 
-Fix all errors and warnings before proceeding.
+Fix any errors and warnings before proceeding.
 
-## Step 7: Update
+5. Update the skill:
 
 ```bash
 better-skills update <slug-or-uuid> --from <folder> [--slug <slug>]
@@ -56,9 +42,10 @@ better-skills update <slug-or-uuid> --from <folder> [--slug <slug>]
 The CLI will:
 
 - Diff local resources against the server (insert/update/delete)
-- Resolve `[[resource:new:...]]` to `[[resource:<uuid>]]` in all content
+- Resolve `\[[resource:new:...]]` mentions to `\[[resource:<uuid>]]` in both
+  SKILL.md and resource file content
 
-## Step 8: Confirm
+6. Confirm the update:
 
 ```bash
 better-skills get <slug-or-uuid>

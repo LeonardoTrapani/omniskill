@@ -261,7 +261,7 @@ export function SkillCommandPalette({
   // ── Suggestions: top 3 user skills ─────────────────────────────────────────
 
   const suggestionsQuery = useQuery({
-    ...trpc.skills.list.queryOptions({ limit: 3 }),
+    ...trpc.skills.listByOwner.queryOptions({ limit: 3 }),
     placeholderData: keepPreviousData,
     enabled: open && mode === "command",
   });
@@ -345,7 +345,7 @@ export function SkillCommandPalette({
 
   // Also show top skills when vault search is empty
   const vaultEmptyQuery = useQuery({
-    ...trpc.skills.list.queryOptions({ limit: 5 }),
+    ...trpc.skills.listByOwner.queryOptions({ limit: 5 }),
     placeholderData: keepPreviousData,
     enabled: open && mode === "vault" && vaultDebouncedQuery.length === 0,
   });

@@ -56,16 +56,19 @@ describe("new resource mentions", () => {
     expect(result.missingPaths).toEqual(["references/missing.md"]);
   });
 
-  test("ignores new mention examples in inline code", () => {
+  test("collects new mentions inside inline code (backslash is the only escape)", () => {
     const markdown = [
       "Example: `[[resource:new:references/example.md]]`",
       "Actual: [[resource:new:references/real.md]]",
     ].join("\n");
 
-    expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
+    expect(collectNewResourceMentionPaths(markdown)).toEqual([
+      "references/example.md",
+      "references/real.md",
+    ]);
   });
 
-  test("ignores new mention examples in fenced code blocks", () => {
+  test("collects new mentions inside fenced code blocks (backslash is the only escape)", () => {
     const markdown = [
       "```md",
       "[[resource:new:references/example.md]]",
@@ -73,7 +76,10 @@ describe("new resource mentions", () => {
       "Actual: [[resource:new:references/real.md]]",
     ].join("\n");
 
-    expect(collectNewResourceMentionPaths(markdown)).toEqual(["references/real.md"]);
+    expect(collectNewResourceMentionPaths(markdown)).toEqual([
+      "references/example.md",
+      "references/real.md",
+    ]);
   });
 
   test("ignores escaped new mention tokens", () => {

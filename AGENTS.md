@@ -41,6 +41,7 @@ better-skills is an agent second brain: authenticated users manage a graph of re
 - `apps/cli/AGENTS.md`
 - `packages/api/AGENTS.md`
 - `packages/db/AGENTS.md`
+- `resources/default-skills/AGENTS.md`
 - `docs/mention-link-sync-flow.md`
 - `docs/skills-schema.md`
 - `.agents/skills/turborepo/SKILL.md`

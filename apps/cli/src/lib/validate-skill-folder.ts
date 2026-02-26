@@ -5,7 +5,7 @@ import { collectNewResourceMentionPaths, normalizeResourcePath } from "./new-res
 
 const RESOURCE_DIRS = ["references", "scripts", "assets"] as const;
 
-type SkillFolderValidationResult = {
+export type SkillFolderValidationResult = {
   ok: boolean;
   errors: string[];
   warnings: string[];

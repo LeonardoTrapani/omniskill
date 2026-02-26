@@ -3,11 +3,14 @@ import Features from "@/app/_landing/features";
 import Footer from "@/app/_landing/footer";
 import HeroSection from "@/app/_landing/hero-section";
 import Pricing from "@/app/_landing/pricing";
+import { getSkillCount } from "@/lib/landing/get-skill-count";
 
-export default function Home() {
+export default async function Home() {
+  const skillCount = await getSkillCount();
+
   return (
     <main className="min-h-screen bg-background">
-      <HeroSection />
+      <HeroSection skillCount={skillCount} />
       <div className="py-6 flex flex-col gap-24 max-w-7xl mx-auto">
         <Features />
         <Pricing />

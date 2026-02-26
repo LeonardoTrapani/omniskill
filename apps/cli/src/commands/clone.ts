@@ -5,7 +5,7 @@ import { parseMentions } from "@better-skills/api/lib/mentions";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";
-import { toInstallableSkill, writeSkillFolder } from "../lib/skills-installer";
+import { type InstallableSkill, writeSkillFolder } from "../lib/skills-installer";
 import { trpc } from "../lib/trpc";
 import * as ui from "../lib/ui";
 import { UUID_RE } from "../lib/uuid";
@@ -45,6 +45,24 @@ function parseArgs(argv: string[]) {
   }
 
   return { identifier, to, force };
+}
+
+function toInstallableSkill(skill: SkillDetails): InstallableSkill {
+  return {
+    id: skill.id,
+    slug: skill.slug,
+    name: skill.name,
+    description: skill.description,
+    originalMarkdown: skill.originalMarkdown,
+    renderedMarkdown: skill.renderedMarkdown,
+    frontmatter: skill.frontmatter,
+    resources: skill.resources.map((resource) => ({
+      path: resource.path,
+      content: resource.content,
+    })),
+    sourceUrl: skill.sourceUrl,
+    sourceIdentifier: skill.sourceIdentifier,
+  };
 }
 
 async function ensureTargetDir(path: string, force: boolean): Promise<void> {

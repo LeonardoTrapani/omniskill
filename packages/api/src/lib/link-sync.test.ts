@@ -99,7 +99,8 @@ mock.module("@better-skills/db", () => {
 });
 
 // must import after mock setup
-const { MentionSyntaxError, MentionValidationError, syncAutoLinks } = await import("./link-sync");
+const { MentionSyntaxError, MentionValidationError, syncAutoLinks, syncAutoLinksForSources } =
+  await import("./link-sync");
 
 describe("syncAutoLinks", () => {
   const SKILL_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
@@ -108,24 +109,22 @@ describe("syncAutoLinks", () => {
   const USER_ID = "user-123";
   const OWNER = "owner-1";
 
-  function skillSource(sourceId: string, markdown: string) {
-    return [{ type: "skill" as const, sourceId, sourceOwnerUserId: OWNER, markdown }];
-  }
-
   beforeEach(() => {
     deleteCalls = [];
     insertCalls = [];
+    // source skill + target skill both owned by OWNER
     skillOwners = new Map([
       [SKILL_UUID, OWNER],
       [TARGET_SKILL, OWNER],
     ]);
+    // target resource owned by OWNER
     resourceOwners = new Map([[TARGET_RESOURCE, OWNER]]);
   });
 
   test("deletes existing auto links and inserts new ones", async () => {
     const md = `See [[skill:${TARGET_SKILL}]] and [[resource:${TARGET_RESOURCE}]]`;
 
-    await syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID);
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
 
     expect(deleteCalls).toHaveLength(1);
     expect(insertCalls).toHaveLength(1);
@@ -135,7 +134,7 @@ describe("syncAutoLinks", () => {
   test("sets targetSkillId for skill mentions, targetResourceId for resource mentions", async () => {
     const md = `[[skill:${TARGET_SKILL}]] and [[resource:${TARGET_RESOURCE}]]`;
 
-    await syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID);
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
 
     const values = insertCalls[0]!.values as Array<{
       targetSkillId: string | null;
@@ -157,7 +156,7 @@ describe("syncAutoLinks", () => {
   });
 
   test("only deletes (no insert) when markdown has no mentions", async () => {
-    await syncAutoLinks(skillSource(SKILL_UUID, "plain text with no mentions"), USER_ID);
+    await syncAutoLinks(SKILL_UUID, "plain text with no mentions", USER_ID);
 
     expect(deleteCalls).toHaveLength(1);
     expect(insertCalls).toHaveLength(0);
@@ -168,7 +167,7 @@ describe("syncAutoLinks", () => {
     const unknownResource = "e5f6a7b8-c9d0-1234-ef12-345678901234";
     const md = `[[skill:${TARGET_SKILL}]] [[skill:${unknownSkill}]] [[resource:${unknownResource}]]`;
 
-    await expect(syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID)).rejects.toBeInstanceOf(
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
       MentionValidationError,
     );
 
@@ -179,9 +178,7 @@ describe("syncAutoLinks", () => {
   test("throws on mention tokens with non-uuid targets", async () => {
     const md = "See [[resource:references/guide.md]]";
 
-    await expect(syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID)).rejects.toBeInstanceOf(
-      MentionSyntaxError,
-    );
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(MentionSyntaxError);
 
     expect(deleteCalls).toHaveLength(0);
     expect(insertCalls).toHaveLength(0);
@@ -190,7 +187,7 @@ describe("syncAutoLinks", () => {
   test("tags all links with origin markdown-auto", async () => {
     const md = `[[skill:${TARGET_SKILL}]]`;
 
-    await syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID);
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
 
     const values = insertCalls[0]!.values as Array<{ metadata: Record<string, unknown> }>;
     for (const v of values) {
@@ -201,7 +198,7 @@ describe("syncAutoLinks", () => {
   test("sets createdByUserId on all links", async () => {
     const md = `[[skill:${TARGET_SKILL}]]`;
 
-    await syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID);
+    await syncAutoLinks(SKILL_UUID, md, USER_ID);
 
     const values = insertCalls[0]!.values as Array<{ createdByUserId: string }>;
     for (const v of values) {
@@ -211,11 +208,12 @@ describe("syncAutoLinks", () => {
 
   test("throws on cross-owner skill mentions", async () => {
     const foreignSkill = "f6a7b8c9-d0e1-2345-6789-abcdef012345";
+    // add a skill owned by someone else
     skillOwners.set(foreignSkill, "other-owner");
 
     const md = `[[skill:${TARGET_SKILL}]] [[skill:${foreignSkill}]]`;
 
-    await expect(syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID)).rejects.toBeInstanceOf(
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
       MentionValidationError,
     );
 
@@ -229,7 +227,7 @@ describe("syncAutoLinks", () => {
 
     const md = `[[resource:${TARGET_RESOURCE}]] [[resource:${foreignResource}]]`;
 
-    await expect(syncAutoLinks(skillSource(SKILL_UUID, md), USER_ID)).rejects.toBeInstanceOf(
+    await expect(syncAutoLinks(SKILL_UUID, md, USER_ID)).rejects.toBeInstanceOf(
       MentionValidationError,
     );
 
@@ -241,7 +239,7 @@ describe("syncAutoLinks", () => {
     const SOURCE_RESOURCE = "12345678-9abc-def0-1234-56789abcdef0";
     const md = `[[skill:${TARGET_SKILL}]] [[resource:${TARGET_RESOURCE}]]`;
 
-    await syncAutoLinks(
+    await syncAutoLinksForSources(
       [
         {
           type: "resource",
