@@ -13,12 +13,10 @@ import {
   syncAutoLinksForSources,
   validateMentionTargets,
 } from "../lib/link-sync";
-import { remapMentionTargetIds } from "../lib/mentions";
 import { renderMentions } from "../lib/render-mentions";
 
 // -- shared enums --
 
-const visibilityEnum = z.enum(["public", "private"]);
 const resourceKindEnum = z.enum(["reference", "script", "asset", "other"]);
 
 // -- pagination --
@@ -59,8 +57,7 @@ const resourceReadOutput = resourceOutput.extend({
 
 const skillOutput = z.object({
   id: z.string().uuid(),
-  ownerUserId: z.string().nullable(),
-  visibility: visibilityEnum,
+  ownerUserId: z.string(),
   slug: z.string(),
   name: z.string(),
   description: z.string(),
@@ -88,19 +85,6 @@ const paginatedSkillList = z.object({
 });
 
 // -- helpers --
-
-type Session = { user: { id: string } };
-
-/** visibility filter: public skills + caller's own private skills */
-function visibilityFilter(session: Session | null) {
-  if (session) {
-    return or(
-      eq(skill.visibility, "public"),
-      and(eq(skill.visibility, "private"), eq(skill.ownerUserId, session.user.id)),
-    );
-  }
-  return eq(skill.visibility, "public");
-}
 
 function throwMentionValidationError(error: unknown): never {
   if (error instanceof MentionSyntaxError || error instanceof MentionValidationError) {
@@ -205,7 +189,6 @@ async function toSkillOutput(
   return {
     id: row.id,
     ownerUserId: row.ownerUserId,
-    visibility: row.visibility,
     slug: row.slug,
     name: row.name,
     description: row.description,
@@ -226,7 +209,6 @@ function toSkillListItem(row: typeof skill.$inferSelect) {
   return {
     id: row.id,
     ownerUserId: row.ownerUserId,
-    visibility: row.visibility,
     slug: row.slug,
     name: row.name,
     description: row.description,
@@ -308,7 +290,6 @@ const searchResultItem = z.object({
   slug: z.string(),
   name: z.string(),
   description: z.string(),
-  visibility: visibilityEnum,
   matchType: z.enum(["title", "description", "content"]),
   score: z.number(),
   snippet: z.string().nullable(),
@@ -323,7 +304,7 @@ export const skillsRouter = router({
       const [result] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(skill)
-        .where(eq(skill.visibility, "public"));
+        .where(sql`${skill.ownerUserId} is not null`);
       return { count: result?.count ?? 0 };
     } catch (error) {
       const details = error instanceof Error ? error.message : String(error);
@@ -334,40 +315,23 @@ export const skillsRouter = router({
     }
   }),
 
-  search: publicProcedure
+  search: protectedProcedure
     .input(
       z.object({
         query: z.string().min(1),
-        scope: z.enum(["own", "all"]).default("own"),
         limit: z.number().int().min(1).max(50).default(5),
-        visibility: visibilityEnum.optional(),
       }),
     )
     .output(z.object({ items: z.array(searchResultItem), total: z.number() }))
     .query(async ({ ctx, input }) => {
-      const { query, scope, limit, visibility } = input;
-
-      if (scope === "own" && !ctx.session) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Authentication required to search own skills",
-        });
-      }
+      const { query, limit } = input;
+      const userId = ctx.session.user.id;
 
       const pattern = `%${query}%`;
       const useFuzzy = query.length >= 3;
 
-      const scopeCondition =
-        scope === "own"
-          ? eq(skill.ownerUserId, ctx.session!.user.id)
-          : visibilityFilter(ctx.session);
-
       const matchCondition = searchCondition(query);
-      const conditions = [matchCondition, scopeCondition];
-      if (visibility) {
-        conditions.push(eq(skill.visibility, visibility));
-      }
-      const whereClause = and(...conditions);
+      const whereClause = and(matchCondition, eq(skill.ownerUserId, userId));
 
       // additive score: trigram similarity base + exact substring bonuses.
       // the ILIKE bonuses ensure "docker" in a description outranks "doc" trigram overlaps.
@@ -434,7 +398,6 @@ export const skillsRouter = router({
           slug: row.slug,
           name: row.name,
           description: row.description,
-          visibility: row.visibility,
           matchType,
           score: Math.round(row.score * 100) / 100,
           snippet,
@@ -546,26 +509,22 @@ export const skillsRouter = router({
       return { items: items.slice(0, limit) };
     }),
 
-  list: publicProcedure
+  list: protectedProcedure
     .input(
       cursorPaginationInput.extend({
         search: z.string().optional(),
-        visibility: visibilityEnum.optional(),
       }),
     )
     .output(paginatedSkillList)
     .query(async ({ ctx, input }) => {
-      const { cursor, limit, search, visibility } = input;
+      const { cursor, limit, search } = input;
+      const userId = ctx.session.user.id;
 
-      const conditions = [visibilityFilter(ctx.session)];
+      const conditions = [eq(skill.ownerUserId, userId)];
 
       if (search) {
         const pattern = `%${search}%`;
         conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
-      }
-
-      if (visibility) {
-        conditions.push(eq(skill.visibility, visibility));
       }
 
       if (cursor) {
@@ -656,7 +615,7 @@ export const skillsRouter = router({
       };
     }),
 
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(
       z.object({
         id: z.string().uuid(),
@@ -665,10 +624,11 @@ export const skillsRouter = router({
     )
     .output(skillOutput)
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
       const rows = await db
         .select()
         .from(skill)
-        .where(and(eq(skill.id, input.id), visibilityFilter(ctx.session)));
+        .where(and(eq(skill.id, input.id), eq(skill.ownerUserId, userId)));
 
       const row = rows[0];
       if (!row) {
@@ -680,7 +640,7 @@ export const skillsRouter = router({
       return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
 
-  getBySlug: publicProcedure
+  getBySlug: protectedProcedure
     .input(
       z.object({
         slug: z.string().min(1),
@@ -689,10 +649,11 @@ export const skillsRouter = router({
     )
     .output(skillOutput)
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
       const rows = await db
         .select()
         .from(skill)
-        .where(and(eq(skill.slug, input.slug), visibilityFilter(ctx.session)));
+        .where(and(eq(skill.slug, input.slug), eq(skill.ownerUserId, userId)));
 
       const row = rows[0];
       if (!row) {
@@ -704,7 +665,7 @@ export const skillsRouter = router({
       return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
 
-  getResourceByPath: publicProcedure
+  getResourceByPath: protectedProcedure
     .input(
       z.object({
         skillSlug: z.string().min(1),
@@ -713,10 +674,11 @@ export const skillsRouter = router({
     )
     .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
       const skillRows = await db
         .select()
         .from(skill)
-        .where(and(eq(skill.slug, input.skillSlug), visibilityFilter(ctx.session)));
+        .where(and(eq(skill.slug, input.skillSlug), eq(skill.ownerUserId, userId)));
 
       const skillRow = skillRows[0];
       if (!skillRow) {
@@ -738,7 +700,7 @@ export const skillsRouter = router({
       };
     }),
 
-  getResourceBySkillIdAndPath: publicProcedure
+  getResourceBySkillIdAndPath: protectedProcedure
     .input(
       z.object({
         skillId: z.string().uuid(),
@@ -747,10 +709,11 @@ export const skillsRouter = router({
     )
     .output(resourceReadOutput)
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
       const skillRows = await db
         .select()
         .from(skill)
-        .where(and(eq(skill.id, input.skillId), visibilityFilter(ctx.session)));
+        .where(and(eq(skill.id, input.skillId), eq(skill.ownerUserId, userId)));
 
       const skillRow = skillRows[0];
       if (!skillRow) {
@@ -779,7 +742,6 @@ export const skillsRouter = router({
         name: z.string().min(1),
         description: z.string().min(1),
         skillMarkdown: z.string(),
-        visibility: visibilityEnum.default("private"),
         frontmatter: z.record(z.string(), z.unknown()).default({}),
         metadata: z.record(z.string(), z.unknown()).default({}),
         sourceUrl: z.string().url().nullish(),
@@ -813,7 +775,6 @@ export const skillsRouter = router({
           name: input.name,
           description: input.description,
           skillMarkdown: input.skillMarkdown,
-          visibility: input.visibility,
           frontmatter: input.frontmatter,
           metadata: input.metadata,
           sourceUrl: input.sourceUrl ?? null,
@@ -878,7 +839,6 @@ export const skillsRouter = router({
         name: z.string().min(1).optional(),
         description: z.string().min(1).optional(),
         skillMarkdown: z.string().optional(),
-        visibility: visibilityEnum.optional(),
         frontmatter: z.record(z.string(), z.unknown()).optional(),
         metadata: z.record(z.string(), z.unknown()).optional(),
         sourceUrl: z.string().url().nullish(),
@@ -937,7 +897,6 @@ export const skillsRouter = router({
       if (input.name !== undefined) updates.name = input.name;
       if (input.description !== undefined) updates.description = input.description;
       if (input.skillMarkdown !== undefined) updates.skillMarkdown = input.skillMarkdown;
-      if (input.visibility !== undefined) updates.visibility = input.visibility;
       if (input.frontmatter !== undefined) updates.frontmatter = input.frontmatter;
       if (input.metadata !== undefined) updates.metadata = input.metadata;
       if (input.sourceUrl !== undefined) updates.sourceUrl = input.sourceUrl ?? null;
@@ -1082,11 +1041,12 @@ export const skillsRouter = router({
     return buildGraphPayload(skills, resources, links);
   }),
 
-  // connected component around a single skill (works for public skills too)
-  graphForSkill: publicProcedure
+  // connected component around a single skill in the caller vault
+  graphForSkill: protectedProcedure
     .input(z.object({ skillId: z.string().uuid() }))
     .output(graphOutput)
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
       const visitedSkillIds = new Set<string>();
       const queue = [input.skillId];
       const allSkills: (typeof skill.$inferSelect)[] = [];
@@ -1107,7 +1067,7 @@ export const skillsRouter = router({
         const skills = await db
           .select()
           .from(skill)
-          .where(and(inArray(skill.id, batch), visibilityFilter(ctx.session)));
+          .where(and(inArray(skill.id, batch), eq(skill.ownerUserId, userId)));
 
         const foundIds = skills.map((s) => s.id);
         if (foundIds.length === 0) break;
@@ -1169,146 +1129,6 @@ export const skillsRouter = router({
       }
 
       return buildGraphPayload(allSkills, allResources, allLinks);
-    }),
-
-  duplicate: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        slug: z.string().min(1).optional(),
-      }),
-    )
-    .output(skillOutput)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-
-      // fetch source skill + resources (respects visibility)
-      const [source] = await db
-        .select()
-        .from(skill)
-        .where(and(eq(skill.id, input.id), visibilityFilter(ctx.session)));
-
-      if (!source) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
-      }
-
-      const sourceResources = await db
-        .select()
-        .from(skillResource)
-        .where(eq(skillResource.skillId, source.id));
-
-      const slug = input.slug || source.slug;
-
-      const [created] = await db
-        .insert(skill)
-        .values({
-          ownerUserId: userId,
-          slug,
-          name: source.name,
-          description: source.description,
-          skillMarkdown: source.skillMarkdown,
-          visibility: "private",
-          frontmatter: source.frontmatter,
-          metadata: { importedFrom: { skillId: source.id, slug: source.slug } },
-          sourceUrl: source.sourceUrl,
-          sourceIdentifier: source.sourceIdentifier,
-        })
-        .returning();
-
-      if (!created) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to duplicate skill",
-        });
-      }
-
-      let resources: (typeof skillResource.$inferSelect)[] = [];
-
-      if (sourceResources.length > 0) {
-        resources = await db
-          .insert(skillResource)
-          .values(
-            sourceResources.map((r) => ({
-              skillId: created.id,
-              path: r.path,
-              kind: r.kind,
-              content: r.content,
-              metadata: r.metadata,
-            })),
-          )
-          .returning();
-      }
-
-      const mentionIdMap = new Map<string, string>([[source.id.toLowerCase(), created.id]]);
-
-      if (sourceResources.length > 0 && resources.length > 0) {
-        const duplicatedResourceIdByPath = new Map(
-          resources.map((resource) => [resource.path, resource.id]),
-        );
-
-        for (const sourceResource of sourceResources) {
-          const duplicatedResourceId = duplicatedResourceIdByPath.get(sourceResource.path);
-          if (duplicatedResourceId) {
-            mentionIdMap.set(sourceResource.id.toLowerCase(), duplicatedResourceId);
-          }
-        }
-      }
-
-      // Product invariant: public catalog skills only contain internal mentions.
-      const remappedMarkdown = remapMentionTargetIds(source.skillMarkdown, mentionIdMap);
-
-      let createdSkill = created;
-      if (remappedMarkdown !== source.skillMarkdown) {
-        const [updatedSkill] = await db
-          .update(skill)
-          .set({ skillMarkdown: remappedMarkdown })
-          .where(eq(skill.id, created.id))
-          .returning();
-
-        if (updatedSkill) {
-          createdSkill = updatedSkill;
-        }
-      }
-
-      if (resources.length > 0) {
-        for (const resource of resources) {
-          const remappedResourceMarkdown = remapMentionTargetIds(resource.content, mentionIdMap);
-          if (remappedResourceMarkdown === resource.content) {
-            continue;
-          }
-
-          await db
-            .update(skillResource)
-            .set({ content: remappedResourceMarkdown })
-            .where(eq(skillResource.id, resource.id));
-        }
-      }
-
-      const duplicatedResources = await loadSkillResources(createdSkill.id);
-
-      try {
-        await syncAutoLinksForSources(
-          [
-            {
-              type: "skill",
-              sourceId: createdSkill.id,
-              sourceOwnerUserId: createdSkill.ownerUserId,
-              markdown: createdSkill.skillMarkdown,
-            },
-            ...duplicatedResources.map((resource) => ({
-              type: "resource" as const,
-              sourceId: resource.id,
-              sourceOwnerUserId: createdSkill.ownerUserId,
-              markdown: resource.content,
-            })),
-          ],
-          userId,
-        );
-      } catch (error) {
-        throwMentionValidationError(error);
-      }
-
-      return await toSkillOutput(createdSkill, duplicatedResources);
     }),
 
   delete: protectedProcedure

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const footerLinks = [
-  { label: "Skills", href: "/skills", type: "route" },
+  { label: "Vault", href: "/vault", type: "route" },
   { label: "Docs", href: "#docs", type: "anchor" },
   { label: "Pricing", href: "#pricing", type: "anchor" },
   { label: "Github", href: "#github", type: "anchor" },
@@ -19,7 +19,7 @@ export default function Footer() {
             <div className="flex-1">
               <p className="text-xs text-primary uppercase tracking-[0.05em] mb-3">BETTER-SKILLS</p>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-                The open agent skills ecosystem. Build, share, and manage a graph of reusable skills
+                The open agent skills ecosystem. Build and manage a private graph of reusable skills
                 for your AI agents.
               </p>
             </div>

@@ -13,7 +13,7 @@ better-skills logout
 
 ```bash
 better-skills list [search] [--all] [--limit N]
-better-skills search "<query>" [--public] [--limit N]
+better-skills search "<query>" [--limit N]
 better-skills get <slug-or-uuid>
 better-skills clone <slug-or-uuid> [--to <dir>] [--force]
 ```
@@ -24,10 +24,9 @@ Behavior for `list`:
 - Optional positional `search` text filters by name/slug (ILIKE).
 - `--limit N` caps results (default 20). `--all` fetches every skill.
 
-## Import and delete
+## Delete
 
 ```bash
-better-skills import <slug-or-uuid> [--slug <new-slug>]
 better-skills delete <uuid> [--yes]
 ```
 
@@ -61,5 +60,5 @@ The CLI auto-detects non-interactive environments (no TTY, `AGENT=1`,
 - Destructive commands like `delete` require `--yes` in non-interactive mode.
 - Interactive prompts (agent selection, backup suggestions) are skipped with
   sensible defaults.
-- create/import/update print JSON on success (`id`, `slug`, `name`, `visibility`).
+- create/update print JSON on success (`id`, `slug`, `name`).
 - failures return non-zero and print actionable error text.

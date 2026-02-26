@@ -53,7 +53,6 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     slug: skill.slug,
     name: skill.name,
     description: skill.description,
-    visibility: skill.visibility,
     originalMarkdown: skill.originalMarkdown,
     renderedMarkdown: skill.renderedMarkdown,
     frontmatter: skill.frontmatter,

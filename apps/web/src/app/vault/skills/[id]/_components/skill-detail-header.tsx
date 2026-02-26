@@ -1,15 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Calendar,
-  Eye,
-  FileText,
-  Globe,
-  Lock,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowUpRight, Calendar, Eye, FileText, Lock, Pencil, Trash2 } from "lucide-react";
 
 import { SkillDescription } from "@/components/skills/skill-description";
 import { Button } from "@/components/ui/button";
@@ -21,15 +11,12 @@ export function SkillDetailHeader({
   slug,
   name,
   description,
-  visibility,
   isDefaultSkill,
   sourceIdentifier,
   sourceUrl,
   updatedAt,
   resourcesCount,
-  canAddToVault,
   canManageSkill,
-  onAddToVault,
   onDelete,
   compact = false,
   viewingResource,
@@ -39,15 +26,12 @@ export function SkillDetailHeader({
   slug: string;
   name: string;
   description?: string | null;
-  visibility: "public" | "private";
   isDefaultSkill: boolean;
   sourceIdentifier?: string | null;
   sourceUrl?: string | null;
   updatedAt: string | Date;
   resourcesCount: number;
-  canAddToVault: boolean;
   canManageSkill: boolean;
-  onAddToVault: () => void;
   onDelete: () => void;
   compact?: boolean;
   /** When set, appends the resource path to compact breadcrumb */
@@ -99,12 +83,8 @@ export function SkillDetailHeader({
           {/* Visibility badge */}
           <div className="flex items-center gap-2 pt-0.5">
             <span className="inline-flex items-center gap-1.5 border border-border px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
-              {visibility === "public" ? (
-                <Globe className="size-3" aria-hidden="true" />
-              ) : (
-                <Lock className="size-3" aria-hidden="true" />
-              )}
-              {visibility === "public" ? "Public" : "Private"}
+              <Lock className="size-3" aria-hidden="true" />
+              Private
             </span>
             {isDefaultSkill && (
               <span className="inline-flex items-center border border-border px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
@@ -166,14 +146,8 @@ export function SkillDetailHeader({
         </div>
 
         {/* Actions */}
-        {showCompactActions && (canAddToVault || canManageSkill) && (
+        {showCompactActions && canManageSkill && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            {canAddToVault && (
-              <Button size="sm" className="w-full hover:bg-primary/90" onClick={onAddToVault}>
-                Add to Vault
-                <Plus className="size-3.5" />
-              </Button>
-            )}
             {canManageSkill && (
               <>
                 <Link href={buildSkillEditHref(id)} className="flex-1">
@@ -216,12 +190,6 @@ export function SkillDetailHeader({
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
-          {canAddToVault && (
-            <Button size="default" className="hover:bg-primary/90" onClick={onAddToVault}>
-              Add to Vault
-              <Plus className="size-3.5" />
-            </Button>
-          )}
           {canManageSkill && (
             <>
               <Link href={buildSkillEditHref(id)}>
@@ -248,12 +216,8 @@ export function SkillDetailHeader({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground font-mono">
         <span className="inline-flex items-center gap-1.5">
-          {visibility === "public" ? (
-            <Globe className="size-3" aria-hidden="true" />
-          ) : (
-            <Lock className="size-3" aria-hidden="true" />
-          )}
-          {visibility}
+          <Lock className="size-3" aria-hidden="true" />
+          private
         </span>
         {isDefaultSkill && (
           <>

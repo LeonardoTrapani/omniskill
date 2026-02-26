@@ -610,7 +610,6 @@ export async function seedDefaultSkillsForUser(userId: string): Promise<SeedDefa
           .insert(skill)
           .values({
             ownerUserId: userId,
-            visibility: "private",
             slug: template.slug,
             name: template.name,
             description: template.description,

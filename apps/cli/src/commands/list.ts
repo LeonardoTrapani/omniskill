@@ -31,7 +31,6 @@ export async function listCommand() {
       slug: string;
       name: string;
       description: string;
-      visibility: string;
       updatedAt: string;
     }> = [];
 
@@ -66,9 +65,7 @@ export async function listCommand() {
 
       console.log(`[${i + 1}] ${item.name}`);
       console.log(`    ${item.description}`);
-      console.log(
-        `    id: ${item.id} | slug: ${item.slug} | visibility: ${item.visibility} | updated: ${updated}`,
-      );
+      console.log(`    id: ${item.id} | slug: ${item.slug} | updated: ${updated}`);
       if (i < items.length - 1) console.log();
     }
   } catch (error) {

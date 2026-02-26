@@ -36,6 +36,13 @@
       "when": 1772060074074,
       "tag": "0004_deep_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772130224326,
+      "tag": "0005_charming_power_pack",
+      "breakpoints": true
     }
   ]
 }

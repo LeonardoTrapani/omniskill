@@ -14,8 +14,6 @@ import {
 
 import { user } from "./auth";
 
-export const skillVisibilityEnum = pgEnum("skill_visibility", ["public", "private"]);
-
 export const skillResourceKindEnum = pgEnum("skill_resource_kind", [
   "reference",
   "script",
@@ -27,8 +25,9 @@ export const skill = pgTable(
   "skill",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    ownerUserId: text("owner_user_id").references(() => user.id, { onDelete: "cascade" }),
-    visibility: skillVisibilityEnum("visibility").notNull().default("public"),
+    ownerUserId: text("owner_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     description: text("description").notNull(),
@@ -52,15 +51,7 @@ export const skill = pgTable(
   },
   (table) => [
     index("skill_owner_user_id_idx").on(table.ownerUserId),
-    index("skill_visibility_idx").on(table.visibility),
     uniqueIndex("skill_private_owner_slug_idx").on(table.ownerUserId, table.slug),
-    uniqueIndex("skill_public_slug_idx")
-      .on(table.slug)
-      .where(sql`${table.visibility} = 'public' and ${table.ownerUserId} is null`),
-    check(
-      "skill_visibility_owner_check",
-      sql`${table.visibility} = 'public' or ${table.ownerUserId} is not null`,
-    ),
     // pg_trgm GIN indexes for fuzzy search
     index("skill_name_trgm_idx").using("gin", sql`${table.name} gin_trgm_ops`),
     index("skill_description_trgm_idx").using("gin", sql`${table.description} gin_trgm_ops`),

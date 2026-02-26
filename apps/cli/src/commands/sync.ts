@@ -15,14 +15,14 @@ import * as ui from "../lib/ui";
 
 const SYNC_PAGE_LIMIT = 100;
 
-type SkillListOutput = Awaited<ReturnType<typeof trpc.skills.list.query>>;
+type SkillListOutput = Awaited<ReturnType<typeof trpc.skills.listByOwner.query>>;
 type SkillListItem = SkillListOutput["items"][number];
 type SkillDetails = Awaited<ReturnType<typeof trpc.skills.getBySlug.query>>;
 
 export type SyncRunResult = {
   ok: boolean;
   authenticated: boolean;
-  totalPrivateSkills: number;
+  totalSkills: number;
   syncedSkills: number;
   failedSkills: number;
   removedStaleSkills: number;
@@ -34,7 +34,6 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     slug: skill.slug,
     name: skill.name,
     description: skill.description,
-    visibility: skill.visibility,
     originalMarkdown: skill.originalMarkdown,
     renderedMarkdown: skill.renderedMarkdown,
     frontmatter: skill.frontmatter,
@@ -47,15 +46,14 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
   };
 }
 
-async function fetchAllPrivateSkills(): Promise<SkillListItem[]> {
+async function fetchAllSkills(): Promise<SkillListItem[]> {
   const items: SkillListItem[] = [];
   let cursor: string | undefined;
 
   for (;;) {
-    const result = await trpc.skills.list.query({
+    const result = await trpc.skills.listByOwner.query({
       limit: SYNC_PAGE_LIMIT,
       cursor,
-      visibility: "private",
     });
 
     items.push(...result.items);
@@ -68,7 +66,7 @@ async function fetchAllPrivateSkills(): Promise<SkillListItem[]> {
   }
 }
 
-export async function syncPrivateSkills(
+export async function syncSkills(
   selectedAgents: SupportedAgent[],
   options?: {
     promptUnsyncedBackup?: boolean;
@@ -89,7 +87,7 @@ export async function syncPrivateSkills(
     return {
       ok: false,
       authenticated: false,
-      totalPrivateSkills: 0,
+      totalSkills: 0,
       syncedSkills: 0,
       failedSkills: 0,
       removedStaleSkills: 0,
@@ -97,17 +95,17 @@ export async function syncPrivateSkills(
   }
 
   const fetchSpinner = ui.spinner();
-  fetchSpinner.start("loading private skills");
+  fetchSpinner.start("loading skills");
 
   let privateSkills: SkillListItem[];
   try {
-    privateSkills = await fetchAllPrivateSkills();
+    privateSkills = await fetchAllSkills();
   } catch (error) {
-    fetchSpinner.stop(pc.red(`failed to load private skills: ${readErrorMessage(error)}`));
+    fetchSpinner.stop(pc.red(`failed to load skills: ${readErrorMessage(error)}`));
     return {
       ok: false,
       authenticated: true,
-      totalPrivateSkills: 0,
+      totalSkills: 0,
       syncedSkills: 0,
       failedSkills: 0,
       removedStaleSkills: 0,
@@ -115,21 +113,21 @@ export async function syncPrivateSkills(
   }
 
   if (privateSkills.length === 0) {
-    fetchSpinner.stop(pc.dim("no private skills to sync"));
+    fetchSpinner.stop(pc.dim("no skills to sync"));
     if (promptUnsyncedBackup) {
       await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
     }
     return {
       ok: true,
       authenticated: true,
-      totalPrivateSkills: 0,
+      totalSkills: 0,
       syncedSkills: 0,
       failedSkills: 0,
       removedStaleSkills: 0,
     };
   }
 
-  fetchSpinner.stop(pc.green(`syncing ${privateSkills.length} private skill(s)`));
+  fetchSpinner.stop(pc.green(`syncing ${privateSkills.length} skill(s)`));
 
   const serverSkillIds = new Set(privateSkills.map((s) => s.id));
 
@@ -176,7 +174,7 @@ export async function syncPrivateSkills(
     ui.log.info(pc.dim(`removed ${removedStaleSkills} skill(s) no longer on server`));
   }
 
-  ui.log.info(pc.dim(`synced ${synced}/${privateSkills.length} private skill(s)`));
+  ui.log.info(pc.dim(`synced ${synced}/${privateSkills.length} skill(s)`));
 
   if (promptUnsyncedBackup) {
     await maybePromptUnsyncedLocalSkillsBackup(selectedAgents);
@@ -185,7 +183,7 @@ export async function syncPrivateSkills(
   return {
     ok: failed === 0,
     authenticated: true,
-    totalPrivateSkills: privateSkills.length,
+    totalSkills: privateSkills.length,
     syncedSkills: synced,
     failedSkills: failed,
     removedStaleSkills,
@@ -200,5 +198,5 @@ export async function syncCommand() {
     return;
   }
 
-  await syncPrivateSkills(selectedAgents, { promptUnsyncedBackup: true });
+  await syncSkills(selectedAgents, { promptUnsyncedBackup: true });
 }

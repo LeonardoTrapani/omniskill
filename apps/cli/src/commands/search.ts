@@ -8,17 +8,16 @@ const DEFAULT_LIMIT = 5;
 
 export async function searchCommand() {
   const args = process.argv.slice(3);
-  const isPublic = args.includes("--public");
   const limitIdx = args.indexOf("--limit");
   const limit = limitIdx !== -1 ? parseInt(args[limitIdx + 1]!, 10) : DEFAULT_LIMIT;
 
   const queryArgs = args.filter(
-    (a, i) => a !== "--public" && a !== "--limit" && (limitIdx === -1 || i !== limitIdx + 1),
+    (a, i) => a !== "--limit" && (limitIdx === -1 || i !== limitIdx + 1),
   );
   const query = queryArgs.join(" ");
 
   if (!query) {
-    ui.log.error("usage: better-skills search <query> [--public] [--limit N]");
+    ui.log.error("usage: better-skills search <query> [--limit N]");
     process.exit(1);
   }
 
@@ -31,8 +30,7 @@ export async function searchCommand() {
   s.start("searching skills");
 
   try {
-    const scope = isPublic ? "all" : "own";
-    const result = await trpc.skills.search.query({ query, scope, limit });
+    const result = await trpc.skills.search.query({ query, limit });
 
     if (result.items.length === 0) {
       s.stop(pc.dim(`no skills found matching "${query}"`));
@@ -41,7 +39,7 @@ export async function searchCommand() {
 
     s.stop(pc.dim(`found ${result.total} skill(s)`));
 
-    console.log(`\nfound ${result.total} skill(s) matching "${query}" (scope: ${scope}):\n`);
+    console.log(`\nfound ${result.total} skill(s) matching "${query}":\n`);
 
     for (let i = 0; i < result.items.length; i++) {
       const item = result.items[i]!;
@@ -50,9 +48,7 @@ export async function searchCommand() {
 
       console.log(`[${i + 1}] ${item.name} (${item.matchType} ${pct}%)`);
       console.log(`    ${item.description}`);
-      console.log(
-        `    id: ${item.id} | slug: ${item.slug} | visibility: ${item.visibility} | updated: ${updated}`,
-      );
+      console.log(`    id: ${item.id} | slug: ${item.slug} | updated: ${updated}`);
       if (item.snippet) {
         console.log(`    snippet: ${item.snippet}`);
       }

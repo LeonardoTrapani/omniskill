@@ -35,7 +35,7 @@ better-skills validate <folder>
 5. Update skill:
 
 ```bash
-better-skills update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
+better-skills update <slug-or-uuid> --from <folder> [--slug <slug>]
 ```
 
 6. Confirm with:

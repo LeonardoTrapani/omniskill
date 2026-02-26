@@ -35,7 +35,7 @@ better-skills validate <skill_dir>
 4. Create skill:
 
 ```bash
-better-skills create --from <skill_dir> [--slug <slug>] [--public]
+better-skills create --from <skill_dir> [--slug <slug>]
 ```
 
 5. Confirm with:
@@ -52,5 +52,5 @@ rm -rf "$tmp_root"
 
 ## Output expectation
 
-- Success output is JSON containing `id`, `slug`, `name`, `visibility`.
+- Success output is JSON containing `id`, `slug`, `name`.
 - If local `:new:` mention paths are missing, fail before mutation.

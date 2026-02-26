@@ -6,7 +6,7 @@ This document explains how better-skills stores skills as a graph in Postgres wi
 
 Model skills so they can be:
 
-- Public (shared registry) or private (user-owned)
+- Private and user-owned
 - Stored with full `SKILL.md` content and parsed metadata
 - Split into subfiles (`references`, `scripts`, `assets`, etc.)
 - Linked in a many-to-many graph, including resource-level links
@@ -18,8 +18,7 @@ Model skills so they can be:
 Core node for a skill.
 
 - `id`: UUID PK
-- `owner_user_id`: nullable FK to `user.id`
-- `visibility`: enum `public | private`
+- `owner_user_id`: FK to `user.id`
 - `slug`, `name`, `description`
 - `skill_markdown`: full raw `SKILL.md` content
 - `frontmatter`: parsed YAML frontmatter as JSONB
@@ -28,12 +27,10 @@ Core node for a skill.
 - `source_url`, `source_identifier`
 - timestamps (`created_at`, `updated_at`)
 
-Ownership and visibility rules:
+Ownership rules:
 
-- Private skills must have an owner (`owner_user_id`)
-- Public skills can be global (owner is null)
-- Unique private slug per owner
-- Unique global public slug
+- Every skill must have an owner (`owner_user_id`)
+- Unique slug per owner
 
 ### `skill_resource`
 

@@ -6,8 +6,7 @@ import { randomUUID } from "crypto";
 
 type SkillRow = {
   id: string;
-  ownerUserId: string | null;
-  visibility: "public" | "private";
+  ownerUserId: string;
   slug: string;
   name: string;
   description: string;
@@ -195,7 +194,6 @@ function fakeTable(name: string, columns: Record<string, string>) {
 const fakeSkill = fakeTable("skill", {
   id: "id",
   ownerUserId: "owner_user_id",
-  visibility: "visibility",
   slug: "slug",
   name: "name",
   description: "description",
@@ -560,7 +558,6 @@ mock.module("@better-skills/db/schema/skills", () => ({
   skill: fakeSkill,
   skillResource: fakeSkillResource,
   skillLink: fakeSkillLink,
-  skillVisibilityEnum: {},
   skillResourceKindEnum: {},
   skillRelations: {},
   skillResourceRelations: {},
@@ -601,7 +598,6 @@ function seedSkill(overrides: Partial<SkillRow> = {}): SkillRow {
   const row: SkillRow = {
     id: randomUUID(),
     ownerUserId: USER_A,
-    visibility: "public",
     slug: `skill-${randomUUID().slice(0, 8)}`,
     name: "Test Skill",
     description: "A test skill",
@@ -661,36 +657,39 @@ beforeEach(() => {
 });
 
 // ============================================================
-// LIST — visibility + search
+// LIST — owner + search
 // ============================================================
 
 describe("skills.list", () => {
-  test("unauthenticated list returns only public skills", async () => {
-    seedSkill({ visibility: "public", name: "Public One" });
-    seedSkill({ visibility: "private", ownerUserId: USER_A, name: "Private One" });
-
-    const result = await anonCaller().skills.list({});
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0]!.name).toBe("Public One");
+  test("unauthenticated list returns UNAUTHORIZED", async () => {
+    await expect(anonCaller().skills.list({})).rejects.toThrow();
   });
 
-  test("authenticated list returns public + own private", async () => {
-    seedSkill({ visibility: "public", name: "Public" });
-    seedSkill({ visibility: "private", ownerUserId: USER_A, name: "My Private" });
-    seedSkill({ visibility: "private", ownerUserId: USER_B, name: "Other Private" });
+  test("authenticated list returns only caller vault skills", async () => {
+    seedSkill({ ownerUserId: USER_A, name: "My Skill" });
+    seedSkill({ ownerUserId: USER_A, name: "Another Skill" });
+    seedSkill({ ownerUserId: USER_B, name: "Other User Skill" });
 
     const result = await authedCaller(USER_A).skills.list({});
     const names = result.items.map((i) => i.name);
-    expect(names).toContain("Public");
-    expect(names).toContain("My Private");
-    expect(names).not.toContain("Other Private");
+    expect(names).toContain("My Skill");
+    expect(names).toContain("Another Skill");
+    expect(names).not.toContain("Other User Skill");
   });
 
   test("search filters by name", async () => {
-    seedSkill({ visibility: "public", name: "TypeScript Basics", slug: "ts-basics" });
-    seedSkill({ visibility: "public", name: "React Patterns", slug: "react-patterns" });
+    seedSkill({
+      ownerUserId: USER_A,
+      name: "TypeScript Basics",
+      slug: "ts-basics",
+    });
+    seedSkill({
+      ownerUserId: USER_A,
+      name: "React Patterns",
+      slug: "react-patterns",
+    });
 
-    const result = await anonCaller().skills.list({ search: "TypeScript" });
+    const result = await authedCaller(USER_A).skills.list({ search: "TypeScript" });
     expect(result.items).toHaveLength(1);
     expect(result.items[0]!.name).toBe("TypeScript Basics");
   });
@@ -700,22 +699,40 @@ describe("skills.list", () => {
     const middle = new Date("2026-01-01T00:00:02.000Z");
     const newest = new Date("2026-01-01T00:00:03.000Z");
 
-    seedSkill({ visibility: "public", name: "Oldest", createdAt: oldest, updatedAt: oldest });
-    seedSkill({ visibility: "public", name: "Middle", createdAt: middle, updatedAt: middle });
-    seedSkill({ visibility: "public", name: "Newest", createdAt: newest, updatedAt: newest });
+    seedSkill({
+      ownerUserId: USER_A,
+      name: "Oldest",
+      createdAt: oldest,
+      updatedAt: oldest,
+    });
+    seedSkill({
+      ownerUserId: USER_A,
+      name: "Middle",
+      createdAt: middle,
+      updatedAt: middle,
+    });
+    seedSkill({
+      ownerUserId: USER_A,
+      name: "Newest",
+      createdAt: newest,
+      updatedAt: newest,
+    });
 
-    const pageOne = await anonCaller().skills.list({ limit: 2 });
+    const pageOne = await authedCaller(USER_A).skills.list({ limit: 2 });
     expect(pageOne.items.map((item) => item.name)).toEqual(["Newest", "Middle"]);
     expect(pageOne.nextCursor).toBe(pageOne.items[1]!.id);
 
-    const pageTwo = await anonCaller().skills.list({ limit: 2, cursor: pageOne.nextCursor! });
+    const pageTwo = await authedCaller(USER_A).skills.list({
+      limit: 2,
+      cursor: pageOne.nextCursor!,
+    });
     expect(pageTwo.items.map((item) => item.name)).toEqual(["Oldest"]);
     expect(pageTwo.nextCursor).toBeNull();
   });
 
   test("invalid cursor returns BAD_REQUEST", async () => {
     try {
-      await anonCaller().skills.list({ cursor: randomUUID() });
+      await authedCaller(USER_A).skills.list({ cursor: randomUUID() });
       expect(true).toBe(false);
     } catch (err: unknown) {
       expect((err as { code: string }).code).toBe("BAD_REQUEST");
@@ -723,9 +740,9 @@ describe("skills.list", () => {
   });
 
   test("list items exclude markdown and resources", async () => {
-    seedSkill({ visibility: "public" });
+    seedSkill({ ownerUserId: USER_A });
 
-    const result = await anonCaller().skills.list({});
+    const result = await authedCaller(USER_A).skills.list({});
     const item = result.items[0]!;
     expect(item).not.toHaveProperty("originalMarkdown");
     expect(item).not.toHaveProperty("renderedMarkdown");
@@ -734,29 +751,26 @@ describe("skills.list", () => {
 });
 
 // ============================================================
-// GET BY ID — visibility + content
+// GET BY ID — ownership + content
 // ============================================================
 
 describe("skills.getById", () => {
-  test("returns public skill for unauthenticated caller", async () => {
-    const s = seedSkill({ visibility: "public", name: "Public Skill" });
+  test("unauthenticated caller gets UNAUTHORIZED", async () => {
+    const s = seedSkill({ ownerUserId: USER_A });
+    await expect(anonCaller().skills.getById({ id: s.id })).rejects.toThrow();
+  });
 
-    const result = await anonCaller().skills.getById({ id: s.id });
+  test("owner can fetch skill", async () => {
+    const s = seedSkill({ ownerUserId: USER_A });
+
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
     expect(result.id).toBe(s.id);
-    expect(result.name).toBe("Public Skill");
     expect(result.originalMarkdown).toBe(s.skillMarkdown);
     expect(result.renderedMarkdown).toBeDefined();
   });
 
-  test("owner can fetch private skill", async () => {
-    const s = seedSkill({ visibility: "private", ownerUserId: USER_A });
-
-    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
-    expect(result.id).toBe(s.id);
-  });
-
-  test("non-owner gets NOT_FOUND for private skill", async () => {
-    const s = seedSkill({ visibility: "private", ownerUserId: USER_A });
+  test("non-owner gets NOT_FOUND", async () => {
+    const s = seedSkill({ ownerUserId: USER_A });
 
     try {
       await authedCaller(USER_B).skills.getById({ id: s.id });
@@ -767,22 +781,25 @@ describe("skills.getById", () => {
   });
 
   test("missing id returns NOT_FOUND", async () => {
-    expect(anonCaller().skills.getById({ id: randomUUID() })).rejects.toThrow();
+    expect(authedCaller(USER_A).skills.getById({ id: randomUUID() })).rejects.toThrow();
   });
 
   test("includes resources in response", async () => {
-    const s = seedSkill({ visibility: "public" });
+    const s = seedSkill({ ownerUserId: USER_A });
     seedResource(s.id, { path: "readme.md", content: "hello" });
 
-    const result = await anonCaller().skills.getById({ id: s.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
     expect(result.resources).toHaveLength(1);
     expect(result.resources[0]!.path).toBe("readme.md");
   });
 
   test("returns both originalMarkdown and renderedMarkdown", async () => {
-    const s = seedSkill({ visibility: "public", skillMarkdown: "plain text no mentions" });
+    const s = seedSkill({
+      ownerUserId: USER_A,
+      skillMarkdown: "plain text no mentions",
+    });
 
-    const result = await anonCaller().skills.getById({ id: s.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
     expect(result.originalMarkdown).toBe("plain text no mentions");
     expect(result.renderedMarkdown).toBe("plain text no mentions");
   });
@@ -793,27 +810,25 @@ describe("skills.getById", () => {
 // ============================================================
 
 describe("skills.getBySlug", () => {
-  test("returns public skill by slug", async () => {
-    const s = seedSkill({ visibility: "public", slug: "my-skill" });
-
-    const result = await anonCaller().skills.getBySlug({ slug: "my-skill" });
-    expect(result.id).toBe(s.id);
+  test("unauthenticated caller gets UNAUTHORIZED", async () => {
+    seedSkill({ ownerUserId: USER_A, slug: "my-skill" });
+    await expect(anonCaller().skills.getBySlug({ slug: "my-skill" })).rejects.toThrow();
   });
 
-  test("owner can fetch private skill by slug", async () => {
-    seedSkill({ visibility: "private", ownerUserId: USER_A, slug: "private-slug" });
+  test("owner can fetch skill by slug", async () => {
+    seedSkill({ ownerUserId: USER_A, slug: "private-slug" });
 
     const result = await authedCaller(USER_A).skills.getBySlug({ slug: "private-slug" });
     expect(result.slug).toBe("private-slug");
   });
 
-  test("non-owner cannot fetch private skill by slug", async () => {
-    seedSkill({ visibility: "private", ownerUserId: USER_A, slug: "private-slug-2" });
+  test("non-owner cannot fetch skill by slug", async () => {
+    seedSkill({ ownerUserId: USER_A, slug: "private-slug-2" });
     expect(authedCaller(USER_B).skills.getBySlug({ slug: "private-slug-2" })).rejects.toThrow();
   });
 
   test("missing slug returns NOT_FOUND", async () => {
-    expect(anonCaller().skills.getBySlug({ slug: "nonexistent" })).rejects.toThrow();
+    expect(authedCaller(USER_A).skills.getBySlug({ slug: "nonexistent" })).rejects.toThrow();
   });
 });
 
@@ -822,22 +837,34 @@ describe("skills.getBySlug", () => {
 // ============================================================
 
 describe("skills.getResourceByPath", () => {
-  test("returns resource for public skill", async () => {
-    const s = seedSkill({ visibility: "public", slug: "pub-skill" });
+  test("owner can access resource by slug/path", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, slug: "my-skill" });
     seedResource(s.id, { path: "lib/utils.ts", content: "export const x = 1;" });
 
-    const result = await anonCaller().skills.getResourceByPath({
-      skillSlug: "pub-skill",
+    const result = await authedCaller(USER_A).skills.getResourceByPath({
+      skillSlug: "my-skill",
       resourcePath: "lib/utils.ts",
     });
     expect(result.path).toBe("lib/utils.ts");
     expect(result.content).toBe("export const x = 1;");
-    expect(result.skillSlug).toBe("pub-skill");
+    expect(result.skillSlug).toBe("my-skill");
     expect(result.skillName).toBe(s.name);
   });
 
-  test("private resource fails for non-owner", async () => {
-    const s = seedSkill({ visibility: "private", ownerUserId: USER_A, slug: "priv-skill" });
+  test("unauthenticated access returns UNAUTHORIZED", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, slug: "private-only" });
+    seedResource(s.id, { path: "secret.ts" });
+
+    await expect(
+      anonCaller().skills.getResourceByPath({
+        skillSlug: "private-only",
+        resourcePath: "secret.ts",
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("resource fails for non-owner", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, slug: "priv-skill" });
     seedResource(s.id, { path: "secret.ts" });
 
     expect(
@@ -848,8 +875,8 @@ describe("skills.getResourceByPath", () => {
     ).rejects.toThrow();
   });
 
-  test("owner can access private resource", async () => {
-    const s = seedSkill({ visibility: "private", ownerUserId: USER_A, slug: "my-priv" });
+  test("owner can access resource", async () => {
+    const s = seedSkill({ ownerUserId: USER_A, slug: "my-priv" });
     seedResource(s.id, { path: "impl.ts", content: "private stuff" });
 
     const result = await authedCaller(USER_A).skills.getResourceByPath({
@@ -860,11 +887,11 @@ describe("skills.getResourceByPath", () => {
   });
 
   test("missing resource path returns NOT_FOUND", async () => {
-    const s = seedSkill({ visibility: "public", slug: "exists" });
+    const s = seedSkill({ ownerUserId: USER_A, slug: "exists" });
     seedResource(s.id, { path: "real.ts" });
 
     expect(
-      anonCaller().skills.getResourceByPath({
+      authedCaller(USER_A).skills.getResourceByPath({
         skillSlug: "exists",
         resourcePath: "nonexistent.ts",
       }),
@@ -872,15 +899,15 @@ describe("skills.getResourceByPath", () => {
   });
 
   test("returns renderedContent with mention links", async () => {
-    const s = seedSkill({ visibility: "public", slug: "pub-with-mentions" });
+    const s = seedSkill({ ownerUserId: USER_A, slug: "with-mentions" });
     const target = seedResource(s.id, { path: "references/guidelines.md" });
     seedResource(s.id, {
       path: "references/flow.md",
       content: `Read [[resource:${target.id}]]`,
     });
 
-    const result = await anonCaller().skills.getResourceByPath({
-      skillSlug: "pub-with-mentions",
+    const result = await authedCaller(USER_A).skills.getResourceByPath({
+      skillSlug: "with-mentions",
       resourcePath: "references/flow.md",
     });
 
@@ -893,14 +920,14 @@ describe("skills.getResourceByPath", () => {
 
 describe("skills.getResourceBySkillIdAndPath", () => {
   test("returns renderedContent with mention links", async () => {
-    const s = seedSkill({ visibility: "public" });
+    const s = seedSkill({ ownerUserId: USER_A });
     const target = seedResource(s.id, { path: "references/checklist.md" });
     seedResource(s.id, {
       path: "references/create.md",
       content: `See [[resource:${target.id}]]`,
     });
 
-    const result = await anonCaller().skills.getResourceBySkillIdAndPath({
+    const result = await authedCaller(USER_A).skills.getResourceBySkillIdAndPath({
       skillId: s.id,
       resourcePath: "references/create.md",
     });
@@ -941,25 +968,14 @@ describe("skills.create", () => {
     expect(result.ownerUserId).toBe(USER_A);
   });
 
-  test("create without visibility defaults to private", async () => {
+  test("create keeps owner on created skill", async () => {
     const result = await authedCaller(USER_A).skills.create({
       slug: "default-vis",
       name: "Default",
       description: "testing default",
       skillMarkdown: "# D",
     });
-    expect(result.visibility).toBe("private");
-  });
-
-  test("create with explicit public visibility", async () => {
-    const result = await authedCaller(USER_A).skills.create({
-      slug: "pub",
-      name: "Public",
-      description: "public",
-      skillMarkdown: "# P",
-      visibility: "public",
-    });
-    expect(result.visibility).toBe("public");
+    expect(result.ownerUserId).toBe(USER_A);
   });
 
   test("create persists nested resources", async () => {
@@ -1039,84 +1055,6 @@ describe("skills.create", () => {
     });
     expect(result.originalMarkdown).toBe("just plain text");
     expect(result.renderedMarkdown).toBeDefined();
-  });
-});
-
-// ============================================================
-// DUPLICATE — import into private vault
-// ============================================================
-
-describe("skills.duplicate", () => {
-  test("remaps internal mention UUIDs to duplicated skill resources", async () => {
-    const source = seedSkill({
-      visibility: "public",
-      ownerUserId: USER_A,
-    });
-    const sourceResource = seedResource(source.id, { path: "references/guide.md" });
-
-    source.skillMarkdown = `See [[skill:${source.id}]] and [[resource:${sourceResource.id}]]`;
-
-    const result = await authedCaller(USER_B).skills.duplicate({ id: source.id });
-
-    expect(result.ownerUserId).toBe(USER_B);
-    expect(result.visibility).toBe("private");
-
-    const duplicatedResource = result.resources.find(
-      (resource) => resource.path === sourceResource.path,
-    );
-    expect(duplicatedResource).toBeDefined();
-    if (!duplicatedResource) return;
-
-    expect(result.originalMarkdown).toBe(
-      `See [[skill:${result.id}]] and [[resource:${duplicatedResource.id}]]`,
-    );
-
-    const autoLinks = links.filter(
-      (link) =>
-        link.sourceSkillId === result.id &&
-        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
-    );
-
-    expect(autoLinks.some((link) => link.targetSkillId === result.id)).toBe(true);
-    expect(autoLinks.some((link) => link.targetResourceId === duplicatedResource.id)).toBe(true);
-  });
-
-  test("remaps internal mentions inside duplicated resources and syncs resource links", async () => {
-    const source = seedSkill({
-      visibility: "public",
-      ownerUserId: USER_A,
-    });
-    const sourceResourceA = seedResource(source.id, { path: "references/target.md" });
-    const sourceResourceB = seedResource(source.id, {
-      path: "references/source.md",
-      content: `See [[skill:${source.id}]] and [[resource:${sourceResourceA.id}]]`,
-    });
-
-    const result = await authedCaller(USER_B).skills.duplicate({ id: source.id });
-
-    const duplicatedResourceA = result.resources.find(
-      (resource) => resource.path === sourceResourceA.path,
-    );
-    const duplicatedResourceB = result.resources.find(
-      (resource) => resource.path === sourceResourceB.path,
-    );
-
-    expect(duplicatedResourceA).toBeDefined();
-    expect(duplicatedResourceB).toBeDefined();
-    if (!duplicatedResourceA || !duplicatedResourceB) return;
-
-    expect(duplicatedResourceB.content).toBe(
-      `See [[skill:${result.id}]] and [[resource:${duplicatedResourceA.id}]]`,
-    );
-
-    const autoLinks = links.filter(
-      (link) =>
-        link.sourceResourceId === duplicatedResourceB.id &&
-        (link.metadata as Record<string, unknown>).origin === "markdown-auto",
-    );
-
-    expect(autoLinks.some((link) => link.targetSkillId === result.id)).toBe(true);
-    expect(autoLinks.some((link) => link.targetResourceId === duplicatedResourceA.id)).toBe(true);
   });
 });
 
@@ -1274,45 +1212,48 @@ describe("skills.delete", () => {
 
 describe("rendering", () => {
   test("get response has both markdown fields for plain text", async () => {
-    const s = seedSkill({ visibility: "public", skillMarkdown: "# Hello World" });
+    const s = seedSkill({
+      ownerUserId: USER_A,
+      skillMarkdown: "# Hello World",
+    });
 
-    const result = await anonCaller().skills.getById({ id: s.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
     expect(result.originalMarkdown).toBe("# Hello World");
     expect(result.renderedMarkdown).toBe("# Hello World");
   });
 
   test("get response renders skill mentions to backticked skill name", async () => {
-    const target = seedSkill({ visibility: "public", name: "Target Skill" });
+    const target = seedSkill({ ownerUserId: USER_A, name: "Target Skill" });
     const source = seedSkill({
-      visibility: "public",
+      ownerUserId: USER_A,
       skillMarkdown: `See [[skill:${target.id}]] for more`,
     });
 
-    const result = await anonCaller().skills.getById({ id: source.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: source.id });
     expect(result.originalMarkdown).toContain(`[[skill:${target.id}]]`);
     expect(result.renderedMarkdown).toContain(`\`${target.name}\``);
   });
 
   test("get response renders resource mentions", async () => {
-    const parent = seedSkill({ visibility: "public", name: "Parent Skill" });
+    const parent = seedSkill({ ownerUserId: USER_A, name: "Parent Skill" });
     const res = seedResource(parent.id, { path: "helpers/util.ts" });
     const source = seedSkill({
-      visibility: "public",
+      ownerUserId: USER_A,
       skillMarkdown: `Check [[resource:${res.id}]]`,
     });
 
-    const result = await anonCaller().skills.getById({ id: source.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: source.id });
     expect(result.renderedMarkdown).toContain("`helpers/util.ts for Parent Skill`");
   });
 
   test("get response can render mention links for web", async () => {
-    const target = seedSkill({ visibility: "public", name: "Target Skill" });
+    const target = seedSkill({ ownerUserId: USER_A, name: "Target Skill" });
     const source = seedSkill({
-      visibility: "public",
+      ownerUserId: USER_A,
       skillMarkdown: `See [[skill:${target.id}]]`,
     });
 
-    const result = await anonCaller().skills.getById({ id: source.id, linkMentions: true });
+    const result = await authedCaller(USER_A).skills.getById({ id: source.id, linkMentions: true });
 
     expect(result.renderedMarkdown).toContain(
       `/vault/skills/${target.id}?mention=skill%3A${target.id}`,
@@ -1322,11 +1263,11 @@ describe("rendering", () => {
   test("unknown mentions resolve to fallback text", async () => {
     const unknownId = randomUUID();
     const s = seedSkill({
-      visibility: "public",
+      ownerUserId: USER_A,
       skillMarkdown: `See [[skill:${unknownId}]]`,
     });
 
-    const result = await anonCaller().skills.getById({ id: s.id });
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
     expect(result.renderedMarkdown).toContain("`(unknown skill)`");
   });
 });
@@ -1337,8 +1278,8 @@ describe("rendering", () => {
 
 describe("graph links", () => {
   test("graphForSkill includes skill/resource link combinations", async () => {
-    const skillA = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "A" });
-    const skillB = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "B" });
+    const skillA = seedSkill({ ownerUserId: USER_A, name: "A" });
+    const skillB = seedSkill({ ownerUserId: USER_A, name: "B" });
     const resourceA = seedResource(skillA.id, { path: "references/a.md" });
     const resourceB = seedResource(skillB.id, { path: "references/b.md" });
 
@@ -1366,8 +1307,8 @@ describe("graph links", () => {
   });
 
   test("graph includes skill/resource link combinations for caller vault", async () => {
-    const skillA = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "A" });
-    const skillB = seedSkill({ ownerUserId: USER_A, visibility: "private", name: "B" });
+    const skillA = seedSkill({ ownerUserId: USER_A, name: "A" });
+    const skillB = seedSkill({ ownerUserId: USER_A, name: "B" });
     const resourceA = seedResource(skillA.id, { path: "references/a.md" });
     const resourceB = seedResource(skillB.id, { path: "references/b.md" });
 
@@ -1395,7 +1336,7 @@ describe("graph links", () => {
 
 describe("link auto-sync", () => {
   test("create with mentions generates auto links", async () => {
-    const target = seedSkill({ visibility: "public", name: "Link Target" });
+    const target = seedSkill({ ownerUserId: USER_A, name: "Link Target" });
 
     await authedCaller(USER_A).skills.create({
       slug: "linker",
@@ -1413,10 +1354,9 @@ describe("link auto-sync", () => {
   });
 
   test("update markdown refreshes auto links", async () => {
-    const targetA = seedSkill({ visibility: "public", name: "Target A" });
-    const targetB = seedSkill({ visibility: "public", name: "Target B" });
+    const targetA = seedSkill({ ownerUserId: USER_A, name: "Target A" });
+    const targetB = seedSkill({ ownerUserId: USER_A, name: "Target B" });
     const source = seedSkill({
-      visibility: "public",
       ownerUserId: USER_A,
       skillMarkdown: `See [[skill:${targetA.id}]]`,
     });
@@ -1448,9 +1388,8 @@ describe("link auto-sync", () => {
   });
 
   test("manual links remain after auto-sync refresh", async () => {
-    const target = seedSkill({ visibility: "public", name: "Target" });
+    const target = seedSkill({ ownerUserId: USER_A, name: "Target" });
     const source = seedSkill({
-      visibility: "public",
       ownerUserId: USER_A,
       skillMarkdown: "no mentions",
     });
@@ -1475,7 +1414,7 @@ describe("link auto-sync", () => {
   });
 
   test("create syncs auto links for resource markdown", async () => {
-    const targetSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const targetSkill = seedSkill({ ownerUserId: USER_A });
     const targetResource = seedResource(targetSkill.id, { path: "references/target.md" });
 
     const created = await authedCaller(USER_A).skills.create({
@@ -1508,10 +1447,10 @@ describe("link auto-sync", () => {
   });
 
   test("update resource markdown refreshes resource auto links", async () => {
-    const targetSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const targetSkill = seedSkill({ ownerUserId: USER_A });
     const targetResourceA = seedResource(targetSkill.id, { path: "references/target-a.md" });
     const targetResourceB = seedResource(targetSkill.id, { path: "references/target-b.md" });
-    const sourceSkill = seedSkill({ ownerUserId: USER_A, visibility: "private" });
+    const sourceSkill = seedSkill({ ownerUserId: USER_A });
     const sourceResource = seedResource(sourceSkill.id, {
       path: "references/source.md",
       content: `See [[resource:${targetResourceA.id}]]`,

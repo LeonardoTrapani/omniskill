@@ -15,7 +15,6 @@ function parseArgs(argv: string[]) {
   let identifier: string | undefined;
   let from: string | undefined;
   let slug: string | undefined;
-  let visibility: "public" | "private" | undefined;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
@@ -34,28 +33,16 @@ function parseArgs(argv: string[]) {
       slug = args[++i];
       continue;
     }
-
-    if (arg === "--public") {
-      visibility = "public";
-      continue;
-    }
-
-    if (arg === "--private") {
-      visibility = "private";
-      continue;
-    }
   }
 
-  return { identifier, from, slug, visibility };
+  return { identifier, from, slug };
 }
 
 export async function updateCommand() {
-  const { identifier, from, slug, visibility: visibilityOverride } = parseArgs(process.argv);
+  const { identifier, from, slug } = parseArgs(process.argv);
 
   if (!identifier || !from) {
-    ui.log.error(
-      "usage: better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
-    );
+    ui.log.error("usage: better-skills update <slug-or-uuid> --from <dir> [--slug <s>]");
     process.exit(1);
   }
 
@@ -82,7 +69,6 @@ export async function updateCommand() {
     process.exit(1);
   }
 
-  const visibility = visibilityOverride ?? targetSkill.visibility;
   const resourcesPayload = buildUpdateResourcesPayload(targetSkill.resources, draft.resources);
 
   s.start("updating skill");
@@ -96,7 +82,6 @@ export async function updateCommand() {
       name: draft.name,
       description: draft.description,
       skillMarkdown: draft.markdownForMutation,
-      visibility,
       frontmatter: draft.frontmatter,
       resources: resourcesPayload,
     });
@@ -118,7 +103,6 @@ export async function updateCommand() {
         id: updatedSkill.id,
         slug: updatedSkill.slug,
         name: updatedSkill.name,
-        visibility: updatedSkill.visibility,
       }),
     );
   } catch (error) {

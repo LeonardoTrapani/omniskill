@@ -4,21 +4,20 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { Command, Search, Hexagon, Globe } from "lucide-react";
+import { Command, Search, Hexagon } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 
 import UserMenu from "./user-menu";
 import { SkillCommandPalette } from "./skill-command-palette";
 
-type PaletteMode = "command" | "vault" | "marketplace";
+type PaletteMode = "command" | "vault";
 
 type NavItem =
   | { label: string; href: Route; kind: "route" }
   | { label: string; href: `#${string}`; kind: "hash" };
 
 const publicNav: NavItem[] = [
-  { label: "Skills", href: "/skills", kind: "route" },
   { label: "Docs", href: "#docs", kind: "hash" },
   { label: "Pricing", href: "#pricing", kind: "hash" },
   { label: "Github", href: "#github", kind: "hash" },
@@ -126,7 +125,6 @@ export default function Navbar() {
                   className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
                 >
                   {item.label === "My Vault" ? <Hexagon className="size-3.5" /> : null}
-                  {item.label === "Explore" ? <Globe className="size-3.5" /> : null}
                   {item.label}
                 </Link>
               ) : (

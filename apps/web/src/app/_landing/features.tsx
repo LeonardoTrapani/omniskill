@@ -18,7 +18,7 @@ const topFeatures = [
     description:
       "Visual skill management, graph exploration, and account settings from your browser.",
     imageSrc: "/landing/features/feature-image-5.png",
-    imageAlt: "BETTER-SKILLS web console skills marketplace",
+    imageAlt: "BETTER-SKILLS web console vault view",
     indigoOverlay:
       "bg-[radial-gradient(circle_at_12%_18%,rgba(99,102,241,0.28),transparent_42%),radial-gradient(ellipse_70%_55%_at_92%_74%,rgba(99,102,241,0.2),transparent_48%),radial-gradient(circle_at_58%_6%,rgba(99,102,241,0.16),transparent_28%)]",
   },
@@ -36,12 +36,12 @@ const gridFeatures = [
       "bg-[radial-gradient(ellipse_74%_44%_at_68%_8%,rgba(99,102,241,0.3),transparent_50%),radial-gradient(circle_at_18%_88%,rgba(99,102,241,0.22),transparent_40%),radial-gradient(circle_at_4%_32%,rgba(99,102,241,0.15),transparent_30%)]",
   },
   {
-    id: "skill-marketplace",
-    title: "SKILL MARKETPLACE",
+    id: "private-vault",
+    title: "PRIVATE VAULT",
     description:
-      "Browse and install skills from the community. Publish your own skills and earn from usage.",
+      "Keep skills scoped to your account so your agents share a consistent, private source of truth.",
     imageSrc: "/landing/features/feature-image-2.png",
-    imageAlt: "Skill detail page in the marketplace",
+    imageAlt: "Skill detail page in a private vault",
     indigoOverlay:
       "bg-[radial-gradient(circle_at_50%_10%,rgba(99,102,241,0.26),transparent_38%),radial-gradient(ellipse_64%_52%_at_88%_90%,rgba(99,102,241,0.2),transparent_50%),radial-gradient(circle_at_22%_46%,rgba(99,102,241,0.14),transparent_34%)]",
   },

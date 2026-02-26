@@ -4,7 +4,6 @@ import { configCommand } from "./commands/config";
 import { createCommand } from "./commands/create";
 import { deleteCommand } from "./commands/delete";
 import { getCommand } from "./commands/get";
-import { importCommand } from "./commands/import";
 import { healthCommand } from "./commands/health";
 import { listCommand } from "./commands/list";
 import { loginCommand } from "./commands/login";
@@ -37,16 +36,13 @@ function printUsage() {
   ui.log.info("  better-skills validate <dir>");
   ui.log.info("  better-skills backup [--source <dir>] [--out <tmp-dir>] [--agent <agent>]...");
   ui.log.info("  better-skills list [search] [--all] [--limit N]");
-  ui.log.info("  better-skills search <query> [--public] [--limit N]");
+  ui.log.info("  better-skills search <query> [--limit N]");
   ui.log.info("  better-skills get <slug-or-uuid>");
   ui.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
   ui.log.info("  better-skills config");
-  ui.log.info("  better-skills create --from <dir> [--slug <s>] [--public]");
-  ui.log.info(
-    "  better-skills update <slug-or-uuid> --from <dir> [--slug <s>] [--public|--private]",
-  );
+  ui.log.info("  better-skills create --from <dir> [--slug <s>]");
+  ui.log.info("  better-skills update <slug-or-uuid> --from <dir> [--slug <s>]");
   ui.log.info("  better-skills delete <uuid> [--yes]");
-  ui.log.info("  better-skills import <slug-or-uuid> [--slug <new-slug>]");
 }
 
 function printVersion() {
@@ -111,9 +107,6 @@ async function run(args: string[]) {
       return;
     case "delete":
       await deleteCommand();
-      return;
-    case "import":
-      await importCommand();
       return;
     default:
       throw new UsageError(`unknown command: ${firstArg}`);

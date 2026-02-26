@@ -341,8 +341,8 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-md text-muted-foreground leading-[1.7] max-w-lg mx-auto mb-8"
             >
-              Build, share, and manage a graph of reusable skills for your AI agents. Connect your
-              CLI and web app to a powerful skill marketplace.
+              Build and manage a private graph of reusable skills for your AI agents. Connect your
+              CLI and web app to your vault.
             </motion.p>
 
             {/* Chat box */}
@@ -364,7 +364,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <Copy className="w-3 h-3" />
-                    {skillCount > 0 && <span>{skillCount} skills in the registry</span>}
+                    {skillCount > 0 && <span>{skillCount} skills across vaults</span>}
                   </div>
                   <button
                     type="submit"

@@ -13,27 +13,24 @@ function parseArgs(argv: string[]) {
   const args = argv.slice(3);
   let from: string | undefined;
   let slug: string | undefined;
-  let isPublic = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
-    if (arg === "--public") {
-      isPublic = true;
-    } else if (arg === "--from" && args[i + 1]) {
+    if (arg === "--from" && args[i + 1]) {
       from = args[++i];
     } else if (arg === "--slug" && args[i + 1]) {
       slug = args[++i];
     }
   }
 
-  return { from, slug, isPublic };
+  return { from, slug };
 }
 
 export async function createCommand() {
-  const { from, slug: slugOverride, isPublic } = parseArgs(process.argv);
+  const { from, slug: slugOverride } = parseArgs(process.argv);
 
   if (!from) {
-    ui.log.error("usage: better-skills create --from <dir> [--slug <s>] [--public]");
+    ui.log.error("usage: better-skills create --from <dir> [--slug <s>]");
     process.exit(1);
   }
 
@@ -49,7 +46,6 @@ export async function createCommand() {
     slugOverride ||
     (typeof draft.frontmatter.slug === "string" ? draft.frontmatter.slug : null) ||
     slugify(draft.name);
-  const visibility = isPublic ? ("public" as const) : ("private" as const);
 
   const s = ui.spinner();
   s.start("creating skill");
@@ -62,7 +58,6 @@ export async function createCommand() {
       name: draft.name,
       description: draft.description,
       skillMarkdown: draft.markdownForMutation,
-      visibility,
       frontmatter: draft.frontmatter,
       resources: draft.resources,
     });
@@ -84,7 +79,6 @@ export async function createCommand() {
         id: createdSkill.id,
         slug: createdSkill.slug,
         name: createdSkill.name,
-        visibility: createdSkill.visibility,
       }),
     );
   } catch (error) {

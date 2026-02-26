@@ -23,7 +23,6 @@ export type InstallableSkill = {
   slug: string;
   name: string;
   description: string;
-  visibility: "public" | "private";
   originalMarkdown: string;
   renderedMarkdown: string;
   frontmatter: Record<string, unknown>;
@@ -59,7 +58,6 @@ type InstallLockSkillEntry = {
   slug: string;
   name: string;
   description: string;
-  visibility: "public" | "private";
   canonicalPath: string;
   source: {
     type: "better-skills-api";
@@ -138,7 +136,6 @@ export async function writeSkillFolder(
           skillId: skill.id,
           slug: skill.slug,
           name: skill.name,
-          visibility: skill.visibility,
           installedAt: new Date().toISOString(),
         },
         null,
@@ -260,7 +257,6 @@ async function writeInstallLock(
     slug: skill.slug,
     name: skill.name,
     description: skill.description,
-    visibility: skill.visibility,
     canonicalPath: result.canonicalPath,
     source: {
       type: "better-skills-api",

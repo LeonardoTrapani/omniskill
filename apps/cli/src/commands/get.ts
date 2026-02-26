@@ -28,7 +28,6 @@ export async function getCommand() {
     console.log(`\n# ${skill.name}\n`);
     console.log(`id: ${skill.id}`);
     console.log(`slug: ${skill.slug}`);
-    console.log(`visibility: ${skill.visibility}`);
     console.log(`updated: ${updated}`);
     console.log(`description: ${skill.description}`);
 

@@ -3,7 +3,7 @@
 ## Create
 
 ```bash
-better-skills create --from <dir> [--slug <slug>] [--public]
+better-skills create --from <dir> [--slug <slug>]
 ```
 
 Behavior:
@@ -30,7 +30,7 @@ Behavior:
 ## Update
 
 ```bash
-better-skills update <slug-or-uuid> --from <dir> [--slug <slug>] [--public|--private]
+better-skills update <slug-or-uuid> --from <dir> [--slug <slug>]
 ```
 
 Behavior:
