@@ -88,7 +88,13 @@ The CLI will:
 - Resolve `\[[resource:new:...]]` mentions to `\[[resource:<uuid>]]` in both
   SKILL.md and resource file content
 
-## Step 5: Confirm and clean up
+## Step 5: Sync
+
+```bash
+better-skills sync
+```
+
+## Step 6: Confirm and clean up
 
 ```bash
 better-skills get <slug-or-uuid>
@@ -99,3 +105,5 @@ rm -rf "$tmp_root"
 
 - Success: JSON with `id`, `slug`, `name`.
 - Failure: non-zero exit with actionable error text.
+
+End by telling the user to start a new session so updated skills are reloaded.

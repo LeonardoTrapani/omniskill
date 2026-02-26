@@ -45,11 +45,19 @@ The CLI will:
 - Resolve `\[[resource:new:...]]` mentions to `\[[resource:<uuid>]]` in both
   SKILL.md and resource file content
 
-6. Confirm the update:
+6. Sync:
+
+```bash
+better-skills sync
+```
+
+7. Confirm the update:
 
 ```bash
 better-skills get <slug-or-uuid>
 ```
+
+End by telling the user to start a new session so updated skills are reloaded.
 
 ## Behavior
 
