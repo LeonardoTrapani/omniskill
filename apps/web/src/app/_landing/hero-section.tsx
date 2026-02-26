@@ -316,7 +316,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               className="relative mb-6 w-full flex items-start justify-center select-none"
             >
               {/* <div className="relative mx-auto w-fit max-w-full">
-                <pre className="inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-muted-foreground/50 font-[family-name:var(--font-fira-mono)]">
+                <pre className="inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-neutral-300 font-[family-name:var(--font-fira-mono)]">
                   {normalizedShadow}
                 </pre>
                 <pre className="absolute top-0 left-0 inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-foreground font-[family-name:var(--font-fira-mono)]">

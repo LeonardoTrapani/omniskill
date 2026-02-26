@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { ComponentProps } from "react";
+import { Command, ShieldCheck } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 import Loader from "@/components/loader";
@@ -46,6 +47,16 @@ function getSafeCallbackURL(next: string | null): string {
   return next;
 }
 
+function LoginLoadingState() {
+  return (
+    <main className="relative min-h-[calc(100vh-52px)] bg-background">
+      <div className="mx-auto flex min-h-[calc(100vh-52px)] max-w-5xl items-center justify-center px-6 py-10">
+        <Loader />
+      </div>
+    </main>
+  );
+}
+
 function LoginPageContent() {
   const searchParams = useSearchParams();
   const { isPending } = authClient.useSession();
@@ -59,7 +70,7 @@ function LoginPageContent() {
   const callbackURL = getSafeCallbackURL(searchParams.get("next"));
 
   if (!isHydrated || isPending) {
-    return <Loader />;
+    return <LoginLoadingState />;
   }
 
   const signInWith = (provider: "google" | "github") => {
@@ -72,42 +83,43 @@ function LoginPageContent() {
 
   return (
     <main className="relative min-h-[calc(100vh-52px)] overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-40" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
 
       <section className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-5xl items-center px-6 py-10 md:px-10">
-        <div className="grid w-full border border-border bg-background/90 backdrop-blur-sm lg:grid-cols-[1.2fr_0.9fr]">
-          <div className="border-b border-border p-6 sm:p-8 lg:border-r lg:border-b-0 lg:p-10">
-            <p className="text-[11px] uppercase text-muted-foreground">Access Node</p>
-            <h1 className="mt-4 max-w-lg text-3xl font-semibold leading-tight text-foreground text-balance sm:text-4xl">
-              Sign In
+        <div className="grid w-full border border-border bg-background/90 backdrop-blur-sm lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="border-b border-border p-7 sm:p-9 lg:border-b-0 lg:border-r lg:p-10">
+            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-primary">
+              Access Node
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+              Sign in
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Continue to your BETTER-SKILLS workspace to manage reusable skills for your agents
-              across CLI and web.
+              Continue to your BETTER-SKILLS workspace to manage reusable skills across CLI and web.
             </p>
-            {/*
-            <div className="mt-7 border border-border bg-muted/20 p-4">
-              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                Session Preview
+
+            <div className="mt-6 border border-border bg-muted/10 p-4">
+              <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+                Quick access
               </p>
-              <p className="mt-2 font-mono text-xs leading-6 text-foreground/90 break-words">
-                &gt; better-skills login
-                <br />
-                &gt; better-skills config
-                <br />
-                &gt; better-skills sync
+              <p className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+                <Command className="size-3.5" aria-hidden="true" />
+                Open the command palette with{" "}
+                <span className="font-mono text-foreground">Cmd + K</span>
               </p>
-            </div> */}
+            </div>
           </div>
 
-          <div className="p-6 sm:p-8 lg:p-10">
-            <p className="text-[11px] uppercase text-muted-foreground">Login</p>
+          <div className="p-7 sm:p-9 lg:p-10">
+            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+              Authentication
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">Choose a provider to continue.</p>
 
             <div className="mt-6 space-y-3">
               <Button
                 variant="outline"
-                className="h-11 w-full gap-3"
+                className="h-11 w-full justify-start gap-3 px-4"
                 disabled={loadingProvider !== null}
                 onClick={() => signInWith("google")}
               >
@@ -121,7 +133,7 @@ function LoginPageContent() {
 
               <Button
                 variant="outline"
-                className="h-11 w-full gap-3"
+                className="h-11 w-full justify-start gap-3 px-4"
                 disabled={loadingProvider !== null}
                 onClick={() => signInWith("github")}
               >
@@ -134,7 +146,8 @@ function LoginPageContent() {
               </Button>
             </div>
 
-            <p className="mt-6 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
+            <p className="mt-6 inline-flex items-center gap-2 border-t border-dashed border-border pt-5 text-xs leading-5 text-muted-foreground">
+              <ShieldCheck className="size-3.5" aria-hidden="true" />
               You will be redirected back to your vault after authentication.
             </p>
           </div>
@@ -146,7 +159,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<LoginLoadingState />}>
       <LoginPageContent />
     </Suspense>
   );

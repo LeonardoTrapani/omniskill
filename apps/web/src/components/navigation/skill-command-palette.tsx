@@ -32,7 +32,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSkillSearch, useDebouncedValue } from "@/hooks/skills/use-skill-search";
 import { authClient } from "@/lib/auth/auth-client";
 import { trpc } from "@/lib/api/trpc";
+import { buildResourceResponsiveHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
+import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 import {
   Dialog,
   DialogContent,
@@ -87,7 +89,7 @@ function ModeBadge({ mode }: { mode: PaletteMode }) {
 
 function PaletteFooter({ mode }: { mode: PaletteMode }) {
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
+    <div className="lg:flex hidden items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
       <div className="flex items-center gap-3">
         <span className="inline-flex items-center gap-1">
           <kbd className="inline-flex items-center justify-center size-4 border border-border bg-muted rounded-sm">
@@ -155,7 +157,7 @@ function PaletteRow({
         isSelected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
       )}
     >
-      <span className="flex-shrink-0 text-muted-foreground/50">{item.icon}</span>
+      <span className="flex-shrink-0 text-neutral-300">{item.icon}</span>
       <span className="flex-1 min-w-0 truncate">{item.label}</span>
       {item.subtitle && (
         <span className="flex-shrink-0 text-[11px] text-muted-foreground truncate max-w-[40%]">
@@ -191,6 +193,7 @@ export function SkillCommandPalette({
   initialMode?: PaletteMode;
 }) {
   const router = useRouter();
+  const isDesktopLg = useIsDesktopLg();
   const { resolvedTheme, setTheme } = useTheme();
   const [mode, setMode] = useState<PaletteMode>(initialMode ?? "command");
   const [search, setSearch] = useState(initialSearch ?? "");
@@ -198,6 +201,22 @@ export function SkillCommandPalette({
   const inputRef = useRef<HTMLInputElement>(null);
   const rowRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const navigateTo = useCallback(
+    (href: Route | string) => {
+      const target = String(href);
+      const current = `${window.location.pathname}${window.location.search}`;
+
+      if (current === target) {
+        // Force a real navigation when selecting the current URL
+        window.location.assign(target);
+        return;
+      }
+
+      router.push(target as Route);
+    },
+    [router],
+  );
 
   // ── Close helper ────────────────────────────────────────────────────────────
 
@@ -294,7 +313,7 @@ export function SkillCommandPalette({
         description: "Account & preferences",
         icon: <Settings className="size-4" />,
         keywords: ["settings", "account", "preferences", "profile"],
-        action: () => runAndClose(() => window.location.assign("/settings")),
+        action: () => runAndClose(() => navigateTo("/settings")),
       },
       {
         id: "switch-theme",
@@ -321,7 +340,7 @@ export function SkillCommandPalette({
           ),
       },
     ],
-    [isDark, setTheme, close, runAndClose, router],
+    [isDark, setTheme, close, runAndClose, router, navigateTo],
   );
 
   // ── Vault search (skills + resources via searchMentions) ───────────────────
@@ -413,7 +432,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           });
         }
       }
@@ -446,7 +465,7 @@ export function SkillCommandPalette({
             label: skill.name,
             subtitle: skill.description ?? "",
             icon: <BookOpen className="size-4" />,
-            action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+            action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
             sectionLabel: items.length === 0 ? "Your skills" : undefined,
           });
         }
@@ -464,7 +483,7 @@ export function SkillCommandPalette({
           label: skill.label,
           subtitle: skill.subtitle ?? "",
           icon: <BookOpen className="size-4" />,
-          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+          action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           sectionLabel: items.length === 0 ? "Skills" : undefined,
         });
       }
@@ -477,9 +496,12 @@ export function SkillCommandPalette({
           subtitle: res.subtitle ?? "",
           icon: <FileText className="size-4" />,
           action: () =>
-            runAndClose(() =>
-              router.push(`/vault/skills/${res.parentSkillId}/resources/${res.label}` as Route),
-            ),
+            runAndClose(() => {
+              if (!res.parentSkillId) return;
+
+              const href = buildResourceResponsiveHref(res.parentSkillId, res.label, isDesktopLg);
+              navigateTo(href);
+            }),
           sectionLabel:
             items.length === skills.length && resources.indexOf(res) === 0
               ? "Resources"
@@ -503,7 +525,7 @@ export function SkillCommandPalette({
               ? skill.snippet
               : (skill.description ?? ""),
           icon: <BookOpen className="size-4" />,
-          action: () => runAndClose(() => router.push(`/vault/skills/${skill.id}` as Route)),
+          action: () => runAndClose(() => navigateTo(`/vault/skills/${skill.id}` as Route)),
           sectionLabel: items.length === 0 ? "Public skills" : undefined,
         });
       }
@@ -523,6 +545,8 @@ export function SkillCommandPalette({
     marketplaceItems,
     runAndClose,
     router,
+    navigateTo,
+    isDesktopLg,
   ]);
 
   // ── Reset selection when items change ──────────────────────────────────────
@@ -577,7 +601,8 @@ export function SkillCommandPalette({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((i) => {
-          const next = Math.min(i + 1, flatItems.length - 1);
+          if (flatItems.length === 0) return 0;
+          const next = i >= flatItems.length - 1 ? 0 : i + 1;
           // load more in marketplace
           if (
             mode === "marketplace" &&
@@ -594,7 +619,10 @@ export function SkillCommandPalette({
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((i) => Math.max(i - 1, 0));
+        setSelectedIndex((i) => {
+          if (flatItems.length === 0) return 0;
+          return i === 0 ? flatItems.length - 1 : i - 1;
+        });
         return;
       }
 
@@ -669,7 +697,7 @@ export function SkillCommandPalette({
       >
         {/* ── Search input ── */}
         <div className="flex items-center gap-3 px-4 py-3">
-          <Search className="size-4 text-muted-foreground/50 flex-shrink-0" />
+          <Search className="size-4 text-neutral-300 flex-shrink-0" />
           <ModeBadge mode={mode} />
           <input
             ref={inputRef}

@@ -54,7 +54,7 @@ export function ResourceTabContent({
   if (isError || !data) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2 text-center">
-        <FileText className="size-8 text-muted-foreground/50" aria-hidden="true" />
+        <FileText className="size-8 text-neutral-300" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Failed to load resource content.</p>
       </div>
     );
@@ -94,7 +94,7 @@ export function ResourceTabContent({
       <div className="max-w-4xl mx-auto px-8 xl:px-12 py-8">
         {downloadAction}
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-5 py-8 text-center">
-          <FileText className="size-8 text-muted-foreground/50" aria-hidden="true" />
+          <FileText className="size-8 text-neutral-300" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">This file cannot be rendered as markdown.</p>
         </div>
       </div>

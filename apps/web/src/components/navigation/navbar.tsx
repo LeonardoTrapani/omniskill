@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { Hexagon, Globe } from "lucide-react";
+import { Command, Search, Hexagon, Globe } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 
@@ -30,6 +30,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, _setMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [cmdInitialSearch, setCmdInitialSearch] = useState("");
   const [cmdInitialMode, setCmdInitialMode] = useState<PaletteMode>("command");
@@ -47,6 +48,13 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   // read ?q= param to auto-open palette
   useEffect(() => {
@@ -137,7 +145,23 @@ export default function Navbar() {
             {mounted &&
               !isPending &&
               (session ? (
-                <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
+                <>
+                  <button
+                    type="button"
+                    onClick={openCmd}
+                    className="inline-flex h-8 items-center gap-6 border border-border bg-background pl-2 pr-1.5 text-muted-foreground transition-colors hover:bg-muted-foreground/3"
+                    aria-label="Open search and command menu with Command+K"
+                  >
+                    <div className="inline-flex gap-2 items-center">
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-[11px] text-muted-foreground">Search</span>
+                    </div>
+                    <span className="inline-flex items-center gap-0.5 rounded-xs border border-border px-1.5 py-0.5 text-[10px] font-mono tracking-widest text-foreground">
+                      <Command className="h-2 w-2" />K
+                    </span>
+                  </button>
+                  <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
+                </>
               ) : (
                 <Link
                   href="/login"

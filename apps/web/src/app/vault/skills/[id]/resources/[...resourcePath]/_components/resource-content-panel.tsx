@@ -41,7 +41,7 @@ export function ResourceContentPanel({
       title="Resource Content"
     >
       <div className="flex min-h-[180px] flex-col items-center justify-center gap-3 px-5 py-8 text-center">
-        <FileText className="size-8 text-muted-foreground/50" aria-hidden="true" />
+        <FileText className="size-8 text-neutral-300" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">This file cannot be rendered.</p>
         <DownloadContentButton
           content={downloadValue}

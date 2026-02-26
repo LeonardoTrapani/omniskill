@@ -34,9 +34,7 @@ export function SkillPanel({
           {title}
         </h2>
         {isEmpty && !open ? (
-          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/50">
-            empty
-          </span>
+          <span className="text-[10px] normal-case tracking-normal text-neutral-300">empty</span>
         ) : null}
       </div>
       <div className="flex items-center gap-2">

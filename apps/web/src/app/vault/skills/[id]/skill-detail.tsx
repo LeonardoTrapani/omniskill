@@ -101,16 +101,25 @@ function SkillDetailInner({ id }: { id: string }) {
 
   const handleDesktopResourceListNavigate = useCallback(
     (event: React.MouseEvent<HTMLElement>, href: string) => {
-      // Extract resource path from href: /vault/skills/{id}/resources/{path}
-      const prefix = `/vault/skills/${encodeURIComponent(skillId)}/resources/`;
-      if (!href.startsWith(prefix)) return;
+      const skillHref = `/vault/skills/${encodeURIComponent(skillId)}`;
+      const legacyPrefix = `${skillHref}/resources/`;
 
-      const encodedPath = href.slice(prefix.length);
-      const decodedPath = encodedPath
-        .split("/")
-        .filter(Boolean)
-        .map((s) => decodeURIComponent(s))
-        .join("/");
+      let decodedPath: string | null = null;
+      if (href.startsWith(legacyPrefix)) {
+        const encodedPath = href.slice(legacyPrefix.length);
+        decodedPath = encodedPath
+          .split("/")
+          .filter(Boolean)
+          .map((s) => decodeURIComponent(s))
+          .join("/");
+      } else {
+        const parsed = new URL(href, window.location.origin);
+        if (parsed.pathname !== skillHref) return;
+
+        decodedPath = parsed.searchParams.get("resource");
+      }
+
+      if (!decodedPath) return;
 
       const resource = resources.find((r) => r.path === decodedPath);
       if (resource) {
@@ -246,7 +255,6 @@ function SkillDetailInner({ id }: { id: string }) {
             collapsible
             defaultOpen={data.resources.length > 0}
             isEmpty={data.resources.length === 0}
-            className="border"
           >
             <ResourceList
               resources={data.resources}
@@ -263,7 +271,7 @@ function SkillDetailInner({ id }: { id: string }) {
         {/* ── Left sidebar ── */}
         <aside className="w-[280px] xl:w-[320px] shrink-0 border-r border-border flex flex-col">
           {/* Metadata section */}
-          <div className="p-5 overflow-y-auto shrink-0">
+          <div className="p-5 overflow-y-auto shrink-0 border-b border-border">
             <SkillDetailHeader
               {...headerProps}
               compact
@@ -372,7 +380,6 @@ function SkillDetailInner({ id }: { id: string }) {
                       collapsible
                       defaultOpen={data.resources.length > 0}
                       isEmpty={data.resources.length === 0}
-                      className="border"
                     >
                       <ResourceList
                         resources={data.resources}

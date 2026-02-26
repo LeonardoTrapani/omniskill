@@ -123,7 +123,6 @@ export default function ResourceDetail({
             collapsible
             defaultOpen={resources.length > 0}
             isEmpty={resources.length === 0}
-            className="border"
           >
             <ResourceList
               resources={resources}
