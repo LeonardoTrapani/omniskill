@@ -1,25 +1,36 @@
 # Create a Skill
 
-Use this when user wants to create a new skill.
+## Step 1: Load authoring rules
 
-## Read first
+Read [[resource:new:references/authoring.md]] now. All decisions below depend
+on those rules.
 
-- [[resource:new:references/authoring.md]]
+## Step 2: Gather input
 
-## Steps
+The user provides one of:
 
-0. Receive instructions:
+- Detailed written instructions
+- Choices/patterns extracted from the current session
+- A URL to a public repo or skill (e.g. GitHub, skills.sh)
 
-Could be:
+If a URL is given, fetch the repo content first, then continue.
 
-- Detailed instructions of what the user wants
-- An abstraction of some choices taken in the current session
-- A github link to a repo with the skill
-- Any public repo link or command, like skills.sh
+## Step 3: Discovery (optional)
 
-For the last two, fetch the repo, and then go on with the rest
+If the intent is broad or the skill might already exist, search the vault
+before creating a duplicate:
 
-1. Draft the skill in a temporary folder (never write directly into the repo):
+```bash
+better-skills search "<query>"
+better-skills get <slug-or-uuid>
+```
+
+If a matching skill exists, confirm with the user: create a new one anyway,
+or switch to the edit flow?
+
+## Step 4: Draft in a temp folder
+
+Never write directly into the repo.
 
 ```bash
 tmp_root="$(mktemp -d)"
@@ -30,22 +41,24 @@ mkdir -p "$skill_dir/references"
 Create `SKILL.md` at `"$skill_dir/SKILL.md"` and resource files inside
 `"$skill_dir/references/"` (or `scripts/`, `assets/`).
 
-2. For every resource file, add a `[[resource:new:<path>]]` mention in
-   SKILL.md or in another resource file. No resource should exist without
-   a matching mention.
+## Step 5: Wire mentions
 
-3. Replace any bare markdown links to local resources
-   (e.g. `[text](references/foo.md)`) with `[[resource:new:references/foo.md]]`.
+For every resource file, add a `[[resource:new:<path>]]` mention in SKILL.md
+or in another resource file. No resource should exist without a matching
+mention.
 
-4. Validate the folder:
+Replace any bare markdown links to local resources
+(e.g. `[text](references/foo.md)`) with `[[resource:new:references/foo.md]]`.
+
+## Step 6: Validate
 
 ```bash
 better-skills validate "$skill_dir"
 ```
 
-Fix any errors and warnings before proceeding.
+Fix all errors and warnings before proceeding.
 
-5. Create the skill:
+## Step 7: Create
 
 ```bash
 better-skills create --from "$skill_dir" [--slug <slug>]
@@ -53,21 +66,15 @@ better-skills create --from "$skill_dir" [--slug <slug>]
 
 The CLI will:
 
-- Read `SKILL.md` and scan resource files
+- Read SKILL.md and scan resource files
 - Validate `:new:` mention paths
 - Create the skill and resources on the server
-- Resolve `[[resource:new:...]]` mentions to `[[resource:<uuid>]]` in both
-  SKILL.md and resource file content
+- Resolve `[[resource:new:...]]` to `[[resource:<uuid>]]` in all content
 
-6. Confirm creation:
+## Step 8: Confirm and clean up
 
 ```bash
 better-skills get <slug-or-uuid>
-```
-
-7. Clean up temp files:
-
-```bash
 rm -rf "$tmp_root"
 ```
 

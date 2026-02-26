@@ -1,18 +1,11 @@
 # Onboard Unmanaged Skills
 
-Use this when user asks to bring unmanaged local skills into the vault.
+## Step 1: Load authoring rules
 
-## Read first
+Read [[resource:new:references/authoring.md]] now. All decisions below depend
+on those rules.
 
-- [[resource:new:references/authoring.md]]
-- [[resource:new:references/create-skill.md]]
-- [[resource:new:references/edit-skill.md]]
-
-## Rule
-
-Use only `better-skills backup` for local collection. Do not copy files manually.
-
-## Step 1: Select skills to upload
+## Step 2: Select skills to upload
 
 Present the full list of unsynced local skills and ask which ones to port.
 Accept "all" or a subset.
@@ -20,9 +13,13 @@ Accept "all" or a subset.
 If the user selects a subset, ask what to do with the unselected skills:
 
 - **Keep locally** (default) — leave as-is.
-- **Delete locally** — remove local folders after backup. Never delete without explicit confirmation.
+- **Delete locally** — remove local folders after backup. Never delete without
+  explicit confirmation.
 
-## Step 2: Backup to tmp
+## Step 3: Backup to tmp
+
+Use only `better-skills backup` for local collection. Do not copy files
+manually.
 
 ```bash
 better-skills backup [--source <dir>] [--out <tmp-dir>] [--agent <agent>]
@@ -33,10 +30,10 @@ Output paths:
 - `raw/` — immutable backup (restore only)
 - `work/` — editable copy for the agent to prepare before uploading
 
-Both copies are plain, unmodified. The agent edits `work/` files (rewriting
-inline links to draft mentions, verifying frontmatter) before create/update.
+Both copies are plain, unmodified. Edit `work/` files only (rewriting inline
+links to draft mentions, verifying frontmatter) before create/update.
 
-## Step 3: Prepare `work/` folders
+## Step 4: Prepare `work/` folders
 
 For each selected skill:
 
@@ -46,19 +43,21 @@ For each selected skill:
 3. Ensure every resource file has a matching `[[resource:new:...]]` mention.
 4. Run `better-skills validate <work-folder>` — fix all errors and warnings.
 
-## Step 4: Route to create or update
+## Step 5: Route to create or edit
 
 1. Check if skill already exists: `better-skills list --all`.
-2. If it does not exist, follow [[resource:new:references/create-skill.md]].
-3. If it exists, follow [[resource:new:references/edit-skill.md]].
+2. If it does not exist → load [[resource:new:references/create-skill.md]]
+   and follow from Step 4 (draft is already prepared).
+3. If it exists → load [[resource:new:references/edit-skill.md]] and follow
+   from Step 4 (apply changes to the cloned folder using the prepared work).
 
-## Step 5: Sync
+## Step 6: Sync
 
 ```bash
 better-skills sync
 ```
 
-## Step 6: Report
+## Step 7: Report
 
 Return concise recap:
 

@@ -62,5 +62,5 @@ The CLI auto-detects non-interactive environments (no TTY, `AGENT=1`,
 `OPENCODE=1`, `CI=true`) and suppresses spinners.
 
 - Destructive commands require `--yes` in non-interactive mode.
-- create/update/import print JSON on success (`id`, `slug`, `name`).
+- create/update print JSON on success (`id`, `slug`, `name`).
 - Failures return non-zero with actionable error text.
