@@ -38,7 +38,7 @@ export async function listCommand() {
 
     // paginate through all results
     while (true) {
-      const page = await trpc.skills.listByOwner.query({
+      const page = await trpc.skills.list.query({
         search,
         limit: showAll ? 100 : Math.min(limit - items.length, 100),
         cursor,

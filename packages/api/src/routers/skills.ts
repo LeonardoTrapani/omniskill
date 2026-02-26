@@ -5,12 +5,12 @@ import { z } from "zod";
 import { db } from "@better-skills/db";
 import { skill, skillLink, skillResource } from "@better-skills/db/schema/skills";
 
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import {
   type AutoLinkSourceInput,
   MentionSyntaxError,
   MentionValidationError,
-  syncAutoLinksForSources,
+  syncAutoLinks,
   validateMentionTargets,
 } from "../lib/link-sync";
 import { renderMentions } from "../lib/render-mentions";
@@ -299,22 +299,6 @@ const searchResultItem = z.object({
 // -- router --
 
 export const skillsRouter = router({
-  count: publicProcedure.output(z.object({ count: z.number() })).query(async () => {
-    try {
-      const [result] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(skill)
-        .where(sql`${skill.ownerUserId} is not null`);
-      return { count: result?.count ?? 0 };
-    } catch (error) {
-      const details = error instanceof Error ? error.message : String(error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `skills.count failed: ${details}`,
-      });
-    }
-  }),
-
   search: protectedProcedure
     .input(
       z.object({
@@ -562,59 +546,6 @@ export const skillsRouter = router({
       };
     }),
 
-  listByOwner: protectedProcedure
-    .input(
-      cursorPaginationInput.extend({
-        search: z.string().optional(),
-      }),
-    )
-    .output(paginatedSkillList)
-    .query(async ({ ctx, input }) => {
-      const { cursor, limit, search } = input;
-      const userId = ctx.session.user.id;
-
-      const conditions = [eq(skill.ownerUserId, userId)];
-
-      if (search) {
-        const pattern = `%${search}%`;
-        conditions.push(or(ilike(skill.name, pattern), ilike(skill.slug, pattern))!);
-      }
-
-      if (cursor) {
-        const cursorRows = await db
-          .select({ id: skill.id, createdAt: skill.createdAt })
-          .from(skill)
-          .where(and(eq(skill.id, cursor), ...conditions));
-
-        const cursorRow = cursorRows[0];
-        if (!cursorRow) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid cursor" });
-        }
-
-        conditions.push(
-          or(
-            lt(skill.createdAt, cursorRow.createdAt),
-            and(eq(skill.createdAt, cursorRow.createdAt), gt(skill.id, cursorRow.id)),
-          )!,
-        );
-      }
-
-      const rows = await db
-        .select()
-        .from(skill)
-        .where(and(...conditions))
-        .orderBy(desc(skill.createdAt), skill.id)
-        .limit(limit + 1);
-
-      const hasMore = rows.length > limit;
-      const items = hasMore ? rows.slice(0, limit) : rows;
-
-      return {
-        items: items.map(toSkillListItem),
-        nextCursor: hasMore ? items[items.length - 1]!.id : null,
-      };
-    }),
-
   getById: protectedProcedure
     .input(
       z.object({
@@ -663,41 +594,6 @@ export const skillsRouter = router({
       const resources = await loadSkillResources(row.id);
 
       return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
-    }),
-
-  getResourceByPath: protectedProcedure
-    .input(
-      z.object({
-        skillSlug: z.string().min(1),
-        resourcePath: z.string().min(1),
-      }),
-    )
-    .output(resourceReadOutput)
-    .query(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-      const skillRows = await db
-        .select()
-        .from(skill)
-        .where(and(eq(skill.slug, input.skillSlug), eq(skill.ownerUserId, userId)));
-
-      const skillRow = skillRows[0];
-      if (!skillRow) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
-      }
-
-      const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
-      const renderedContent = await renderMentions(resource.content, {
-        currentSkillId: skillRow.id,
-        linkMentions: true,
-      });
-
-      return {
-        ...resource,
-        renderedContent,
-        skillId: skillRow.id,
-        skillSlug: skillRow.slug,
-        skillName: skillRow.name,
-      };
     }),
 
   getResourceBySkillIdAndPath: protectedProcedure
@@ -819,7 +715,7 @@ export const skillsRouter = router({
           })),
         ];
 
-        await syncAutoLinksForSources(linkSyncSources, userId);
+        await syncAutoLinks(linkSyncSources, userId);
       } catch (error) {
         if (error instanceof MentionSyntaxError || error instanceof MentionValidationError) {
           await db.delete(skill).where(eq(skill.id, created.id));
@@ -985,7 +881,7 @@ export const skillsRouter = router({
 
       if (linkSyncSources.length > 0) {
         try {
-          await syncAutoLinksForSources(linkSyncSources, userId);
+          await syncAutoLinks(linkSyncSources, userId);
         } catch (error) {
           throwMentionValidationError(error);
         }

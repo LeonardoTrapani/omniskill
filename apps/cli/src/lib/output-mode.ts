@@ -8,7 +8,7 @@ function detect(): OutputMode {
   return "interactive";
 }
 
-export const outputMode: OutputMode = detect();
+const outputMode: OutputMode = detect();
 
 export const isInteractive = outputMode === "interactive";
 export const isPlain = outputMode === "plain";

@@ -221,10 +221,7 @@ async function syncAutoLinksForSource(source: AutoLinkSourceInput, userId: strin
   await db.insert(skillLink).values(values).execute();
 }
 
-export async function syncAutoLinksForSources(
-  sources: AutoLinkSourceInput[],
-  userId: string,
-): Promise<void> {
+export async function syncAutoLinks(sources: AutoLinkSourceInput[], userId: string): Promise<void> {
   if (sources.length === 0) return;
 
   const dedupedSources = new Map<string, AutoLinkSourceInput>();
@@ -238,47 +235,4 @@ export async function syncAutoLinksForSources(
   for (const source of dedupedSources.values()) {
     await syncAutoLinksForSource(source, userId);
   }
-}
-
-/**
- * Replace all auto-generated skill_link edges for a source skill
- * with the current set of [[...]] mentions found in the markdown.
- * Manual links (without origin: "markdown-auto") are left untouched.
- *
- * Same-owner constraint: all mentions must point to existing targets
- * with the same owner as the source skill. Missing or cross-owner
- * targets raise MentionValidationError.
- *
- * The delete + insert runs sequentially. If the insert fails the
- * auto-links are re-synced on the next edit, so the atomicity
- * trade-off is acceptable.
- */
-export async function syncAutoLinks(
-  sourceSkillId: string,
-  markdown: string,
-  userId: string,
-): Promise<void> {
-  // resolve the source skill's owner
-  const sourceSkillRows = await db
-    .select({ ownerUserId: skill.ownerUserId })
-    .from(skill)
-    .where(eq(skill.id, sourceSkillId))
-    .limit(1)
-    .execute();
-
-  const sourceSkill = sourceSkillRows[0];
-
-  if (!sourceSkill) return;
-
-  await syncAutoLinksForSources(
-    [
-      {
-        type: "skill",
-        sourceId: sourceSkillId,
-        sourceOwnerUserId: sourceSkill.ownerUserId,
-        markdown,
-      },
-    ],
-    userId,
-  );
 }

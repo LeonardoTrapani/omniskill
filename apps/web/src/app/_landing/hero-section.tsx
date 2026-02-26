@@ -229,7 +229,7 @@ function buildBrainFrames(ascii: string, frameCount: number) {
 const normalizedBrainAscii = normalizeAsciiArt(brainAscii);
 const brainFrames = buildBrainFrames(normalizedBrainAscii, BRAIN_FRAME_COUNT);
 
-export default function HeroSection({ skillCount }: { skillCount: number }) {
+export default function HeroSection() {
   const router = useRouter();
   const [brainFrameIndex, setBrainFrameIndex] = useState(0);
   const [heroPrompt, setHeroPrompt] = useState("");
@@ -364,7 +364,6 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <Copy className="w-3 h-3" />
-                    {skillCount > 0 && <span>{skillCount} skills across vaults</span>}
                   </div>
                   <button
                     type="submit"

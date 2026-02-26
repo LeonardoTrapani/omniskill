@@ -28,7 +28,7 @@ export default function MySkillsTable({ onDelete, height, className }: MySkillsT
   const [search, setSearch] = useState("");
 
   const { data, isLoading, isError } = useQuery(
-    trpc.skills.listByOwner.queryOptions({
+    trpc.skills.list.queryOptions({
       limit: 50,
       search: search.trim() || undefined,
     }),

@@ -575,7 +575,7 @@ mock.module("@better-skills/auth", () => ({
 
 // -- import router + tRPC infra (after all mocks) --
 
-const { t } = await import("../index");
+const { t } = await import("../trpc");
 const { appRouter } = await import("./index");
 
 const createCaller = t.createCallerFactory(appRouter);
@@ -835,88 +835,6 @@ describe("skills.getBySlug", () => {
 // ============================================================
 // GET RESOURCE BY PATH
 // ============================================================
-
-describe("skills.getResourceByPath", () => {
-  test("owner can access resource by slug/path", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "my-skill" });
-    seedResource(s.id, { path: "lib/utils.ts", content: "export const x = 1;" });
-
-    const result = await authedCaller(USER_A).skills.getResourceByPath({
-      skillSlug: "my-skill",
-      resourcePath: "lib/utils.ts",
-    });
-    expect(result.path).toBe("lib/utils.ts");
-    expect(result.content).toBe("export const x = 1;");
-    expect(result.skillSlug).toBe("my-skill");
-    expect(result.skillName).toBe(s.name);
-  });
-
-  test("unauthenticated access returns UNAUTHORIZED", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "private-only" });
-    seedResource(s.id, { path: "secret.ts" });
-
-    await expect(
-      anonCaller().skills.getResourceByPath({
-        skillSlug: "private-only",
-        resourcePath: "secret.ts",
-      }),
-    ).rejects.toThrow();
-  });
-
-  test("resource fails for non-owner", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "priv-skill" });
-    seedResource(s.id, { path: "secret.ts" });
-
-    expect(
-      authedCaller(USER_B).skills.getResourceByPath({
-        skillSlug: "priv-skill",
-        resourcePath: "secret.ts",
-      }),
-    ).rejects.toThrow();
-  });
-
-  test("owner can access resource", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "my-priv" });
-    seedResource(s.id, { path: "impl.ts", content: "private stuff" });
-
-    const result = await authedCaller(USER_A).skills.getResourceByPath({
-      skillSlug: "my-priv",
-      resourcePath: "impl.ts",
-    });
-    expect(result.content).toBe("private stuff");
-  });
-
-  test("missing resource path returns NOT_FOUND", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "exists" });
-    seedResource(s.id, { path: "real.ts" });
-
-    expect(
-      authedCaller(USER_A).skills.getResourceByPath({
-        skillSlug: "exists",
-        resourcePath: "nonexistent.ts",
-      }),
-    ).rejects.toThrow();
-  });
-
-  test("returns renderedContent with mention links", async () => {
-    const s = seedSkill({ ownerUserId: USER_A, slug: "with-mentions" });
-    const target = seedResource(s.id, { path: "references/guidelines.md" });
-    seedResource(s.id, {
-      path: "references/flow.md",
-      content: `Read [[resource:${target.id}]]`,
-    });
-
-    const result = await authedCaller(USER_A).skills.getResourceByPath({
-      skillSlug: "with-mentions",
-      resourcePath: "references/flow.md",
-    });
-
-    expect(result.content).toBe(`Read [[resource:${target.id}]]`);
-    expect(result.renderedContent).toContain(
-      `/vault/skills/${s.id}/resources/references/guidelines.md?mention=resource%3A${target.id}`,
-    );
-  });
-});
 
 describe("skills.getResourceBySkillIdAndPath", () => {
   test("returns renderedContent with mention links", async () => {

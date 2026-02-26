@@ -3,7 +3,7 @@ import { queryClient, trpc } from "@/lib/api/trpc";
 export async function invalidateSkillCollectionQueries(skillId?: string) {
   await Promise.all([
     queryClient.invalidateQueries({
-      queryKey: trpc.skills.listByOwner.queryKey(),
+      queryKey: trpc.skills.list.queryKey(),
     }),
     queryClient.invalidateQueries({
       queryKey: trpc.skills.graph.queryKey(),

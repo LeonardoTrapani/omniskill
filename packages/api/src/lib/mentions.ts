@@ -22,25 +22,6 @@ export interface InvalidMentionToken {
 }
 
 /**
- * Rewrite mention target UUIDs using the provided map while preserving the
- * original token format (escaped brackets, type casing, etc).
- */
-export function remapMentionTargetIds(
-  markdown: string,
-  idMap: ReadonlyMap<string, string>,
-): string {
-  if (idMap.size === 0) return markdown;
-
-  return transformOutsideMarkdownCode(markdown, (segment) =>
-    segment.replace(MENTION_RE, (match, _type: string, targetId: string) => {
-      const remappedId = idMap.get(targetId.toLowerCase());
-      if (!remappedId) return match;
-      return match.replace(targetId, remappedId.toLowerCase());
-    }),
-  );
-}
-
-/**
  * Extract deduplicated [[skill:<uuid>]] and [[resource:<uuid>]] mentions
  * from markdown text. Only considers tokens where both [[ and ]] appear
  * on the same line.

@@ -99,7 +99,6 @@ export const skillLink = pgTable(
       onDelete: "cascade",
     }),
     kind: text("kind").notNull().default("related"),
-    note: text("note"),
     metadata: jsonb("metadata")
       .$type<Record<string, unknown>>()
       .notNull()

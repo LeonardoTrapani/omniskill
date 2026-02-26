@@ -33,7 +33,7 @@ function getConfigDir() {
   return join(homedir(), ".config", "better-skills");
 }
 
-export function getConfigFilePath() {
+function getConfigFilePath() {
   return join(getConfigDir(), "config.json");
 }
 
