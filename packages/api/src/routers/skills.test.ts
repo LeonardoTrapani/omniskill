@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-thenable -- drizzle query builders are thenable by design */
 import { beforeEach, describe, expect, test, mock } from "bun:test";
 import { randomUUID } from "crypto";
 
