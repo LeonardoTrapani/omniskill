@@ -69,7 +69,7 @@ jobs:
       - name: sync default skills
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: 00000000000000000000000000000000
+          BETTER_AUTH_SECRET: "00000000000000000000000000000000"
           BETTER_AUTH_URL: https://better-skills.dev
           CORS_ORIGIN: https://better-skills.dev
           GOOGLE_CLIENT_ID: placeholder
