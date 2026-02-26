@@ -32,8 +32,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSkillSearch, useDebouncedValue } from "@/hooks/skills/use-skill-search";
 import { authClient } from "@/lib/auth/auth-client";
 import { trpc } from "@/lib/api/trpc";
-import { buildResourceHref, buildResourceTabHref } from "@/lib/skills/routes";
+import { buildResourceResponsiveHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
+import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 import {
   Dialog,
   DialogContent,
@@ -88,7 +89,7 @@ function ModeBadge({ mode }: { mode: PaletteMode }) {
 
 function PaletteFooter({ mode }: { mode: PaletteMode }) {
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
+    <div className="lg:flex hidden items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
       <div className="flex items-center gap-3">
         <span className="inline-flex items-center gap-1">
           <kbd className="inline-flex items-center justify-center size-4 border border-border bg-muted rounded-sm">
@@ -156,7 +157,7 @@ function PaletteRow({
         isSelected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
       )}
     >
-      <span className="flex-shrink-0 text-muted-foreground/50">{item.icon}</span>
+      <span className="flex-shrink-0 text-neutral-300">{item.icon}</span>
       <span className="flex-1 min-w-0 truncate">{item.label}</span>
       {item.subtitle && (
         <span className="flex-shrink-0 text-[11px] text-muted-foreground truncate max-w-[40%]">
@@ -192,6 +193,7 @@ export function SkillCommandPalette({
   initialMode?: PaletteMode;
 }) {
   const router = useRouter();
+  const isDesktopLg = useIsDesktopLg();
   const { resolvedTheme, setTheme } = useTheme();
   const [mode, setMode] = useState<PaletteMode>(initialMode ?? "command");
   const [search, setSearch] = useState(initialSearch ?? "");
@@ -497,10 +499,7 @@ export function SkillCommandPalette({
             runAndClose(() => {
               if (!res.parentSkillId) return;
 
-              const href =
-                window.innerWidth < 1024
-                  ? buildResourceHref(res.parentSkillId, res.label)
-                  : buildResourceTabHref(res.parentSkillId, res.label);
+              const href = buildResourceResponsiveHref(res.parentSkillId, res.label, isDesktopLg);
               navigateTo(href);
             }),
           sectionLabel:
@@ -547,6 +546,7 @@ export function SkillCommandPalette({
     runAndClose,
     router,
     navigateTo,
+    isDesktopLg,
   ]);
 
   // ── Reset selection when items change ──────────────────────────────────────
@@ -697,7 +697,7 @@ export function SkillCommandPalette({
       >
         {/* ── Search input ── */}
         <div className="flex items-center gap-3 px-4 py-3">
-          <Search className="size-4 text-muted-foreground/50 flex-shrink-0" />
+          <Search className="size-4 text-neutral-300 flex-shrink-0" />
           <ModeBadge mode={mode} />
           <input
             ref={inputRef}
