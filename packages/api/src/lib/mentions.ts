@@ -1,3 +1,5 @@
+import { transformOutsideMarkdownCode } from "@better-skills/markdown/transform-outside-markdown-code";
+
 // UUID v4 pattern (lowercase hex, 8-4-4-4-12)
 const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const UUID_VALUE_RE = new RegExp(`^${UUID_RE}$`, "i");
@@ -6,54 +8,6 @@ const UUID_VALUE_RE = new RegExp(`^${UUID_RE}$`, "i");
 const MENTION_RE = new RegExp(String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`, "gi");
 
 const MENTION_TOKEN_RE = new RegExp(String.raw`(?<!\\)\[\[(skill|resource):([^\]\n]+)\]\]`, "gi");
-
-function transformOutsideMarkdownCode(
-  markdown: string,
-  transform: (segment: string) => string,
-): string {
-  const lines = markdown.split("\n");
-  let inFence = false;
-  let fenceMarker: "`" | "~" | null = null;
-
-  const transformedLines = lines.map((line) => {
-    const trimmed = line.trimStart();
-    const fenceMatch = trimmed.match(/^(```+|~~~+)/);
-
-    if (fenceMatch) {
-      const marker = fenceMatch[1]![0] as "`" | "~";
-
-      if (!inFence) {
-        inFence = true;
-        fenceMarker = marker;
-        return line;
-      }
-
-      if (fenceMarker === marker) {
-        inFence = false;
-        fenceMarker = null;
-      }
-
-      return line;
-    }
-
-    if (inFence) {
-      return line;
-    }
-
-    const parts = line.split(/(`[^`]*`)/g);
-    return parts
-      .map((part) => {
-        if (part.startsWith("`") && part.endsWith("`")) {
-          return part;
-        }
-
-        return transform(part);
-      })
-      .join("");
-  });
-
-  return transformedLines.join("\n");
-}
 
 export type MentionType = "skill" | "resource";
 

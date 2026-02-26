@@ -24,12 +24,15 @@ export type InstallableSkill = {
   name: string;
   description: string;
   visibility: "public" | "private";
+  originalMarkdown: string;
   renderedMarkdown: string;
   frontmatter: Record<string, unknown>;
   resources: SkillResourceInput[];
   sourceUrl: string | null;
   sourceIdentifier: string | null;
 };
+
+export type SkillMarkdownVariant = "rendered" | "original";
 
 export type AgentInstallResult = {
   agent: SupportedAgent;
@@ -97,20 +100,27 @@ async function cleanDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
 }
 
-async function writeCanonicalSkill(
+export async function writeSkillFolder(
   skill: InstallableSkill,
-  canonicalPath: string,
+  targetPath: string,
+  options?: {
+    markdownVariant?: SkillMarkdownVariant;
+    writeInstallMetadata?: boolean;
+  },
 ): Promise<{ skippedResources: string[] }> {
-  const skillMdPath = join(canonicalPath, "SKILL.md");
-  const fullMarkdown = matter.stringify(skill.renderedMarkdown, skill.frontmatter);
+  const markdownVariant = options?.markdownVariant ?? "rendered";
+  const markdown = markdownVariant === "original" ? skill.originalMarkdown : skill.renderedMarkdown;
+
+  const skillMdPath = join(targetPath, "SKILL.md");
+  const fullMarkdown = matter.stringify(markdown, skill.frontmatter);
   await writeFile(skillMdPath, fullMarkdown, "utf8");
 
   const skippedResources: string[] = [];
 
   for (const resource of skill.resources) {
-    const resourcePath = resolve(canonicalPath, resource.path);
+    const resourcePath = resolve(targetPath, resource.path);
 
-    if (!isPathSafe(canonicalPath, resourcePath)) {
+    if (!isPathSafe(targetPath, resourcePath)) {
       skippedResources.push(resource.path);
       continue;
     }
@@ -119,22 +129,24 @@ async function writeCanonicalSkill(
     await writeFile(resourcePath, resource.content, "utf8");
   }
 
-  const metadataPath = join(canonicalPath, INSTALL_METADATA_FILE);
-  await writeFile(
-    metadataPath,
-    `${JSON.stringify(
-      {
-        skillId: skill.id,
-        slug: skill.slug,
-        name: skill.name,
-        visibility: skill.visibility,
-        installedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    )}\n`,
-    "utf8",
-  );
+  if (options?.writeInstallMetadata) {
+    const metadataPath = join(targetPath, INSTALL_METADATA_FILE);
+    await writeFile(
+      metadataPath,
+      `${JSON.stringify(
+        {
+          skillId: skill.id,
+          slug: skill.slug,
+          name: skill.name,
+          visibility: skill.visibility,
+          installedAt: new Date().toISOString(),
+        },
+        null,
+        2,
+      )}\n`,
+      "utf8",
+    );
+  }
 
   return { skippedResources };
 }
@@ -301,7 +313,10 @@ export async function installSkill(
 
   await mkdir(BETTER_SKILLS_DIR, { recursive: true });
   await cleanDirectory(canonicalPath);
-  const canonicalWrite = await writeCanonicalSkill(skill, canonicalPath);
+  const canonicalWrite = await writeSkillFolder(skill, canonicalPath, {
+    markdownVariant: "rendered",
+    writeInstallMetadata: true,
+  });
 
   const targets: AgentInstallResult[] = [];
 

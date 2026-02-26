@@ -214,6 +214,42 @@ async function toSkillOutput(
   };
 }
 
+function toSkillListItem(row: typeof skill.$inferSelect) {
+  return {
+    id: row.id,
+    ownerUserId: row.ownerUserId,
+    visibility: row.visibility,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    frontmatter: row.frontmatter,
+    metadata: row.metadata,
+    isDefault: row.isDefault,
+    sourceUrl: row.sourceUrl,
+    sourceIdentifier: row.sourceIdentifier,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+async function loadSkillResources(skillId: string) {
+  return await db.select().from(skillResource).where(eq(skillResource.skillId, skillId));
+}
+
+async function loadSkillResourceByPath(skillId: string, resourcePath: string) {
+  const resourceRows = await db
+    .select()
+    .from(skillResource)
+    .where(and(eq(skillResource.skillId, skillId), eq(skillResource.path, resourcePath)));
+
+  const resource = resourceRows[0];
+  if (!resource) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found" });
+  }
+
+  return resource;
+}
+
 // -- search helpers --
 
 // strict_word_similarity normalizes by max(|trgm(query)|, |trgm(best_substr)|),
@@ -554,21 +590,7 @@ export const skillsRouter = router({
       const items = hasMore ? rows.slice(0, limit) : rows;
 
       return {
-        items: items.map((row) => ({
-          id: row.id,
-          ownerUserId: row.ownerUserId,
-          visibility: row.visibility,
-          slug: row.slug,
-          name: row.name,
-          description: row.description,
-          frontmatter: row.frontmatter,
-          metadata: row.metadata,
-          isDefault: row.isDefault,
-          sourceUrl: row.sourceUrl,
-          sourceIdentifier: row.sourceIdentifier,
-          createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-        })),
+        items: items.map(toSkillListItem),
         nextCursor: hasMore ? items[items.length - 1]!.id : null,
       };
     }),
@@ -621,21 +643,7 @@ export const skillsRouter = router({
       const items = hasMore ? rows.slice(0, limit) : rows;
 
       return {
-        items: items.map((row) => ({
-          id: row.id,
-          ownerUserId: row.ownerUserId,
-          visibility: row.visibility,
-          slug: row.slug,
-          name: row.name,
-          description: row.description,
-          frontmatter: row.frontmatter,
-          metadata: row.metadata,
-          isDefault: row.isDefault,
-          sourceUrl: row.sourceUrl,
-          sourceIdentifier: row.sourceIdentifier,
-          createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-        })),
+        items: items.map(toSkillListItem),
         nextCursor: hasMore ? items[items.length - 1]!.id : null,
       };
     }),
@@ -659,10 +667,7 @@ export const skillsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
       }
 
-      const resources = await db
-        .select()
-        .from(skillResource)
-        .where(eq(skillResource.skillId, row.id));
+      const resources = await loadSkillResources(row.id);
 
       return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
@@ -686,10 +691,7 @@ export const skillsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
       }
 
-      const resources = await db
-        .select()
-        .from(skillResource)
-        .where(eq(skillResource.skillId, row.id));
+      const resources = await loadSkillResources(row.id);
 
       return await toSkillOutput(row, resources, { linkMentions: input.linkMentions });
     }),
@@ -719,17 +721,7 @@ export const skillsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
       }
 
-      const resourceRows = await db
-        .select()
-        .from(skillResource)
-        .where(
-          and(eq(skillResource.skillId, skillRow.id), eq(skillResource.path, input.resourcePath)),
-        );
-
-      const resource = resourceRows[0];
-      if (!resource) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found" });
-      }
+      const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
 
       return {
         ...resource,
@@ -764,17 +756,7 @@ export const skillsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
       }
 
-      const resourceRows = await db
-        .select()
-        .from(skillResource)
-        .where(
-          and(eq(skillResource.skillId, skillRow.id), eq(skillResource.path, input.resourcePath)),
-        );
-
-      const resource = resourceRows[0];
-      if (!resource) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found" });
-      }
+      const resource = await loadSkillResourceByPath(skillRow.id, input.resourcePath);
 
       return {
         ...resource,

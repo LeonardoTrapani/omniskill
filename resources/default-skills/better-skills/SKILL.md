@@ -2,7 +2,7 @@
 name: better-skills
 description: |
   Route and execute better-skills vault work from CLI: create skills, edit skills,
-  search/import/delete/sync, and propose linking or curation actions. Trigger on
+  search/import/clone/delete/sync, and propose linking or curation actions. Trigger on
   "create a skill", "edit/update a skill", "better-skills", "better skills",
   "skill vault", "import this skill", "link this skill", and similar requests.
 ---

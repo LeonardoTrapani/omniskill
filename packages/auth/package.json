@@ -17,6 +17,7 @@
   "dependencies": {
     "@better-skills/db": "workspace:*",
     "@better-skills/env": "workspace:*",
+    "@better-skills/markdown": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",

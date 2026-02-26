@@ -1,5 +1,6 @@
 import * as p from "@clack/prompts";
 
+import { cloneCommand } from "./commands/clone";
 import { configCommand } from "./commands/config";
 import { createCommand } from "./commands/create";
 import { deleteCommand } from "./commands/delete";
@@ -12,6 +13,7 @@ import { searchCommand } from "./commands/search";
 import { syncCommand } from "./commands/sync";
 import { updateCommand } from "./commands/update";
 import { whoamiCommand } from "./commands/whoami";
+import { readErrorMessage } from "./lib/errors";
 import { getCliVersion } from "./lib/version";
 
 class UsageError extends Error {
@@ -32,6 +34,7 @@ function printUsage() {
   p.log.info("  better-skills sync");
   p.log.info("  better-skills search <query> [--public] [--limit N]");
   p.log.info("  better-skills get <slug-or-uuid>");
+  p.log.info("  better-skills clone <slug-or-uuid> [--to <dir>] [--force]");
   p.log.info("  better-skills config");
   p.log.info("  better-skills create --from <dir> [--slug <s>] [--public]");
   p.log.info(
@@ -80,6 +83,9 @@ async function run(args: string[]) {
     case "get":
       await getCommand();
       return;
+    case "clone":
+      await cloneCommand();
+      return;
     case "config":
       await configCommand();
       return;
@@ -104,7 +110,7 @@ async function main() {
   try {
     await run(process.argv.slice(2));
   } catch (error) {
-    p.log.error(error instanceof Error ? error.message : String(error));
+    p.log.error(readErrorMessage(error));
 
     if (error instanceof UsageError) {
       printUsage();

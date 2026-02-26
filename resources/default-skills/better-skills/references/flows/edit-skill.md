@@ -10,19 +10,29 @@ Use this when user wants to update an existing skill from a local folder.
 
 ## Steps
 
-1. Validate folder:
+1. Clone current skill to local folder first:
+
+```bash
+better-skills clone <slug-or-uuid> --to <folder>
+```
+
+2. Edit local files (`SKILL.md` and resources).
+
+If adding a new file, create it under `references/`, `scripts/`, or `assets/`, then mention it with draft token form like `[[resource:new:references/new-file.md]]`.
+
+3. Validate folder:
 
 ```bash
 python scripts/validate_skill_folder.py <folder>
 ```
 
-2. Update skill:
+4. Update skill:
 
 ```bash
 better-skills update <slug-or-uuid> --from <folder> [--slug <slug>] [--public|--private]
 ```
 
-3. Confirm with:
+5. Confirm with:
 
 ```bash
 better-skills get <slug-or-uuid>

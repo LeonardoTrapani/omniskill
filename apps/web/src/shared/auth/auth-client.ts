@@ -1,8 +1,4 @@
-import { env } from "@better-skills/env/web";
 import { createAuthClient } from "better-auth/react";
-import { deviceAuthorizationClient } from "better-auth/client/plugins";
+import { createAuthClientOptions } from "@/shared/auth/auth-options";
 
-export const authClient = createAuthClient({
-  baseURL: env.NEXT_PUBLIC_SERVER_URL,
-  plugins: [deviceAuthorizationClient()],
-});
+export const authClient = createAuthClient(createAuthClientOptions());

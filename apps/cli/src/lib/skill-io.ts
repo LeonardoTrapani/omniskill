@@ -11,6 +11,8 @@ import {
 } from "./new-resource-mentions";
 import { trpc } from "./trpc";
 
+export { readErrorMessage } from "./errors";
+
 const RESOURCE_DIRS: Record<string, "reference" | "script" | "asset"> = {
   references: "reference",
   scripts: "script",
@@ -43,25 +45,6 @@ export type UpdateResourcePayload = {
   content: string;
   metadata: Record<string, unknown>;
 };
-
-export function readErrorMessage(error: unknown): string {
-  if (typeof error === "object" && error !== null) {
-    const candidate = error as {
-      message?: string;
-      shape?: { message?: string };
-    };
-
-    if (typeof candidate.shape?.message === "string") {
-      return candidate.shape.message;
-    }
-
-    if (typeof candidate.message === "string") {
-      return candidate.message;
-    }
-  }
-
-  return String(error);
-}
 
 export function slugify(name: string): string {
   return name

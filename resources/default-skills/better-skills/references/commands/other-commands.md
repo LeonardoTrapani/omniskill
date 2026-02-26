@@ -14,6 +14,7 @@ better-skills logout
 ```bash
 better-skills search "<query>" [--public] [--limit N]
 better-skills get <slug-or-uuid>
+better-skills clone <slug-or-uuid> [--to <dir>] [--force]
 ```
 
 ## Import and delete

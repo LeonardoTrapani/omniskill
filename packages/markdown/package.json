@@ -1,5 +1,5 @@
 {
-  "name": "@better-skills/api",
+  "name": "@better-skills/markdown",
   "type": "module",
   "exports": {
     ".": {
@@ -14,20 +14,8 @@
   "scripts": {
     "build": "bun build ./src/index.ts --outfile ./dist/index.mjs --target=node --format=esm"
   },
-  "dependencies": {
-    "@better-skills/auth": "workspace:*",
-    "@better-skills/db": "workspace:*",
-    "@better-skills/env": "workspace:*",
-    "@better-skills/markdown": "workspace:*",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
-    "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.1",
-    "zod": "catalog:"
-  },
   "devDependencies": {
     "@better-skills/config": "workspace:*",
-    "hono": "catalog:",
     "typescript": "catalog:"
   }
 }

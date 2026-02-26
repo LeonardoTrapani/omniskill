@@ -2,6 +2,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 
 import { getAgentDisplayName, resolveInstallAgents } from "../lib/agents";
+import { readErrorMessage } from "../lib/errors";
 import {
   installSkill,
   readInstallLock,
@@ -23,6 +24,7 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     name: skill.name,
     description: skill.description,
     visibility: skill.visibility,
+    originalMarkdown: skill.originalMarkdown,
     renderedMarkdown: skill.renderedMarkdown,
     frontmatter: skill.frontmatter,
     resources: skill.resources.map((resource) => ({
@@ -32,10 +34,6 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     sourceUrl: skill.sourceUrl,
     sourceIdentifier: skill.sourceIdentifier,
   };
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 async function fetchAllPrivateSkills(): Promise<SkillListItem[]> {
@@ -87,7 +85,7 @@ export async function syncCommand() {
   try {
     privateSkills = await fetchAllPrivateSkills();
   } catch (error) {
-    fetchSpinner.stop(pc.red(`failed to load private skills: ${errorMessage(error)}`));
+    fetchSpinner.stop(pc.red(`failed to load private skills: ${readErrorMessage(error)}`));
     return;
   }
 
@@ -113,7 +111,7 @@ export async function syncCommand() {
       synced += 1;
       spinner.stop(pc.green(`synced ${item.slug}`));
     } catch (error) {
-      spinner.stop(pc.red(`failed ${item.slug}: ${errorMessage(error)}`));
+      spinner.stop(pc.red(`failed ${item.slug}: ${readErrorMessage(error)}`));
     }
   }
 
@@ -131,7 +129,7 @@ export async function syncCommand() {
         await uninstallSkill(folder);
         spinner.stop(pc.green(`removed ${entry.slug}`));
       } catch (error) {
-        spinner.stop(pc.red(`failed to remove ${entry.slug}: ${errorMessage(error)}`));
+        spinner.stop(pc.red(`failed to remove ${entry.slug}: ${readErrorMessage(error)}`));
       }
     }
 

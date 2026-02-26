@@ -1,6 +1,6 @@
 # Flow: Other CLI Operations
 
-Use this for auth, connectivity, discovery commands, import/delete, sync, and config.
+Use this for auth, connectivity, discovery commands, import/clone/delete, sync, and config.
 
 ## Read first
 

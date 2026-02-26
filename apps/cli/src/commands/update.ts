@@ -8,8 +8,7 @@ import {
   resolveNewResourceMentions,
 } from "../lib/skill-io";
 import { trpc } from "../lib/trpc";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID_RE } from "../lib/uuid";
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(3);

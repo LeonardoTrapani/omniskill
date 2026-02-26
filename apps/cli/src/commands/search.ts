@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
+import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
 
 const DEFAULT_LIMIT = 5;
@@ -59,8 +60,7 @@ export async function searchCommand() {
     }
   } catch (error) {
     s.stop(pc.red("search failed"));
-    const message = error instanceof Error ? error.message : String(error);
-    p.log.error(message);
+    p.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

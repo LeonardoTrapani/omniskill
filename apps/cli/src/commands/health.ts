@@ -1,6 +1,7 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
+import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
 
 export async function healthCommand() {
@@ -11,7 +12,6 @@ export async function healthCommand() {
     const result = await trpc.healthCheck.query();
     s.stop(pc.green(`server responded: ${result}`));
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    s.stop(pc.red(`server unreachable: ${message}`));
+    s.stop(pc.red(`server unreachable: ${readErrorMessage(error)}`));
   }
 }

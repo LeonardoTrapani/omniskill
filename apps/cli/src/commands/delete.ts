@@ -1,9 +1,9 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
+import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID_RE } from "../lib/uuid";
 
 export async function deleteCommand() {
   const id = process.argv[3];
@@ -22,8 +22,7 @@ export async function deleteCommand() {
     s.stop(pc.dim(`found ${skill.name} (${skill.slug})`));
   } catch (error) {
     s.stop(pc.red("fetch failed"));
-    const message = error instanceof Error ? error.message : String(error);
-    p.log.error(message);
+    p.log.error(readErrorMessage(error));
     process.exit(1);
   }
 
@@ -42,8 +41,7 @@ export async function deleteCommand() {
     s.stop(pc.green(`deleted ${skill.name}`));
   } catch (error) {
     s.stop(pc.red("delete failed"));
-    const message = error instanceof Error ? error.message : String(error);
-    p.log.error(message);
+    p.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

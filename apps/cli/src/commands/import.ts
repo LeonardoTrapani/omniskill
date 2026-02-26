@@ -1,9 +1,9 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 
+import { readErrorMessage } from "../lib/errors";
 import { trpc } from "../lib/trpc";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { UUID_RE } from "../lib/uuid";
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(3);
@@ -45,8 +45,7 @@ export async function importCommand() {
       s.stop(pc.dim(`found ${found.name}`));
     } catch (error) {
       s.stop(pc.red("not found"));
-      const message = error instanceof Error ? error.message : String(error);
-      p.log.error(message);
+      p.log.error(readErrorMessage(error));
       process.exit(1);
     }
   }
@@ -71,8 +70,7 @@ export async function importCommand() {
     );
   } catch (error) {
     s.stop(pc.red("import failed"));
-    const message = error instanceof Error ? error.message : String(error);
-    p.log.error(message);
+    p.log.error(readErrorMessage(error));
     process.exit(1);
   }
 }

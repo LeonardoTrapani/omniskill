@@ -10,6 +10,7 @@
   "dependencies": {
     "@better-skills/api": "workspace:*",
     "@better-skills/env": "workspace:*",
+    "@better-skills/markdown": "workspace:*",
     "@clack/prompts": "^1.0.1",
     "@trpc/client": "catalog:",
     "better-auth": "^1.4.18",
