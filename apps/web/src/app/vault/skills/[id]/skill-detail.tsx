@@ -38,8 +38,9 @@ import { SkillDetailHeader } from "@/app/vault/skills/[id]/_components/skill-det
 
 function SkillDetailInner({ id }: { id: string }) {
   const router = useRouter();
-  const { session, selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } =
-    useAddSkillFlow({ loginNext: `/vault/skills/${id}` });
+  const { selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } = useAddSkillFlow({
+    loginNext: `/vault/skills/${id}`,
+  });
   const { data, isLoading, isError } = useQuery(
     trpc.skills.getById.queryOptions({ id, linkMentions: true }),
   );
@@ -86,10 +87,9 @@ function SkillDetailInner({ id }: { id: string }) {
   const findResourceByHref = useMemo(() => createResourceHrefResolver(resources), [resources]);
 
   const skillId = data?.id ?? id;
-  const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data?.isDefault ?? false;
-  const canManageSkill = data?.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
-  const canAddToVault = data?.visibility === "public" && !isOwnedByViewer;
+  const canManageSkill = !isDefaultSkill;
+  const canAddToVault = false;
 
   /* ── Desktop: intercept resource clicks to open as tab ── */
   const handleOpenResourceTab = useCallback(
@@ -202,7 +202,6 @@ function SkillDetailInner({ id }: { id: string }) {
     slug: data.slug,
     name: data.name,
     description: data.description,
-    visibility: data.visibility as "public" | "private",
     isDefaultSkill,
     sourceIdentifier: data.sourceIdentifier,
     sourceUrl: data.sourceUrl,

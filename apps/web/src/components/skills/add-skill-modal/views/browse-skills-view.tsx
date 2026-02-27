@@ -64,7 +64,7 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search public skills ..."
+          placeholder="Search skills ..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
@@ -86,7 +86,7 @@ export default function BrowseSkillsView({ dispatch }: BrowseSkillsViewProps) {
               {search.trim() ? (
                 <>No skills matching &ldquo;{search}&rdquo;</>
               ) : (
-                "No public skills available"
+                "No skills available"
               )}
             </p>
           </div>

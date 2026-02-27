@@ -64,8 +64,6 @@ export default function SkillsTable({
   } = useSkillSearch({
     query: search,
     enabled: hasSearchQuery,
-    scope: "all",
-    visibility: "public",
     initialLimit: 5,
     limitStep: 5,
     maxLimit: 50,
@@ -76,7 +74,6 @@ export default function SkillsTable({
       ...trpc.skills.list.infiniteQueryOptions(
         {
           limit: pageSize,
-          visibility: "public",
         },
         {
           getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

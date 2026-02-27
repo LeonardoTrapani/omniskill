@@ -25,7 +25,7 @@ const firaMono = Fira_Mono({
 export const metadata: Metadata = {
   title: "BETTER-SKILLS - The Open Agent Skills Ecosystem",
   description:
-    "BETTER-SKILLS lets you build and manage a private graph of reusable skills for your AI agents. Connect your CLI and web app to your vault.",
+    "BETTER-SKILLS lets you build and manage a graph of reusable skills for your AI agents. Connect your CLI and web app to your vault.",
 };
 
 export default async function RootLayout({

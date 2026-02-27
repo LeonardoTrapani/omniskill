@@ -329,22 +329,24 @@ export const skillsRouter = router({
     }
   }),
 
-  countByOwner: protectedProcedure.output(z.object({ count: z.number() })).query(async ({ ctx }) => {
-    try {
-      const userId = ctx.session.user.id;
-      const [result] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(skill)
-        .where(eq(skill.ownerUserId, userId));
-      return { count: result?.count ?? 0 };
-    } catch (error) {
-      const details = error instanceof Error ? error.message : String(error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `skills.countByOwner failed: ${details}`,
-      });
-    }
-  }),
+  countByOwner: protectedProcedure
+    .output(z.object({ count: z.number() }))
+    .query(async ({ ctx }) => {
+      try {
+        const userId = ctx.session.user.id;
+        const [result] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(skill)
+          .where(eq(skill.ownerUserId, userId));
+        return { count: result?.count ?? 0 };
+      } catch (error) {
+        const details = error instanceof Error ? error.message : String(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `skills.countByOwner failed: ${details}`,
+        });
+      }
+    }),
 
   search: protectedProcedure
     .input(

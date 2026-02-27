@@ -21,7 +21,11 @@ type NavItem =
 const publicNav: NavItem[] = [
   { label: "Features", href: "#features", kind: "hash" },
   { label: "Pricing", href: "#pricing", kind: "hash" },
-  { label: "Docs", href: "#", kind: "external" },
+  {
+    label: "Docs",
+    href: "https://github.com/better-skills/better-skills#readme",
+    kind: "external",
+  },
   { label: "GitHub", href: "https://github.com/better-skills", kind: "external" },
 ];
 

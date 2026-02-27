@@ -197,8 +197,8 @@ export default function CliDemo() {
               className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:border-primary [a]:hover:bg-primary [a]:hover:text-background"
               render={<Link href={ctaHref} />}
             >
-                {mounted && session ? "Go to Vault" : "Get Started"}
-                <ArrowRight className="size-4" />
+              {mounted && session ? "Go to Vault" : "Get Started"}
+              <ArrowRight className="size-4" />
             </Button>
           </div>
 

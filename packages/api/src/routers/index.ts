@@ -36,10 +36,7 @@ export const appRouter = router({
   completeOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 
-    await db
-      .update(user)
-      .set({ onboardingCompleted: true })
-      .where(eq(user.id, userId));
+    await db.update(user).set({ onboardingCompleted: true }).where(eq(user.id, userId));
 
     return { activated: true };
   }),

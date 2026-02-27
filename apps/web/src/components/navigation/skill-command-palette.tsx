@@ -507,8 +507,7 @@ export function SkillCommandPalette({
 
   // ── Loading states ─────────────────────────────────────────────────────────
 
-  const isLoading =
-    mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading;
+  const isLoading = mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading;
 
   const showEmpty =
     (mode === "vault" &&
@@ -572,13 +571,7 @@ export function SkillCommandPalette({
         setSelectedIndex(0);
       }
     },
-    [
-      mode,
-      search,
-      flatItems,
-      selectedIndex,
-      cycleMode,
-    ],
+    [mode, search, flatItems, selectedIndex, cycleMode],
   );
 
   // ── Render section headers inline ──────────────────────────────────────────
@@ -649,10 +642,7 @@ export function SkillCommandPalette({
         </div>
 
         {/* ── Results ── */}
-        <div
-          ref={listRef}
-          className="max-h-[320px] overflow-y-auto border-t border-border"
-        >
+        <div ref={listRef} className="max-h-[320px] overflow-y-auto border-t border-border">
           {isLoading && flatItems.length === 0 && (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
@@ -666,7 +656,6 @@ export function SkillCommandPalette({
           )}
 
           {renderedItems}
-
         </div>
 
         {/* ── Footer ── */}

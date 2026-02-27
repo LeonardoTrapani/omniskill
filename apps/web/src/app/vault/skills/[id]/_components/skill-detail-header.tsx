@@ -1,15 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Calendar,
-  Eye,
-  FileText,
-  Globe,
-  Lock,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowUpRight, Calendar, Eye, FileText, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { SkillDescription } from "@/components/skills/skill-description";
 import { Button } from "@/components/ui/button";
@@ -21,7 +11,6 @@ export function SkillDetailHeader({
   slug,
   name,
   description,
-  visibility,
   isDefaultSkill,
   sourceIdentifier,
   sourceUrl,
@@ -39,7 +28,6 @@ export function SkillDetailHeader({
   slug: string;
   name: string;
   description?: string | null;
-  visibility: "public" | "private";
   isDefaultSkill: boolean;
   sourceIdentifier?: string | null;
   sourceUrl?: string | null;
@@ -96,16 +84,8 @@ export function SkillDetailHeader({
           </h1>
           <SkillDescription description={description} />
 
-          {/* Visibility badge */}
+          {/* Status badges */}
           <div className="flex items-center gap-2 pt-0.5">
-            <span className="inline-flex items-center gap-1.5 border border-border px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
-              {visibility === "public" ? (
-                <Globe className="size-3" aria-hidden="true" />
-              ) : (
-                <Lock className="size-3" aria-hidden="true" />
-              )}
-              {visibility === "public" ? "Public" : "Private"}
-            </span>
             {isDefaultSkill && (
               <span className="inline-flex items-center border border-border px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
                 default
@@ -247,21 +227,12 @@ export function SkillDetailHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground font-mono">
-        <span className="inline-flex items-center gap-1.5">
-          {visibility === "public" ? (
-            <Globe className="size-3" aria-hidden="true" />
-          ) : (
-            <Lock className="size-3" aria-hidden="true" />
-          )}
-          {visibility}
-        </span>
         {isDefaultSkill && (
           <>
-            <span className="text-border">|</span>
             <span>default skill</span>
+            <span className="text-border">|</span>
           </>
         )}
-        <span className="text-border">|</span>
         <span>
           {resourcesCount} resource{resourcesCount !== 1 ? "s" : ""}
         </span>

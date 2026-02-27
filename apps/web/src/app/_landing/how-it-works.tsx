@@ -43,11 +43,32 @@ function StepPattern({ pattern }: { pattern: "cli" | "graph" | "cli-muted" }) {
     return (
       <svg width="48" height="24" viewBox="0 0 48 24" fill="none" aria-hidden="true">
         <line x1="6" y1="6" x2="22" y2="6" stroke="var(--muted-foreground)" strokeOpacity="0.35" />
-        <line x1="22" y1="6" x2="22" y2="18" stroke="var(--muted-foreground)" strokeOpacity="0.35" />
-        <line x1="22" y1="18" x2="38" y2="18" stroke="var(--muted-foreground)" strokeOpacity="0.3" />
+        <line
+          x1="22"
+          y1="6"
+          x2="22"
+          y2="18"
+          stroke="var(--muted-foreground)"
+          strokeOpacity="0.35"
+        />
+        <line
+          x1="22"
+          y1="18"
+          x2="38"
+          y2="18"
+          stroke="var(--muted-foreground)"
+          strokeOpacity="0.3"
+        />
         <rect x="3" y="3" width="6" height="6" fill="var(--muted-foreground)" fillOpacity="0.45" />
         <rect x="19" y="3" width="6" height="6" fill="var(--muted-foreground)" fillOpacity="0.45" />
-        <rect x="19" y="15" width="6" height="6" fill="var(--muted-foreground)" fillOpacity="0.35" />
+        <rect
+          x="19"
+          y="15"
+          width="6"
+          height="6"
+          fill="var(--muted-foreground)"
+          fillOpacity="0.35"
+        />
         <rect x="35" y="15" width="6" height="6" fill="var(--primary)" fillOpacity="0.6" />
       </svg>
     );

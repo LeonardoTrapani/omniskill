@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -242,12 +238,8 @@
           "name": "device_code_user_id_user_id_fk",
           "tableFrom": "device_code",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -257,16 +249,12 @@
         "device_code_device_code_unique": {
           "name": "device_code_device_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "device_code"
-          ]
+          "columns": ["device_code"]
         },
         "device_code_user_code_unique": {
           "name": "device_code_user_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_code"
-          ]
+          "columns": ["user_code"]
         }
       },
       "policies": {},
@@ -349,12 +337,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -364,9 +348,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -437,9 +419,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -690,12 +670,8 @@
           "name": "skill_owner_user_id_user_id_fk",
           "tableFrom": "skill",
           "tableTo": "user",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -857,12 +833,8 @@
           "name": "skill_link_source_skill_id_skill_id_fk",
           "tableFrom": "skill_link",
           "tableTo": "skill",
-          "columnsFrom": [
-            "source_skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -870,12 +842,8 @@
           "name": "skill_link_source_resource_id_skill_resource_id_fk",
           "tableFrom": "skill_link",
           "tableTo": "skill_resource",
-          "columnsFrom": [
-            "source_resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -883,12 +851,8 @@
           "name": "skill_link_target_skill_id_skill_id_fk",
           "tableFrom": "skill_link",
           "tableTo": "skill",
-          "columnsFrom": [
-            "target_skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -896,12 +860,8 @@
           "name": "skill_link_target_resource_id_skill_resource_id_fk",
           "tableFrom": "skill_link",
           "tableTo": "skill_resource",
-          "columnsFrom": [
-            "target_resource_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_resource_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -909,12 +869,8 @@
           "name": "skill_link_created_by_user_id_user_id_fk",
           "tableFrom": "skill_link",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1051,12 +1007,8 @@
           "name": "skill_resource_skill_id_skill_id_fk",
           "tableFrom": "skill_resource",
           "tableTo": "skill",
-          "columnsFrom": [
-            "skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1072,12 +1024,7 @@
     "public.skill_resource_kind": {
       "name": "skill_resource_kind",
       "schema": "public",
-      "values": [
-        "reference",
-        "script",
-        "asset",
-        "other"
-      ]
+      "values": ["reference", "script", "asset", "other"]
     }
   },
   "schemas": {},

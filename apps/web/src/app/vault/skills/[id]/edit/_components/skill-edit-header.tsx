@@ -80,11 +80,6 @@ export function SkillEditHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground font-mono">
-        <span className="inline-flex items-center gap-1">
-          <span className="inline-block size-1.5 bg-amber-500" aria-hidden="true" />
-          private
-        </span>
-        <span className="text-border">|</span>
         <span>
           {resourcesCount} resource
           {resourcesCount !== 1 ? "s" : ""}

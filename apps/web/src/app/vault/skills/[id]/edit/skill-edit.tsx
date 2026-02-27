@@ -22,7 +22,6 @@ import { SkillPanel } from "@/components/skills/skill-panel";
 import { useMentionAutocomplete, type MentionItem } from "@/hooks/skills/use-mention-autocomplete";
 import { invalidateSkillEditQueries } from "@/lib/skills/invalidate-skill-queries";
 import { buildSkillHref, dashboardRoute } from "@/lib/skills/routes";
-import { authClient } from "@/lib/auth/auth-client";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/api/trpc";
 import { SkillEditEditorPanel } from "@/app/vault/skills/[id]/edit/_components/skill-edit-editor-panel";
@@ -43,7 +42,6 @@ function replaceLastOccurrence(input: string, search: string, replacement: strin
 /* ------------------------------------------------------------------ */
 export default function SkillEdit({ id }: { id: string }) {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
   const { data, isLoading, isError } = useQuery(
     trpc.skills.getById.queryOptions({ id, linkMentions: true }),
   );
@@ -236,19 +234,14 @@ export default function SkillEdit({ id }: { id: string }) {
     );
   }
 
-  const isOwnedByViewer = data.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data.isDefault;
-  const canEditSkill = data.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
+  const canEditSkill = !isDefaultSkill;
 
   /* ---- Not editable ---- */
   if (!canEditSkill) {
     return (
       <SkillPageErrorState
-        message={
-          isDefaultSkill
-            ? "Default skills are read-only and cannot be edited."
-            : "Editing is only available for your private skills. Import this skill into your vault first."
-        }
+        message="Default skills are read-only and cannot be edited."
         href={buildSkillHref(data.id)}
         ctaLabel="Back to Skill"
       />

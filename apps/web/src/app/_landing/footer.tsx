@@ -43,9 +43,7 @@ export default function Footer() {
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
               {/* Brand column */}
               <div className="col-span-2 flex flex-col gap-3 sm:col-span-1">
-                <p className="text-sm font-medium tracking-tight text-foreground">
-                  BETTER-SKILLS.
-                </p>
+                <p className="text-sm font-medium tracking-tight text-foreground">BETTER-SKILLS.</p>
                 <p className="max-w-[200px] text-xs leading-relaxed text-muted-foreground">
                   The open agent skills ecosystem. Build, share, and manage reusable skills for your
                   AI agents.

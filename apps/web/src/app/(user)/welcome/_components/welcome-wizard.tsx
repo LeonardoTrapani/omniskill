@@ -106,8 +106,7 @@ function StepSync() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">Sync your skills</h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          This downloads your vault to all configured agents. It will ask which agents
-          you use.
+          This downloads your vault to all configured agents. It will ask which agents you use.
         </p>
       </div>
 
@@ -162,8 +161,8 @@ function StepCreateSkill() {
           Suggested Prompt
         </p>
         <p className="mt-2 bg-background font-mono text-[11px] leading-relaxed text-foreground">
-        {suggestedPrompt}
-      </p>
+          {suggestedPrompt}
+        </p>
       </div>
     </div>
   );
