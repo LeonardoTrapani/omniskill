@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@better-skills/env": "workspace:*",
+    "@vercel/analytics": "^1.6.1",
     "dotenv": "catalog:",
     "lucide": "^0.575.0",
     "motion": "^12.34.3",
