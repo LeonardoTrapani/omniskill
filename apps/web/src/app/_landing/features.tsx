@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, TerminalSquare, Globe, Puzzle, Network, RefreshCcw } from "lucide-react";
+import { Brain, TerminalSquare, Globe, Bot, Network, RefreshCcw } from "lucide-react";
 import { SectionHeader, SectionBackdrop } from "./grid-background";
 import { LandingContainer, SectionTailSpacer } from "./design-system";
 
@@ -30,12 +30,12 @@ const features = [
       "Explore the skill graph, edit resources with a rich markdown editor, manage account settings, and browse the marketplace from any browser.",
   },
   {
-    icon: Puzzle,
-    label: "Marketplace",
-    title: "Discover community ",
-    titleBold: "skills.",
+    icon: Bot,
+    label: "Agent Ready",
+    title: "Use it with your ",
+    titleBold: "favourite agent.",
     description:
-      "Browse and install skills published by others. Share your own skills with the community and extend your agent's capabilities instantly.",
+      "Run the same skills across your preferred agents and tools. Keep your workflow consistent while switching between CLI, editor, and web.",
   },
   {
     icon: Network,
