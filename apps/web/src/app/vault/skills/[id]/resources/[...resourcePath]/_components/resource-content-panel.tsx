@@ -8,13 +8,15 @@ import { SkillPanel } from "@/components/skills/skill-panel";
 
 export function ResourceContentPanel({
   canRenderMarkdown,
-  content,
+  renderedContent,
+  rawContent,
   markdownComponents,
   downloadName,
   mimeType,
 }: {
   canRenderMarkdown: boolean;
-  content: string;
+  renderedContent: string;
+  rawContent: string;
   markdownComponents: Parameters<typeof ReactMarkdown>[0]["components"];
   downloadName: string;
   mimeType: string;
@@ -27,7 +29,7 @@ export function ResourceContentPanel({
           components={markdownComponents}
           urlTransform={markdownUrlTransform}
         >
-          {content}
+          {renderedContent}
         </ReactMarkdown>
       </article>
     </div>
@@ -40,7 +42,7 @@ export function ResourceContentPanel({
         <FileText className="size-8 text-neutral-300" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">This file cannot be rendered.</p>
         <DownloadContentButton
-          content={content}
+          content={rawContent}
           fileName={downloadName}
           mimeType={mimeType}
           variant="outline"

@@ -42,7 +42,7 @@ export function ResourceHoverLink({
             label: resource.path,
             type: "resource",
             description: null,
-            contentSnippet: previewUnavailable ? null : resource.content,
+            contentSnippet: previewUnavailable ? null : resource.renderedContent,
             slug: null,
             kind: resource.kind,
             parentSkillName: skillName ?? null,

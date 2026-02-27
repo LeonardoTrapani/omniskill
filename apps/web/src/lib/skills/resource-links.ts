@@ -6,6 +6,7 @@ export interface SkillResourceReference {
   path: string;
   kind: string;
   content: string;
+  renderedContent: string;
   updatedAt: string | Date;
 }
 

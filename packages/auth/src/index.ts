@@ -70,6 +70,12 @@ export const auth = betterAuth({
     },
   },
   user: {
+    additionalFields: {
+      onboardingCompleted: {
+        type: "boolean",
+        input: false,
+      },
+    },
     deleteUser: {
       enabled: true,
     },
