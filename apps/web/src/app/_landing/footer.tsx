@@ -1,58 +1,110 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 
-const footerLinks = [
-  { label: "Vault", href: "/vault", type: "route" },
-  { label: "Docs", href: "#docs", type: "anchor" },
-  { label: "Pricing", href: "#pricing", type: "anchor" },
-  { label: "Github", href: "#github", type: "anchor" },
-] as const;
+const columns: { title: string; links: { label: string; href: string; external: boolean }[] }[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Skills", href: "/skills", external: false },
+      { label: "Pricing", href: "#pricing", external: false },
+      { label: "CLI", href: "#docs", external: false },
+      { label: "Changelog", href: "#", external: false },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Documentation", href: "#docs", external: false },
+      { label: "API Reference", href: "#", external: false },
+      { label: "GitHub", href: "https://github.com/better-skills", external: true },
+      { label: "Community", href: "#", external: false },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "#", external: false },
+      { label: "Blog", href: "#", external: false },
+      { label: "Contact", href: "#", external: false },
+      { label: "Open Source", href: "#", external: false },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="relative left-1/2 w-screen -translate-x-1/2 border-t border-border bg-background/95 py-16 px-6 backdrop-blur-sm md:px-16">
-      <div className="max-w-[1280px] mx-auto">
-        <div className="border border-border p-8 md:p-12">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            {/* Left side - branding */}
-            <div className="flex-1">
-              <p className="text-xs text-primary uppercase tracking-[0.05em] mb-3">BETTER-SKILLS</p>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-                The open agent skills ecosystem. Build and manage a private graph of reusable skills
-                for your AI agents.
-              </p>
-            </div>
+    <footer className="border-t border-border bg-background">
+      <div className="flex w-full justify-center px-6 sm:px-8 lg:px-0">
+        <div className="flex w-full max-w-[1112px] flex-col lg:px-16">
+          {/* Main footer content */}
+          <div className="flex flex-col gap-10 py-16 sm:py-20">
+            <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
+              {/* Brand column */}
+              <div className="col-span-2 flex flex-col gap-3 sm:col-span-1">
+                <p className="text-sm font-medium tracking-tight text-foreground">
+                  BETTER-SKILLS.
+                </p>
+                <p className="max-w-[200px] text-xs leading-relaxed text-muted-foreground">
+                  The open agent skills ecosystem. Build, share, and manage reusable skills for your
+                  AI agents.
+                </p>
+              </div>
 
-            {/* Right side - nav links */}
-            <div className="flex flex-wrap items-center gap-6">
-              {footerLinks.map((link) =>
-                link.type === "route" ? (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
-                  >
-                    {link.label}
-                  </a>
-                ),
-              )}
+              {/* Link columns */}
+              {columns.map((col) => (
+                <div key={col.title} className="flex flex-col gap-4">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+                    {col.title}
+                  </p>
+                  <ul className="flex flex-col gap-2.5">
+                    {col.links.map((link) => (
+                      <li key={link.label}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                          >
+                            {link.label}
+                          </a>
+                        ) : link.href.startsWith("#") ? (
+                          <a
+                            href={link.href}
+                            className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                          >
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.href as Route}
+                            className="text-xs text-muted-foreground transition-colors hover:text-primary"
+                          >
+                            {link.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} BETTER-SKILLS, Inc. All rights reserved.
-          </p>
+          {/* Bottom bar */}
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-border py-6 text-xs text-muted-foreground sm:flex-row">
+            <p>&copy; {new Date().getFullYear()} BETTER-SKILLS, Inc.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="transition-colors hover:text-primary">
+                Privacy
+              </a>
+              <a href="#" className="transition-colors hover:text-primary">
+                Terms
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -110,7 +110,7 @@ export function ResourceTabContent({
           components={markdownComponents}
           urlTransform={markdownUrlTransform}
         >
-          {data.renderedContent}
+          {data.content}
         </ReactMarkdown>
       </article>
     </div>

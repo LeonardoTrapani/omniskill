@@ -238,7 +238,7 @@ export default function SkillEdit({ id }: { id: string }) {
 
   const isOwnedByViewer = data.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data.isDefault;
-  const canEditSkill = isOwnedByViewer && !isDefaultSkill;
+  const canEditSkill = data.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
 
   /* ---- Not editable ---- */
   if (!canEditSkill) {
@@ -247,7 +247,7 @@ export default function SkillEdit({ id }: { id: string }) {
         message={
           isDefaultSkill
             ? "Default skills are read-only and cannot be edited."
-            : "Editing is only available for skills in your vault."
+            : "Editing is only available for your private skills. Import this skill into your vault first."
         }
         href={buildSkillHref(data.id)}
         ctaLabel="Back to Skill"

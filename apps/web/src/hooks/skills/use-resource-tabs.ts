@@ -12,6 +12,8 @@ import {
 import type { SkillResourceReference } from "@/lib/skills/resource-links";
 import { trpc } from "@/lib/api/trpc";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -64,11 +66,24 @@ export function useResourceTabs({
   const searchParams = useSearchParams();
 
   /* ── Derive initial state from URL ── */
-  const initialResourcePath = searchParams.get("resource");
-  const initialResource = useMemo(() => {
-    if (!initialResourcePath) return null;
-    return resources.find((r) => r.path === initialResourcePath) ?? null;
-  }, [initialResourcePath, resources]);
+  const initialReferencesParam = searchParams.get("references");
+  const initialActiveTabParam = searchParams.get("activeTab");
+  const initialLegacyResourcePath = searchParams.get("resource");
+
+  const resourcesById = useMemo(
+    () => new Map(resources.map((resource) => [resource.id, resource])),
+    [resources],
+  );
+
+  const initialResourceTabs = useMemo(
+    () => buildResourceTabsFromReferences(initialReferencesParam, resourcesById),
+    [initialReferencesParam, resourcesById],
+  );
+
+  const initialLegacyResource = useMemo(() => {
+    if (!initialLegacyResourcePath) return null;
+    return resources.find((r) => r.path === initialLegacyResourcePath) ?? null;
+  }, [initialLegacyResourcePath, resources]);
 
   /* ── Tab state ── */
   const skillTab: SkillTab = useMemo(
@@ -77,22 +92,28 @@ export function useResourceTabs({
   );
 
   const [openResourceTabs, setOpenResourceTabs] = useState<ResourceTab[]>(() => {
-    if (initialResource) {
-      return [
-        {
-          kind: "resource",
-          id: initialResource.id,
-          path: initialResource.path,
-          label: lastSegment(initialResource.path),
-        },
-      ];
+    if (initialResourceTabs.length > 0) {
+      return initialResourceTabs;
     }
+
+    if (initialLegacyResource) {
+      return [toResourceTab(initialLegacyResource)];
+    }
+
     return [];
   });
 
-  const [activeTabId, setActiveTabId] = useState<string>(() =>
-    initialResource ? initialResource.id : skillId,
-  );
+  const [activeTabId, setActiveTabId] = useState<string>(() => {
+    if (initialResourceTabs.length > 0) {
+      return resolveActiveTabId(initialActiveTabParam, initialResourceTabs, skillId);
+    }
+
+    if (initialLegacyResource) {
+      return initialLegacyResource.id;
+    }
+
+    return skillId;
+  });
 
   /* ── Derived values ── */
   const tabs: ContentTab[] = useMemo(
@@ -112,48 +133,53 @@ export function useResourceTabs({
 
   /* ── URL -> state sync (for cmd+k and browser navigation) ── */
   useEffect(() => {
-    const resourcePath = searchParams.get("resource");
+    const referencesParam = searchParams.get("references");
+    const activeTabParam = searchParams.get("activeTab");
+    const legacyResourcePath = searchParams.get("resource");
 
-    if (!resourcePath) {
-      setActiveTabId(skillId);
-      return;
+    const tabsFromReferences = buildResourceTabsFromReferences(referencesParam, resourcesById);
+
+    let nextTabs = tabsFromReferences;
+    if (nextTabs.length === 0 && legacyResourcePath) {
+      const legacyResource = resources.find((r) => r.path === legacyResourcePath);
+      nextTabs = legacyResource ? [toResourceTab(legacyResource)] : [];
     }
 
-    const resource = resources.find((r) => r.path === resourcePath);
-    if (!resource) return;
+    const nextActiveTabId = resolveActiveTabId(activeTabParam, nextTabs, skillId);
 
-    setOpenResourceTabs((prev) => {
-      if (prev.some((tab) => tab.id === resource.id)) {
-        return prev;
-      }
-
-      return [
-        ...prev,
-        {
-          kind: "resource",
-          id: resource.id,
-          path: resource.path,
-          label: lastSegment(resource.path),
-        },
-      ];
-    });
-
-    setActiveTabId(resource.id);
-  }, [searchParams, resources, skillId]);
+    setOpenResourceTabs((prev) => (areTabsEqual(prev, nextTabs) ? prev : nextTabs));
+    setActiveTabId((prev) => (prev === nextActiveTabId ? prev : nextActiveTabId));
+  }, [searchParams, resourcesById, resources, skillId]);
 
   /* ── URL sync ── */
   useEffect(() => {
-    const currentParam = searchParams.get("resource");
-    const desiredParam = activeResourcePath;
+    const currentReferencesParam = searchParams.get("references") ?? "";
+    const currentActiveTabParam = searchParams.get("activeTab") ?? "";
+    const currentLegacyResourceParam = searchParams.get("resource");
 
-    if (currentParam === desiredParam) return;
+    const desiredReferencesParam = openResourceTabs.map((tab) => tab.id).join(",");
+    const desiredActiveTabParam = activeTab.kind === "skill" ? "skill" : activeTab.id;
+
+    if (
+      currentReferencesParam === desiredReferencesParam &&
+      (desiredReferencesParam.length === 0 || currentActiveTabParam === desiredActiveTabParam) &&
+      currentLegacyResourceParam === null
+    ) {
+      return;
+    }
 
     const params = new URLSearchParams(searchParams.toString());
-    if (desiredParam) {
-      params.set("resource", desiredParam);
+
+    if (desiredReferencesParam.length > 0) {
+      params.set("references", desiredReferencesParam);
+      params.set("activeTab", desiredActiveTabParam);
     } else {
-      params.delete("resource");
+      params.delete("references");
+      params.delete("activeTab");
     }
+
+    // Remove legacy URL shape once state is synced.
+    params.delete("resource");
 
     const newSearch = params.toString();
     const newUrl = newSearch
@@ -162,7 +188,7 @@ export function useResourceTabs({
 
     // Use window.history to avoid Next.js Route type constraints
     window.history.replaceState(window.history.state, "", newUrl);
-  }, [activeResourcePath, searchParams]);
+  }, [activeTab, openResourceTabs, searchParams]);
 
   /* ── Actions ── */
   const openResource = useCallback((resource: SkillResourceReference) => {
@@ -255,4 +281,63 @@ export function useResourceTabs({
 function lastSegment(path: string) {
   const segments = path.split("/").filter(Boolean);
   return segments[segments.length - 1] ?? path;
+}
+
+function toResourceTab(resource: SkillResourceReference): ResourceTab {
+  return {
+    kind: "resource",
+    id: resource.id,
+    path: resource.path,
+    label: lastSegment(resource.path),
+  };
+}
+
+function buildResourceTabsFromReferences(
+  referencesParam: string | null,
+  resourcesById: Map<string, SkillResourceReference>,
+): ResourceTab[] {
+  if (!referencesParam) return [];
+
+  const ids = referencesParam
+    .split(",")
+    .map((id) => id.trim().toLowerCase())
+    .filter((id, idx, arr) => id.length > 0 && arr.indexOf(id) === idx && UUID_RE.test(id));
+
+  const tabs: ResourceTab[] = [];
+  for (const id of ids) {
+    const resource = resourcesById.get(id);
+    if (!resource) continue;
+    tabs.push(toResourceTab(resource));
+  }
+
+  return tabs;
+}
+
+function resolveActiveTabId(
+  activeTabParam: string | null,
+  tabs: ResourceTab[],
+  skillId: string,
+): string {
+  const normalizedActiveTabParam = activeTabParam?.trim().toLowerCase() ?? null;
+
+  if (tabs.length === 0) return skillId;
+  if (normalizedActiveTabParam === "skill") return skillId;
+
+  if (normalizedActiveTabParam && tabs.some((tab) => tab.id === normalizedActiveTabParam)) {
+    return normalizedActiveTabParam;
+  }
+
+  return tabs[0]!.id;
+}
+
+function areTabsEqual(a: ResourceTab[], b: ResourceTab[]) {
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i]!.id !== b[i]!.id || a[i]!.path !== b[i]!.path) {
+      return false;
+    }
+  }
+
+  return true;
 }

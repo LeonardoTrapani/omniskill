@@ -507,7 +507,8 @@ export function SkillCommandPalette({
 
   // ── Loading states ─────────────────────────────────────────────────────────
 
-  const isLoading = mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading;
+  const isLoading =
+    mode === "vault" && vaultDebouncedQuery.length > 0 && vaultQuery.isLoading;
 
   const showEmpty =
     (mode === "vault" &&
@@ -540,7 +541,8 @@ export function SkillCommandPalette({
         e.preventDefault();
         setSelectedIndex((i) => {
           if (flatItems.length === 0) return 0;
-          return i >= flatItems.length - 1 ? 0 : i + 1;
+          const next = i >= flatItems.length - 1 ? 0 : i + 1;
+          return next;
         });
         return;
       }
@@ -563,14 +565,20 @@ export function SkillCommandPalette({
         return;
       }
 
-      // Backspace in vault mode with empty search -> return to command
+      // Backspace in non-command mode with empty search -> return to command
       if (e.key === "Backspace" && search === "" && mode !== "command") {
         e.preventDefault();
         setMode("command");
         setSelectedIndex(0);
       }
     },
-    [mode, search, flatItems, selectedIndex, cycleMode],
+    [
+      mode,
+      search,
+      flatItems,
+      selectedIndex,
+      cycleMode,
+    ],
   );
 
   // ── Render section headers inline ──────────────────────────────────────────
@@ -641,7 +649,10 @@ export function SkillCommandPalette({
         </div>
 
         {/* ── Results ── */}
-        <div ref={listRef} className="max-h-[320px] overflow-y-auto border-t border-border">
+        <div
+          ref={listRef}
+          className="max-h-[320px] overflow-y-auto border-t border-border"
+        >
           {isLoading && flatItems.length === 0 && (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
@@ -655,6 +666,7 @@ export function SkillCommandPalette({
           )}
 
           {renderedItems}
+
         </div>
 
         {/* ── Footer ── */}

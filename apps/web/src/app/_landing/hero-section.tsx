@@ -1,416 +1,130 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { useRouter } from "next/navigation";
-import { Copy, ArrowUp, Check } from "lucide-react";
+import { Copy, Check, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+
 import { authClient } from "@/lib/auth/auth-client";
-
-// /* Shadow layer: box-drawing + block chars (rendered behind in muted color) */
-// const asciiLogoShadow = ` ██████╗ ███╗   ███╗███╗   ██╗██╗███████╗ ██████╗███████╗███╗   ██╗████████╗
-// ██╔═══██╗████╗ ████║████╗  ██║██║██╔════╝██╔════╝██╔════╝████╗  ██║╚══██╔══╝
-// ██║   ██║██╔████╔██║██╔██╗ ██║██║███████╗██║     █████╗  ██╔██╗ ██║   ██║
-// ██║   ██║██║╚██╔╝██║██║╚██╗██║██║╚════██║██║     ██╔══╝  ██║╚██╗██║   ██║
-// ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║███████║╚██████╗███████╗██║ ╚████║   ██║
-//  ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═══╝   ╚═╝`;
-
-// /* Foreground layer: only █ blocks and spaces (rendered on top in foreground color) */
-// const asciiLogoSolid = ` ██████  ███    ███ ███    ██ ██ ███████  ██████ ███████ ███    ██ ████████
-// ██    ██ ████  ████ ████   ██ ██ ██      ██      ██      ████   ██    ██
-// ██    ██ ██ ████ ██ ██ ██  ██ ██ ███████ ██      █████   ██ ██  ██    ██
-// ██    ██ ██  ██  ██ ██  ██ ██ ██      ██ ██      ██      ██  ██ ██    ██
-//  ██████  ██      ██ ██   ████ ██ ███████  ██████ ███████ ██   ████    ██
-//                                                                        `;
-
-const brainAscii = `
-
-
-
-
-
-
-
-
-
-                                                                                                           ..:::::..                  ..::::...
-                                                                                                  .:-+*#%%%@@@#****###*=.        .=*###****%@@@%%%#*=-:.
-                                                                                             .-+#%%%%#%@%%@@@%*-:   .:=#%#:    :#@#-.    :-#@@@@%%@%###%%#+-.
-                                                                                         :=*%%##**+++=-.:--:-=. ..  .=*: =@+  =@=.=*=.  .. .--:--..-=+=+**##%%#=:
-                                                                                     .=*%#+==**@- .::   :=+-:. .++--.  .::-@--@-:.   :--+=. .:==-.   -:. -@**--+%@#=:
-                                                                                  .=#@%+.   -++@-:+-. =*+-.-+- :++*+=**-   ####   =**+**++:.=+::-+*= .==.:%++:   .*%@%+:
-                                                                                -*@%#=.  .=- :=#@*+=:   :=+**#%##*+=-=+++-:=%%=--*+*==-=+#%%%**+=:   :=+*@#-..==.  .+##@#-
-                                                                              .*@%+=--:.::. -*@*-:+%%%%*-. .: .+#%= :---:+*+##***----. -%#=:.:  .-*%%%#=::*@+. .::.---=+#@*
-                                                                             .*@#+--:-:  :#%%#:.=.=+++#@@#-..-.:+*%: .++- %%%*#@.=+=  :%*=.::..=#@##+++-:-.:#%%*:  :-:-=+#@*
-                                                                            -#@%####%@==*=::. ::..-==#%@@#=-..  -+*%. +++*#%%#*#*++- .%*+. . .-+#@@%*-=-..-:  .:=+-+@%*###%@#-
-                                                                         :+%%%+===-=*##=       .=*:*%#=.      :--=+#+  :#+.@#*%.**.  *#+---.      .=#%+-*-.       -##*=--==*#%%*-
-                                                                      .+%@**-     -+##..#   .==++*#@=-=.  -+*#%*=-=%-  .+=.%#+#.==   -%-=+*%#*+-  .=:#@#*++=-.   *..##+:    .=**@%=.
-                                                                     :%@*-:-..-.. :*%.-#-   -+=. .-+*#=::  .---=*%%=   .-=:%#=%:=-.   =@@#+---  .::=##+:. :=+:   -#-.%+. ..- :-:-#@%.
-                                                                     *@#**#*.:=*###*+=-..-. :*##+= ..=%@*:  ---=++***::==-*++:++-+=::%#+++---: .:*@%=.  =+##+. :-..-++*###+=.:#*+*#@*
-                                                                     %@%+-.-**++=-.:-+##@@%*+-.  .:.-+**%#.:---:-++*#=--.:#=:.+#-.-:=@+++.-:--..%@**-=...  .-++@%%##+-:.-=+=**-.-+#@@.
-                                                                    +@+.-=*%:.--  =-:   ...... :.-:#++%+:@:  .-=++=+::++: *#:.*+ -++.:==++=-.  :@.+#**+:::. .: ...   :=: .--.:%+=:.=@*
-                                                                  :#@=.*%%@%-+:.      -.-: ..::.=+##*=. +- :=%*=:.::   -+.#*:-**:+:   ::.:-+#=: -= .=*##=-.:.:. -:::     ..:=-%@%%+.=@#:
-                                                                :*@%:=#+-:.*:--=-    ...=--+**#*+-:      .*%*.  :---. .+*-@= --%-#=  :---.  .*%+       .-++#+*+:-=.:    .-=-::*.:-+*=-#@#:
-                                                               +@%=++%:=**#***+*-  ::-:++#+-: .  ..  :.-*#*% ... --+#=..:%#=.-+*#:.:=#+-: ... %*#+::.  .. ...:-+*+--=.: .=#+**#*#*-:#=+*%@+
-                                                              +@#%#*%%*=::..:=#@%=:-.+*#-.:-.:..--.  ...:-=-=-:::.. .=#%@#*:--++=#%#=. ..-:::==+-....  :-- ...-:.-##=:::=%@#=:..::-+#%*%%%@+
-                                                              @@%%@@=.: ..- :=--@%@%@@*.-+..-==-:.:-.       .=++-:.:+--*#+-:.-*++**-==:::-**=.       .-. :-==-.:+:.*@@%%%@==-:.:.. :.=@@%@@@
-                                                             -@@%@%.  :   .   .--:=%@@:.:. -=-:-+*:            .:-    -=%#=++-..=%=:    -:.           .=+=::--- .:..@@%::--.  ..  ..  .%@%@@:
-                                                            :%@**@-.--.  .+#=:     :-##.   .:.==+**+::+=:           .--==%=== :=%==--            -++:-***+=-.:    .##-.    .-=#+.  .=- -@**@@:
-                                                           .%%===@--=*-    .+%#+=*   :..-++#@%%#*+++###=.:::=::=--:    -+##+:.-+#+:   .---=:--.:::+##*+=++*%%@*+=: .:   *=**%+.   .+*=:-@===%@:
-                                                           +@++-:+%: :*:   :+*@%*.  .-=+#%*=:         :*%%#*=---.==--:.-++%+=:-%++:.:-===.---+##%%+:         :=*##+=-   .*@@#+.   =+. :%+:=++@*
-                                                           *@+-  .:== :.  ..+#@%- :--=#*-.     .:=---:   -@@##+-=#**+ .::+@.-.-@+.:. =**#-=+##@%-   -----:       -#*=--. =#@*=..  :. =+..  =+@*
-                                                           :@@-:.   :     .=#@@= :*#**-     .=+*+-.       .+%@%+++=.  ..::#*=-=%::.   .-++*@@%*.       .=+*+-      :**#+..+@@*=.     :   .:=@@:
-                                                         .-*@@#:.   -.-=-  =%@%*+%+-.     .+#*+=:.=       .. .=       +.- %#-:=%.--:       =. .        = -++*#+.     .-+%++%@#: .--:.-   .-#@@*-.
-                                                       :*@%*-. .==+=% .-*=.+%@#*@-    .=+*==++-:--*==: -- .--...--..= :  -@+-=:%- .: + ::- :::= .=. :=+*:-:-*+=+*=-.    +@*#@%-.+*:. %=+=-. :-*%@*:
-                                                     .*@#=-:=+++===.*+: ..=%@+=%@%: :==*#++===*%%%%+++=:+=-%++=-.  ::.. =%=-..+*%= . -.  :-+++#=-=:-+**@#%#*-+=+*#+==. :@@#=*@#-.  :+*:====++=--+#@*.
-                                                    -@@--*%+:.: -:.  :-. .%@%#-+%@* .-***=.:-=#%@@@%##@%@**+++****+*++:+%+-   +++@=.+++*#*#**++*#%@%##%@%%##=-..=***-. *@%=-%%@#  .-:...::.- :+%+--@@-
-                                                   :@@:=#@-      :+-------+#*#%%@#. .=#%+===+++#%%%@@@+:          ..  .@*+.  :+++#@.   ..         :+@@@%%%#++++==+%#-  .#@%%#*#=---:-:=+:      -@*-:@@:
-                                                   #@= -@@=   -+-. .-:--:-   :*#@#:.:-. .:.: .-=+@@@+. :-..  ::::..    %+--.    -#%   .:..--.  .:-. .+@@@*--  : :  :::.=*@#+.  .-:--:-  :=+:  .+@%. =@#
-                                                  .@@. .#@:        ..:.....    -*#@%+:-. =:-= :=-=%-   .:=%:-:.:..: : .:@#+.  -*%@:....:..:.=--%-:    -@=--:.-.:=.:=:+%@#*:    .....:.         -%#  .@@.
-                                                  =@#   #%.       .=*#++=:+=:::.--=#@*++:::-+++=+@:    ::-=*+=+==+=:++=#%%#+:.=*#@#-=+:-*:=+++*=-::    :@*=+==--.-*+#@#-:-:.-.-+=-+**#-.       -@%   #@=
-                                                  *@#.:.*@-         .-+++****=++==++@@@@#*+%%%%%%#-..:---. .=**+#+==+-:.%%@*-==#%# :=+==*****=. .-=--.:-#%#%#@%*+#@@@@+=+==++**+*+++-.        .=@#.::#@*
-                                                  @@*===#@*:-.               :+#*#%@@@@+-. .+%@@@*+-: .===+. :#=. .=-:.:*+@####@=#..-==  .=#: .+=+-  :=*+@@@%=  :==@@@@#**#+:.              .=.#@#-+=#@@
-                                                 :@@@%@@%@@@@%*+.:              =@@@@%#-.   -*#@@*::  :=+:.#.    .----.:.=@@@%%@-:.:----     .#.-+=. .:-#@@#*:   ::%%@@@@=.            .:.*#%%@@@%@@%@@@:
-                                                 #@#+-::.  .:=#@%# -             .%@@%*=:   ..-*@*+=:  .:- ==.:    -=+=--*@*=+#@+-====-    :.=+.=..  -=*+@*-.    :=+#%@%:             -:*@@#=:.  ::.-+#@#.
-                                               :#@=   -.       :#@*=--:--         .#@%#-+. +   =%**---. .:--#:=--  .+@%%@@*=::+*@@%%@+. .-=-:*--:  .--=**%-   + :+-#%@#:        .--:=:=%@#.       ::   +@#:
-                                              +@%:   -:          #@...:..::.        :=***-=-.-*+-%+-=+-  .: -+-.::.  .*@@**=.+**#@@*.  ::..-+- :  .-+--+%+++: ---***=:        :-...:...@#          =:   -%@+.
-                                            .#@+.   .+.     -.   .@#=======-.           .:  =----=@=+-     .  :=+=.    =@#*:.+++*@=    .=++:  :     -==@==-:--  :.           .-=======#@.   ::     :+.   .+@#.
-                                           .#@=  .:.*#.    .=.    +%       :=+=..-:          .:::-+%=+:   :-=-.  -#:.+- #@*..--+@*.==.:%-  .-=-:   -+=#=--:.. .       .-:..++=:       %+    .=     -#= :.  =@#.
-                                           =@* .:-:==-.    :=                .:%::==:: -:..=-.:-:-+%#+..    :=-=: -%. =-:@#--:=*@:+-  %- -===.    .:**%+=:-..==.:.: ::+=.-%:.               .=.    .==-.=.. *@=
-                                           *@+ -=-====+==--#*:              .+-=%+-::--=+=**#**--=+@+++=.      .-  @: :- @%+++=*% =. :@ .-.      .=*=*@=--:**##*++--::-:+%==+               -#*-======+--=:.*@*
-                                           +@@*-:*#+-.   :*##.              --=#@@%+***-.--==%@@%#@%+-+-+.:::  :-: %- .: #%###*## -. -% --.  -.::==+-*%@*%%%%===..-*+++%@@*==:              -*#*:   .-+#*--%@@=
-                                           .@@#*++-.=-  :--**- -.      ...    -@%%**%#*+====-...-+%%+==.-:...   :-.%- .=.#%*++-#*:=  -%.-.  ....::.=+*#@+:. .-=====**#**%%@-    :..      .- =*#--:  =-.-+**#@@.
-                                            #@#=-  .-=: .--:*#:%+-:-:--*=.  .+%*#*#+:..  .   ..::.*@=.  ...::      @-  : #%***+%*.:  -@      -.. .  :=@+.:: .  .   ...=**#*%+.  .++:---:=**:##--- .:=:. .-+#@%
-                                           :@%+=   :*:::   :--+%%#+-::..   .%%#%%*:-.--.-=.  -:-+=+%. :-::.: -.    @= .+.#%##%#%#:=  =@    .: -.-:-. .%=+=-::  -:-.-::-:*%%*##.   ..:-=+#@%+=-:   -:.*:  .=+%@-
-                                           *@**-    *=    -. .*--=*%+++    =@#%*#**#=*+-:..  .*####=.              #+ .=.@#*+++*@:-  *#              :=####+.  ..:-+*+#*+##%*@=   .+**%*=-=+. .-    =*    =+#@*
-                                          .#@%==.  .=*+:  :-=. ==----%#.   :@%+=#**++**%@= .=**+=--:=..      :---  -%  :-@*+.=++@=.  %- .---:      :.=:-=-**+=..+@%#+++**#=*#@:   .#%=---=: .==.  :*#-   :==%@*.
-                                         :@##@@+=....:=%#. .:*.  .=+-.%#  :=*#++++------=%*=-.:: --:::-=-::-:..-**. =: .#%*+.:-+#*  := :**: .:--::==.-:::.::.:=*@+---=:-++++%#=:  *%.=+-   .*.. .#%=....:-=@@##%:
-                                         *%+-+*#* =+-.:*%* --=-   ..--=@.      ...  ::.:-+@-:=.-..:..=**=-:::-==::::    @*-: .=+#@:   ::.-==-:::-=*#-.:...:.+::@+-: -.  ....     .@+--..   -=-: *@+..=+- *#*+-*%*
-                                         #%=..:..-:--:-=%* :-:*      =.#+           .-.=+=@=-+=.+- +*#+  .::..=-=+:  ::-@=..--.+*@:-.  :*=-= .::.  *#==.:+.++-:@=+-.=.           +%:-      +.+. +%-:---:- ::..+%#
-                                         +@+= :..:  :--*@: -. *:     -*-@:..        --.=++@%+**+-*=%*--  .+=:--:-**-.=:+%+- :- -=#*=- -#+-.==-==.  --##+*-+*+*#@*+:.=:       ...:@=+:     :# :: :@*--:  : .:.++@+
-                                         .@#+:.=***+:=*%#  == .#+:-. .+++#-+.     -**=-+*%%*-==#++--:-+   -=#-:+ ===.-=*%*-.:::++*%*::++-.*-=#=.   *--:-+*#==-#%%*+-+*+:     :-:%*+=. .-:+#..+:  #%*=.+***=.-+#@.
-                                          #%=-.  ..:==#@=  ==   -++*  .=**:+=     :--*###+=.+--.--.=::.   :.:++++ --.=:*%+.   --=%#-=:=: *#=*.:.   .-:=::-.-==.+**%#+--.    .+=:%*-   *++-   +:  -@*+=-..  :-=%%
-                                          %#--. :=*+-:.@+  -+.     #=  .-**.=-+. .=+*=:.                    :--=%+...=-.*#=-=.:*@*:--.  =#=--:                    .:=*==.::*:-.#*:   +*     :+:  =@::=*+-. .--#@.
-                                         +@==-   .-=-==+%*:..:     -@.  ..=:  .. ..:...  .  ....:.:..        -=--#%*=-:-.:#*=--#:.::-==#*=-=-        :.-.:.. .  .  ...:.....  -*..   %-    .-..:*%*====:.   ==+@*
-                                         #@#=+:     :: -=*%%=      .%#.--: ==.     =:-=.--:--+++++**+.=:.::   :-:===*##--.=@%#@:.=:*#**=::=.  .:-.-=:+*#+***+==--- =+.=     .=+.:--.*@:      =%%+=: ::     ===*@#
-                                         .*@%+-=-.  =+ .:==#@=  ::  .%+ :==..===----=====++==- :+--:-**=--:     -:.+-=%:--+@%%%*--:%+-=.::     :-=+**=:--+:.===*++=====--====.:==. *#.  -.  =@#=-:  +=  :-=-+#@*.
-                                         :%@%@*--+-.=*-=..*=#* :===: :@:    .=+--:-.--:- -:...:--.:=+-:*%*+:.     -.-.+=**%%###****-::.-    .:-+#%*--+=..--:.. ::.-:-:.=:--+=.    :@: -==-. *#++.:=:*=.==--#@%@%.
-                                        .%@%#%@@%+-.-% .=-.-##   :#-. -%-     .. . .. .   .***=:.   ---.-##=-:.   .- -.:-:+#**#+:-:.:.-.   ::-=%#::---   .:=+*+:   . :  . .      =@- .=*.   *%:.--  %=.-+%@@%#%@%.
-                                        =@%#@#*#%.-: *- .==-*@.   :-:  :*#=.::.         :=#=.          .. =#*=:+ .     .=.-+++=-.-.     ..=:=#%= .            =%=.         .-..=#*: .--.   .%*==-  =# :-.%#*%%#%@=
-                                        =@#*+-=-%*.  .*+..=-+@*    .::---=**=#+==.. .::-**. ..        .-#+..*#*=.#..     -+++++=:     ..#.=*%+..+#:.        .  .**:-.. :.==+#=**=---::.    *@+-=..+#.  .*%=-=+*#@=
-                                        .%@%=-.: -*=.  =#=. -*@*.            .:==+*+#+**:  .-.-%     :---*%=.:**=-+=  :=**++*#*--+-:  ==-*##:.=%*::=.    .%-:-   :+******==-.             +@+: .=#=  .+#-...-=%@%.
-                                         .%@#=.    :=+- .=#+:.=@#.  .-..                 .:- -@#=:. .==+:*#@%+..=+++==++:#****=.*==+==+**=.:+%%*+:+=-  .-=#@:.-:.                 ..=   .#@=.:+#=. -++:    :=#@#.
-                                          .%@+.::::.  :=   -*%#%@%: -++==..           .-::. -*@=::. :--=*-*#+*#******=:-+%***+-+%*::=******##+%=-*-:-: .:-=@+: .-:-.           :.+++=. :%@%#%*-   =:  .:::::+@%.
-                                           *@=-.   :-==.      .-=@@= ..-=:==-+=--:---:-. .-+-*@=:  .--=======+-=-.----+-+#=+: .+%*-==--=.-=-====--+=--.  -=@*==:. :::-::-=-=+--+:--.  -@@=-:      .==-:.  :-=@#
-                                           @@#*      -*%*-       :%@*:            :..:.:-=-:*@@--.:    :: ..:.:    .--=*%**+. -**@*=-:.   .:...  :.   .::--@@*:==-::: :.            .*@%:      .-*%+:     .##@@
-                                          .@@*=.      :--+#+=:.   .+@@#*=:.... . :-===+-:.:%@%%*+===+-.           ::-+##@%%:  :*%@##+-:.           :=+-===*%%@%:::=+===-: . ....:-+#@@=.   .:=*%+:=.      :=*@@
-                                           +@#=-.       .::=+*+%%##@@%#%@@@@@@#%*#****=*##@@+..#%*+++==-..    .:---=-=**+@*+:.*%@***=-----:.    ..-=++++*##..*@@%#++***##*%#@@@@@@%##@@##%#*#+-.:        .-=*@+
-                                            =@@#-    :      -.:..-===:::.==++*%@@%##%%%@#*=.    -*#%%##+*=::  ...-: .=--*%*+=+%#%+---  --...  -:+**##%%#*-    .=*#@%%####@@%#++=-.::-===-..:::      :    =#@@=
-                                             .-*@%#+==+=---..:=--:-:::%. .. ===-**##+- +=  :-:      ..-+#%*+-   :   :- .#@++***+@* .=.  ..  .=+*%#+-.       :=.  =+.-+##**=-=- .. .%-:--:---..:=--==--=*%@*-.
-                                                @##@@@@@@@%%*#-:...=*+%%+:    :+*+=-+%#+*= ====-:.       :+#**:---:..-..+@%#***+%*.:-.:.---:**#+:       :.====-.+*+%%=:=+*=.    :+%%+*=.:::=*#%%%@@@@@@#%@
-                                                %@%#*=:+=++#@@@%@##%*#*==*+=.   -=++-++##-+=-::.=+=++--.  . .=*#*+--*=*##++++===+#@*=+--=***=: . ..-==+===.:--+*-%#++=*==:   .=+*==#*+@%#%%@@%#+++=-+*#%@%
-                                                #@+**: ..+::=-+*@@@@#*++=:=*-.   -+=+++*@:  .--=====+*++:--=-.  :=++%@#*##+==+-****%%#=+=:  :-=-::+=++======-.  :@++=+=+:   .=*--=*+*#@@@@*+:+.== ..-**+@#
-                                                *@**#= .---. :-+-*%@%**##=:=       :+++#@#. :-++-+---==-==++:--     :*@%***+*+.++*%@*:    .=-:+++-=-=-:-=-+=-. .*@#+*+:      .=:=#*+*%@%+==-. .---..****@*
-                                                :#@%#*=.::--  .--==+%@@%@#@.       :==- .-%-  . .:-:..:+**--#=        :*@+**+:=+%@+:        +#-=**+::.:-.  .  -#=. :--.       .%%%%@@%+==--  .-::::=*#%@#:
-                                                  .-+#%%*+=-     ...=*#%#%%-.+-:  .: =#:  .%-     :#-==-....-#*%+   .-- .+@*=+*@+..-=.  .*#*#-.:.:---=*.     -%.  =#: :. .:-+-.#%%%#*:...    .-=+*%%#+-.
-                                                       :+%@*=-..--:.---+*+@+:=-:     ===   -@.    .:..:--==:.:-*#:    -+- :#%##:.=+:    -#+-:.:===-:..:.    .@-  .+=-    .::=-=@**+:--.:--.:-=*@%+:
-                                                          :#@*==.----:-=+=+##.     .+***=.  %+ ::         .-+=. .=:.  :==- .%%..-==.  ::-  .+*-.         -. +%  :+***=.     .##+===-.---::==+@#:
-                                                            =@#-.==--=---.--*%*-.  . :===.  :%+--+=-.        :*= .-- .-++:  *+  :++- .-:..=*:        :-+=--+@:  .===:..  .-*%*-:.---=--==.-*@=
-                                                             +@*+.  :.:=--:-=.:=**#####+=.   .*%*-=*::.---:. . =#-   :---: :@%. :---:   -#=.. :.---.::*:-*%#:   .=+#####**=:.=-:---::.  .*+@+
-                                                             .%%*-. -=+*=++     .:     .:---   :+#%#*+*--::--==:.=*+-:..:-+@%*#*-:..:-+*=.-==-:-::-*+*#%#+:  .---:.     :.    .*++*+=: :=+%%.
-                                                              :%##*%%#+=--:      :++=:-::.:-==--.:-=++#@@#+=:..:-. .:-=@@%%%##%%%@@=-:. .-:..:=+#@@*++=-:.--=--..:-:.=++:      :-=+*%%###%%:
-                                                               .-%@%- .=*+-:.       .-+*###+--.---. .:==-****+++- :---:*@%##%%%%#@+:---. -+*+***+-=-:. :=::.-=*##**=-.       ::-+*-  -%@%-.
-                                                                 :@@@%=.:=-+=-:           :-=*%*+===--: ..  *.    . --==#%#####*%#==-:..    .*  .. ::-===*#%*=-.           --=+==..=%@@@:
-                                                                  :%%%%%#**+==-:.             -@#=-   .-=-=--*- .-:   .++@***##%@*=   .--  -*--===-.  .-+*@-             .:-==+*##%%%%%:
-                                                                   .+@@*+*-=::-==+*++---+::=.+.%%+:  :-=+-++++##+=-:.  ::%@%+*%@%::  .:-=+%%+*++-+--.  -=%% =--.-=---+*+++=-:---%+*@@+.
-                                                                     .-*#@%#%#.=-.  .*= .-*:=-+*@=+. . .--+==-..-:.:=. :=@@@@%@@%-. .=:.--.-===+--    :+=@%-=-=*:. +*:  .-=:%##%@#*-.
-                                                                          :-=*#%#+=.. :.   --=-@%=::.+=..   -. .*+:  :.:+@@%%%%%@=:..  -++  ::   ..==.-:+#@-==:   .: ::=*#%#*=-.
-                                                                               .=%@+:=:    .:=@#--::..-==: --.:-.-. .-=#@%%@@@%%@@%=-. :-.-.:-: -==- .:::=#%-:     :=+=%%=.
-                                                                                  -#%##%.-.=%@@##**=:.-=+*#==*====+=*##*@%@@@@@@%@**#+=+=+=+*==#*+-- -+**#%@@#=:-:##%%#-
-                                                                                    .:=*#@@@%%%%#+%#*=-:-----::=--=-+***@@%%#*+*%@#*++-=-==.:---::.:=*%%+%%%%%@@@#*=:.
-                                                                                          .-+*#@*@@%##%##%*-: :.  .::--+@#      +@+--::.  ...:-*###%##%@%*@##+-.
-                                                                                               .:--==+*%@*+***+-:--==*%#-        -#%*==--:-+***=#%%*===--:.
-                                                                                                        -#%%#+=++*%#*-.            .-*#%*++++%%%*-.
-                                                                                                           .:---:.                      .:---:.
-`;
-
-const BRAIN_FRAME_COUNT = 12;
-const BRAIN_FRAME_INTERVAL_MS = 95;
-const BRAIN_NOISE_CHARS = [".", ":", "-", "=", "+", "*", "#", "%", "@"];
-const ASCII_FONT_STACK =
-  "var(--font-fira-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
-
-function normalizeAsciiArt(ascii: string, options?: { trimEachLineStart?: boolean }) {
-  const lines = ascii.split("\n");
-
-  while (lines.length > 0 && lines[0]?.trim() === "") {
-    lines.shift();
-  }
-
-  while (lines.length > 0 && lines[lines.length - 1]?.trim() === "") {
-    lines.pop();
-  }
-
-  if (lines.length === 0) {
-    return "";
-  }
-
-  const trimmedLineEnds = lines.map((line) => line.replace(/\s+$/u, ""));
-
-  const normalizedLines = options?.trimEachLineStart
-    ? trimmedLineEnds.map((line) => line.trimStart())
-    : (() => {
-        let minStart = Number.POSITIVE_INFINITY;
-
-        for (const line of trimmedLineEnds) {
-          const firstVisible = line.search(/\S/);
-          if (firstVisible === -1) {
-            continue;
-          }
-          minStart = Math.min(minStart, firstVisible);
-        }
-
-        if (!Number.isFinite(minStart)) {
-          return trimmedLineEnds;
-        }
-
-        return trimmedLineEnds.map((line) => line.slice(minStart));
-      })();
-
-  const maxWidth = normalizedLines.reduce((max, line) => Math.max(max, line.length), 0);
-
-  if (maxWidth === 0) {
-    return "";
-  }
-
-  return normalizedLines.map((line) => line.padEnd(maxWidth, " ")).join("\n");
-}
-
-function buildBrainFrames(ascii: string, frameCount: number) {
-  const nonWhitespaceIndexes = Array.from(ascii).reduce<number[]>((acc, char, index) => {
-    if (char !== " " && char !== "\n") {
-      acc.push(index);
-    }
-    return acc;
-  }, []);
-
-  if (!nonWhitespaceIndexes.length) {
-    return [ascii];
-  }
-
-  return Array.from({ length: frameCount }, (_, frameIndex) => {
-    const progress = frameCount === 1 ? 1 : frameIndex / (frameCount - 1);
-    const stableThreshold = Math.max(0, progress - 0.08);
-    const chars = Array.from(ascii);
-
-    for (let i = 0; i < nonWhitespaceIndexes.length; i += 1) {
-      const charIndex = nonWhitespaceIndexes[i]!;
-      const revealPoint = i / nonWhitespaceIndexes.length;
-
-      if (revealPoint <= stableThreshold) {
-        continue;
-      }
-
-      if (revealPoint <= progress) {
-        chars[charIndex] = BRAIN_NOISE_CHARS[(frameIndex + i) % BRAIN_NOISE_CHARS.length] ?? ".";
-        continue;
-      }
-
-      chars[charIndex] = " ";
-    }
-
-    return chars.join("");
-  });
-}
-
-// const normalizedShadow = normalizeAsciiArt(asciiLogoShadow);
-// const normalizedSolid = normalizeAsciiArt(asciiLogoSolid);
-const normalizedBrainAscii = normalizeAsciiArt(brainAscii);
-const brainFrames = buildBrainFrames(normalizedBrainAscii, BRAIN_FRAME_COUNT);
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { HeroGridOverlay } from "./grid-background";
 
 export default function HeroSection({ skillCount }: { skillCount: number }) {
-  const router = useRouter();
-  const [brainFrameIndex, setBrainFrameIndex] = useState(0);
-  const [heroPrompt, setHeroPrompt] = useState("");
-  const [didCopyInstallCommand, setDidCopyInstallCommand] = useState(false);
-  const { data: session, isPending } = authClient.useSession();
+  const [didCopy, setDidCopy] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { data: session } = authClient.useSession();
 
-  const ctaHref = (session ? "/vault" : "/login") as Route;
+  const ctaHref = (mounted && session ? "/vault" : "/login") as Route;
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reducedMotion) {
-      setBrainFrameIndex(brainFrames.length - 1);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setBrainFrameIndex((prev) => {
-        if (prev < brainFrames.length - 1) {
-          return prev + 1;
-        }
-        clearInterval(interval);
-        return prev;
-      });
-    }, BRAIN_FRAME_INTERVAL_MS);
-
-    return () => clearInterval(interval);
+    setMounted(true);
   }, []);
 
-  const handleHeroSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (isPending) {
-      return;
-    }
-
-    const q = heroPrompt.trim();
-    const dashboardPath = q ? `/vault?q=${encodeURIComponent(q)}` : "/vault";
-
-    if (!session) {
-      router.push(`/login?next=${encodeURIComponent(dashboardPath)}` as "/login");
-      return;
-    }
-
-    router.push(dashboardPath as Route);
-  };
-
-  const handleInstallCommandCopy = async () => {
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText("curl -fsSL https://better-skills.dev/install | bash");
-      setDidCopyInstallCommand(true);
-      window.setTimeout(() => setDidCopyInstallCommand(false), 1500);
+      setDidCopy(true);
+      setTimeout(() => setDidCopy(false), 1500);
     } catch {
-      setDidCopyInstallCommand(false);
+      setDidCopy(false);
     }
   };
 
+  const skillBadgeText =
+    skillCount > 0
+      ? `${skillCount} ${skillCount === 1 ? "skill" : "skills"} in your vault`
+      : "Open source & free";
+
   return (
-    <>
-      <section className="relative min-h-screen flex flex-col overflow-hidden">
-        {/* Brain ASCII Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
-          <pre
-            aria-hidden="true"
-            className="mx-auto w-fit whitespace-pre text-[5px] md:text-[6.5px] text-primary/[0.5] [font-variant-ligatures:none]"
-            style={{
-              fontFamily: ASCII_FONT_STACK,
-              lineHeight: 1.15,
-              letterSpacing: 0,
-            }}
+    <section className="relative flex min-h-[calc(100vh-52px)] flex-col items-center justify-center overflow-hidden lg:min-h-[calc(90vh-52px)]">
+      <HeroGridOverlay />
+
+      <div className="relative z-10 flex w-full justify-center px-4">
+        <div className="flex w-full max-w-3xl flex-col items-center gap-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
           >
-            {brainFrames[brainFrameIndex]}
-          </pre>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 pb-16">
-          <div className="max-w-5xl mx-auto w-full">
-            {/* ASCII Logo — Vercel skills.sh approach: two layered <pre> tags */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.05 }}
-              className="relative mb-6 w-full flex items-start justify-center select-none"
+            <Badge
+              variant="outline"
+              className="gap-2 border-primary/30 bg-background/80 px-3.5 py-1.5 text-xs font-normal text-muted-foreground backdrop-blur-sm"
             >
-              {/* <div className="relative mx-auto w-fit max-w-full">
-                <pre className="inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-neutral-300 font-[family-name:var(--font-fira-mono)]">
-                  {normalizedShadow}
-                </pre>
-                <pre className="absolute top-0 left-0 inline-block whitespace-pre text-[9px] lg:text-[15px] tracking-[-1px] leading-[125%] text-foreground font-[family-name:var(--font-fira-mono)]">
-                  {normalizedSolid}
-                </pre>
-              </div> */}
-            </motion.div>
+              <span className="inline-block size-1.5 bg-primary" />
+              {skillBadgeText}
+            </Badge>
+          </motion.div>
 
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="text-3xl mb-4"
-            >
-              your agent's <span className="text-primary">second brain</span>
-            </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl"
+          >
+            Your Agent&rsquo;s
+            <br />
+            <span className="text-primary">Second Brain</span>
+          </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-md text-muted-foreground leading-[1.7] max-w-lg mx-auto mb-8"
-            >
-              Build and manage a private graph of reusable skills for your AI agents. Connect your
-              CLI and web app to your vault.
-            </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18 }}
+            className="max-w-md text-base leading-relaxed text-muted-foreground sm:px-0 px-6"
+          >
+            Build, share, and manage a graph of reusable skills for your AI agents. It&rsquo;s also
+            open source.
+          </motion.p>
 
-            {/* Chat box */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="w-full max-w-2xl mx-auto bg-background border border-border p-4 mb-8"
-            >
-              <form onSubmit={handleHeroSubmit} className="space-y-6">
-                <input
-                  type="text"
-                  value={heroPrompt}
-                  onChange={(event) => setHeroPrompt(event.target.value)}
-                  placeholder="I want my agent to know how to use…"
-                  className="w-full bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-primary"
-                  aria-label="Describe the skill you need"
-                />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <Copy className="w-3 h-3" />
-                    {skillCount > 0 && <span>{skillCount} skills across vaults</span>}
-                  </div>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/30 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors disabled:opacity-60"
-                    disabled={isPending}
-                  >
-                    Submit
-                    <ArrowUp className="w-2.5 h-2.5" />
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-
-            {/* CTAs */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3"
-            >
-              <Link
-                href={ctaHref}
-                className="order-2 w-full sm:order-1 sm:w-auto px-7 py-2.5 bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 hover:scale-[1.02] transition-all duration-150"
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.24 }}
+            className="flex w-full sm:w-auto max-w-xl flex-col items-center gap-3 px-4 sm:px-6 lg:px-0"
+          >
+            <div className="flex w-full flex-row gap-3">
+              <Button
+                size="lg"
+                className="h-11 min-w-0 flex-1 gap-2 px-4 text-sm sm:px-7"
+                render={<Link href={ctaHref} />}
               >
-                {session ? "Go to Vault" : "Get started"}
-              </Link>
-              <button
-                className="order-1 w-full sm:order-2 sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-background/95 backdrop-blur-md border border-border text-foreground text-sm hover:border-primary/50 transition-colors duration-150"
-                onClick={handleInstallCommandCopy}
+                {mounted && session ? "Go to Vault" : "Get Started"}
+                <ArrowRight className="size-3.5" data-icon="inline-end" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-11 min-w-0 flex-1 px-4 text-sm sm:px-7"
+                render={<Link href="#pricing" />}
               >
-                {didCopyInstallCommand ? (
-                  <Check className="w-3.5 h-3.5 text-primary" />
+                See Pricing
+              </Button>
+            </div>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleCopy}
+              className="group h-11 w-full sm:w-auto justify-between gap-4 border-border bg-background/80 px-4 font-mono text-xs font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground"
+            >
+              <span className="flex min-w-0 items-center gap-2 text-left">
+                <span className="shrink-0 text-primary/60">$</span>
+                <span className="truncate">curl -fsSL https://better-skills.dev/install | bash</span>
+              </span>
+              <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background cursor-pointer">
+                {didCopy ? (
+                  <Check className="size-3 text-primary" />
                 ) : (
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="size-3 opacity-70 transition-opacity group-hover:opacity-100" />
                 )}
-                curl -fsSL https://better-skills.dev/install | bash
-                {didCopyInstallCommand ? (
-                  <span className="text-xs text-primary" aria-live="polite">
-                    copied
-                  </span>
-                ) : null}
-              </button>
-            </motion.div>
-          </div>
+              </span>
+            </Button>
+          </motion.div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
