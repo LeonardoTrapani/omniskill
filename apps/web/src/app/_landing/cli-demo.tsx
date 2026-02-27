@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Box, Check, ChevronRight, Copy } from "lucide-react";
+import { ArrowRight, Box, Check, ChevronRight, Copy } from "lucide-react";
+import type { Route } from "next";
 
 import { SectionBackdrop } from "./grid-background";
 import { Button } from "@/components/ui/button";
 import { LandingContainer, SectionTailSpacer } from "./design-system";
+import { authClient } from "@/lib/auth/auth-client";
 
 const command = "npx -y better-skills-cli@latest init --all --browser";
 
@@ -148,6 +150,13 @@ const iconItems = [
 
 export default function CliDemo() {
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { data: session } = authClient.useSession();
+  const ctaHref = (mounted && session ? "/vault" : "/login") as Route;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -160,7 +169,7 @@ export default function CliDemo() {
   };
 
   return (
-    <section className="relative overflow-hidden">
+    <section id="docs" className="relative overflow-hidden">
       <SectionBackdrop variant="cli-demo" />
 
       <LandingContainer>
@@ -185,11 +194,11 @@ export default function CliDemo() {
             </p>
 
             <Button
-              className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors"
-              render={<Link href="/skills" />}
+              className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:border-primary [a]:hover:bg-primary [a]:hover:text-background"
+              render={<Link href={ctaHref} />}
             >
-                Learn more
-                <ChevronRight className="size-4" />
+                {mounted && session ? "Go to Vault" : "Get Started"}
+                <ArrowRight className="size-4" />
             </Button>
           </div>
 
@@ -229,13 +238,13 @@ export default function CliDemo() {
                 variant="outline"
                 size="lg"
                 onClick={handleCopy}
-                className="group h-11 w-full max-w-[700px] justify-between gap-3 border-border/70 bg-background px-4 font-mono text-xs font-normal text-foreground hover:border-primary/35 sm:h-auto sm:px-6 sm:py-3 sm:text-sm"
+                className="group h-11 w-full max-w-[700px] justify-between gap-3 border-border/70 bg-background px-4 font-mono text-xs font-normal text-foreground sm:h-auto sm:px-6 sm:py-3 sm:text-sm"
               >
                 <span className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <span className="shrink-0 text-primary">$</span>
                   <span className="truncate">{command}</span>
                 </span>
-                <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background sm:size-7">
+                <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background sm:size-7 cursor-pointer">
                   {copied ? (
                     <Check className="size-3 text-primary sm:size-4" />
                   ) : (

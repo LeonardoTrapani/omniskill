@@ -57,7 +57,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section className="relative overflow-hidden">
+    <section id="features" className="relative overflow-hidden">
       <SectionBackdrop variant="features" />
 
       <LandingContainer>

@@ -114,7 +114,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 <span className="shrink-0 text-primary/60">$</span>
                 <span className="truncate">curl -fsSL https://better-skills.dev/install | bash</span>
               </span>
-              <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background">
+              <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background cursor-pointer">
                 {didCopy ? (
                   <Check className="size-3 text-primary" />
                 ) : (

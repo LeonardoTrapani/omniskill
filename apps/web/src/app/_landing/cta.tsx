@@ -1,14 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { LandingContainer } from "./design-system";
 import { SectionBackdrop } from "./grid-background";
+import { authClient } from "@/lib/auth/auth-client";
 
 export default function CTA() {
+  const [mounted, setMounted] = useState(false);
+  const { data: session } = authClient.useSession();
+  const ctaHref = (mounted && session ? "/vault" : "/login") as Route;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <section className="relative overflow-hidden border-t border-border">
       <SectionBackdrop variant="default" />
@@ -85,11 +96,11 @@ export default function CTA() {
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               size="lg"
-              className="h-11 gap-2 px-7 text-sm"
-              render={<Link href="/login?next=/vault" />}
+              className="h-11 w-full justify-center gap-2 px-7 text-sm sm:w-auto"
+              render={<Link href={ctaHref} />}
             >
-              Start for Free
-              <ArrowRight className="size-3.5" data-icon="inline-end" />
+              {mounted && session ? "Go to Vault" : "Get Started"}
+              <ArrowRight className="size-3.5" />
             </Button>
             <Button
               variant="outline"

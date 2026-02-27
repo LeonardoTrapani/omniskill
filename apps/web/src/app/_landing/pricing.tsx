@@ -160,7 +160,7 @@ export default function Pricing() {
                 <Button
                   variant={tier.highlight ? "default" : "outline"}
                   size="lg"
-                  className="mt-6 h-10 w-full text-xs"
+                  className={`mt-6 h-10 w-full text-xs cursor-pointer ${tier.highlight ? "hover:bg-primary/80" : ""}`}
                 >
                   {tier.cta}
                 </Button>

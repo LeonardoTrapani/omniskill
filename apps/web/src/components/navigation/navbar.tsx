@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type MouseEvent } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
@@ -15,13 +15,14 @@ type PaletteMode = "command" | "vault";
 
 type NavItem =
   | { label: string; href: Route; kind: "route" }
-  | { label: string; href: `#${string}`; kind: "hash" };
+  | { label: string; href: `#${string}`; kind: "hash" }
+  | { label: string; href: `https://${string}`; kind: "external" };
 
 const publicNav: NavItem[] = [
-  { label: "Skills", href: "/skills", kind: "route" },
-  { label: "Docs", href: "#docs", kind: "hash" },
+  { label: "Features", href: "#features", kind: "hash" },
   { label: "Pricing", href: "#pricing", kind: "hash" },
-  { label: "Github", href: "#github", kind: "hash" },
+  { label: "Docs", href: "#", kind: "external" },
+  { label: "GitHub", href: "https://github.com/better-skills", kind: "external" },
 ];
 
 const appNav: NavItem[] = [];
@@ -102,6 +103,28 @@ export default function Navbar() {
     setCmdOpen(true);
   }, []);
 
+  const handleHashNavClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, href: `#${string}`) => {
+      if (pathname !== "/") return;
+
+      const section = document.querySelector<HTMLElement>(href);
+      if (!section) return;
+
+      event.preventDefault();
+
+      const navOffset = 60;
+      const sectionTop = section.getBoundingClientRect().top + window.scrollY - navOffset;
+
+      window.scrollTo({
+        top: Math.max(0, sectionTop),
+        behavior: "smooth",
+      });
+
+      window.history.replaceState(null, "", href);
+    },
+    [pathname],
+  );
+
   return (
     <>
       <nav
@@ -129,10 +152,21 @@ export default function Navbar() {
                   {item.label === "Explore" ? <Globe className="size-3.5" /> : null}
                   {item.label}
                 </Link>
+              ) : item.kind === "hash" ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(event) => handleHashNavClick(event, item.href)}
+                  className="text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
+                >
+                  {item.label}
+                </a>
               ) : (
                 <a
                   key={item.label}
                   href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-[13px] text-muted-foreground hover:text-primary transition-colors duration-150"
                 >
                   {item.label}
