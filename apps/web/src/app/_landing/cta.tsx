@@ -5,30 +5,26 @@ import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
-import { SectionBackdrop } from "./grid-background";
+import { LandingContainer } from "./design-system";
 
 export default function CTA() {
   return (
     <section className="relative overflow-hidden border-t border-border">
-      <SectionBackdrop />
-
-      <div className="relative z-10 mx-auto max-w-[1112px] px-4 py-32 sm:px-6 lg:px-0">
+      <LandingContainer className="py-32">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45 }}
-          className="w-full border border-border/70 bg-background/85 px-8 py-14 text-center sm:px-12"
+          className="flex w-full flex-col items-center gap-4 border border-border/70 bg-background/85 px-8 py-14 text-center sm:px-12"
         >
-          <p className="mb-4 text-[11px] font-mono uppercase tracking-[0.08em] text-primary">
+          <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-primary">
             // Get Started \\
           </p>
 
-          <h2 className="mb-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Ready to build?
-          </h2>
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Ready to build?</h2>
 
-          <p className="mx-auto mb-10 max-w-md text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-md pb-6 text-sm leading-relaxed text-muted-foreground">
             Start building your agent&rsquo;s second brain for free and scale seamlessly as your
             project expands. No credit card needed.
           </p>
@@ -46,13 +42,13 @@ export default function CTA() {
               variant="outline"
               size="lg"
               className="h-11 px-7 text-sm"
-              render={<a href="#pricing" />}
+              render={<Link href="#pricing" />}
             >
               See our plans
             </Button>
           </div>
         </motion.div>
-      </div>
+      </LandingContainer>
     </section>
   );
 }

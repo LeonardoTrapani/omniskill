@@ -2,6 +2,7 @@ import type { Route } from "next";
 
 export const dashboardRoute = "/vault" as Route;
 export const deviceRoute = "/device" as Route;
+export const welcomeRoute = "/welcome" as Route;
 
 export function buildSkillHref(skillId: string) {
   const encodedId = encodeURIComponent(skillId);

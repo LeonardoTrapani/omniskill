@@ -7,6 +7,7 @@ import { Box, Check, ChevronRight, Copy } from "lucide-react";
 
 import { SectionBackdrop } from "./grid-background";
 import { Button } from "@/components/ui/button";
+import { LandingContainer, SectionTailSpacer } from "./design-system";
 
 const command = "npx -y better-skills-cli@latest init --all --browser";
 
@@ -162,15 +163,15 @@ export default function CliDemo() {
     <section className="relative overflow-hidden">
       <SectionBackdrop />
 
-      <div className="relative z-10 mx-auto max-w-[1112px] px-4 sm:px-6 lg:px-0">
+      <LandingContainer>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.45, delay: 0.08 }}
-          className="grid overflow-hidden border border-border/70 bg-background lg:grid-cols-[40%_60%]"
+          className="flex flex-col overflow-hidden border border-border/70 bg-background lg:flex-row"
         >
-          <div className="border-b border-border/70 px-8 py-10 lg:border-r lg:border-b-0 lg:px-10 lg:py-12 flex flex-col justify-center gap-4">
+          <div className="flex flex-col justify-center gap-4 border-b border-border/70 px-8 py-10 lg:w-2/5 lg:border-r lg:border-b-0 lg:px-10 lg:py-12">
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
               // One Command Setup \\
             </p>
@@ -182,15 +183,16 @@ export default function CliDemo() {
               Give your AI agents web data with a single command.
             </p>
 
-            <Link href="/skills">
-              <Button className="inline-flex h-11 items-center gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
+            <Button
+              className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+              render={<Link href="/skills" />}
+            >
                 Learn more
                 <ChevronRight className="size-4" />
-              </Button>
-            </Link>
+            </Button>
           </div>
 
-          <div className="bg-muted/[0.25]">
+          <div className="bg-muted/[0.25] lg:w-3/5">
             <div className="flex border-b border-border/70">
               <div className="flex min-w-28 items-center gap-2 border-r border-border/70 px-4 py-3 sm:min-w-32 sm:gap-3 sm:px-5 sm:py-4">
                 <span className="inline-block size-2 border border-border/80 bg-muted sm:size-2.5" />
@@ -202,8 +204,8 @@ export default function CliDemo() {
               </div>
             </div>
 
-            <div className="flex min-h-[380px] flex-col gap-3 items-center justify-center px-6 py-10 text-center">
-              <div className="mb-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div className="flex min-h-[380px] flex-col items-center justify-center gap-8 px-6 py-10 text-center">
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 {iconItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -222,11 +224,13 @@ export default function CliDemo() {
                 })}
               </div>
 
-              <button
+              <Button
+                variant="outline"
+                size="lg"
                 onClick={handleCopy}
-                className="group flex w-full max-w-[700px] items-center justify-between border border-border/70 bg-background px-4 py-3 font-mono text-sm text-foreground transition-colors hover:border-primary/35 sm:px-6 sm:py-3 sm:text-[1rem]"
+                className="group h-auto w-full max-w-[700px] justify-between border-border/70 bg-background px-4 py-3 font-mono text-sm font-normal text-foreground hover:border-primary/35 sm:px-6 sm:text-[1rem]"
               >
-                <span className="truncate text-left flex gap-3">
+                <span className="flex truncate gap-3 text-left">
                   <span className="text-primary">$</span>
                   {command}
                 </span>
@@ -235,7 +239,7 @@ export default function CliDemo() {
                 ) : (
                   <Copy className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground sm:size-5" />
                 )}
-              </button>
+              </Button>
 
               <p className="max-w-sm font-mono text-sm leading-relaxed text-muted-foreground">
                 Works with Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and more
@@ -243,9 +247,8 @@ export default function CliDemo() {
             </div>
           </div>
         </motion.div>
-
-        <div className="h-20" />
-      </div>
+        <SectionTailSpacer />
+      </LandingContainer>
     </section>
   );
 }

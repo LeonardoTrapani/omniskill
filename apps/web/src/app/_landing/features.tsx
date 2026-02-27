@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "motion/react";
 import { Brain, TerminalSquare, Globe, Puzzle, Network, RefreshCcw } from "lucide-react";
 import { SectionHeader, SectionBackdrop } from "./grid-background";
+import { LandingContainer, SectionTailSpacer } from "./design-system";
 
 const features = [
   {
@@ -60,7 +60,7 @@ export default function Features() {
     <section className="relative overflow-hidden">
       <SectionBackdrop />
 
-      <div className="relative z-10 mx-auto max-w-[1112px] px-4 sm:px-6 lg:px-0">
+      <LandingContainer>
         <SectionHeader
           decorator="Features"
           headline={
@@ -73,36 +73,30 @@ export default function Features() {
           subtitle="Fully interactive through an API, MCP, or CLI. Open source and extensible."
         />
 
-        {/* 2x3 feature grid (Firecrawl / Better Auth style) */}
-        <div className="grid grid-cols-1 gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feat, i) => (
-            <motion.div
+        <div className="flex flex-wrap gap-px border border-border bg-border">
+          {features.map((feat) => (
+            <div
               key={feat.label}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.04 * i }}
-              className="flex flex-col bg-background p-10 transition-colors hover:bg-neutral-50"
+              className="flex min-w-[280px] flex-1 basis-full flex-col gap-6 bg-background p-10 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20 sm:basis-[calc(50%-1px)] lg:basis-[calc(33.333%-1px)]"
             >
-              <div className="mb-6 flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <feat.icon className="size-4 text-primary" />
                 <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
                   {feat.label}
                 </span>
               </div>
 
-              <h3 className="mb-3 text-lg text-foreground">
+              <h3 className="text-lg text-foreground">
                 <span className="font-semibold">{feat.title}</span>
                 {feat.titleBold && <span className="font-bold">{feat.titleBold}</span>}
               </h3>
 
               <p className="text-sm leading-relaxed text-muted-foreground">{feat.description}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
-
-        <div className="h-20" />
-      </div>
+        <SectionTailSpacer />
+      </LandingContainer>
     </section>
   );
 }

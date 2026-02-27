@@ -3,13 +3,13 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import * as d3 from "d3";
 
 import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { NodePreviewCard } from "@/components/skills/graph/node-preview-card";
-import { buildSkillHref, buildResourceResponsiveHref } from "@/lib/skills/routes";
+import { buildResourceHref, buildSkillHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
-import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 
 export interface GraphNode extends d3.SimulationNodeDatum {
   id: string;
@@ -65,6 +65,20 @@ function buildAdjacency(edges: GraphEdge[]): Map<string, Set<string>> {
 
 const TRANSITION_MS = 180;
 
+function getResourceNodeColors(isDarkMode: boolean) {
+  if (isDarkMode) {
+    return {
+      defaultFill: "var(--muted-foreground)",
+      activeFill: "oklch(87% 0 0)",
+    };
+  }
+
+  return {
+    defaultFill: "oklch(87% 0 0)",
+    activeFill: "var(--muted-foreground)",
+  };
+}
+
 export function ForceGraph({
   data,
   height = 450,
@@ -75,12 +89,15 @@ export function ForceGraph({
   onNodeClick,
 }: ForceGraphProps) {
   const router = useRouter();
-  const isDesktopLg = useIsDesktopLg();
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const isDarkMode = resolvedTheme === "dark";
+
+  const resourceNodeColors = useMemo(() => getResourceNodeColors(isDarkMode), [isDarkMode]);
 
   const nodeById = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
 
@@ -195,7 +212,7 @@ export function ForceGraph({
         .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)))
         .attr("fill", (d) => {
           if (d.type === "skill") return "var(--primary)";
-          return isFocus(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
+          return isFocus(d) ? resourceNodeColors.activeFill : resourceNodeColors.defaultFill;
         })
         .attr("fill-opacity", (d) => (d.type === "skill" ? 1 : 1))
         .attr("stroke", (d) => {
@@ -238,8 +255,8 @@ export function ForceGraph({
           .duration(TRANSITION_MS)
           .attr("fill", (d) => {
             if (d.type === "skill") return "var(--primary)"; // skills always primary
-            if (isFocus(d)) return "oklch(87% 0 0)";
-            return isActive(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
+            if (isFocus(d)) return resourceNodeColors.activeFill;
+            return isActive(d) ? resourceNodeColors.activeFill : resourceNodeColors.defaultFill;
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
@@ -267,7 +284,7 @@ export function ForceGraph({
           .duration(TRANSITION_MS)
           .attr("fill", (d) => {
             if (d.type === "skill") return "var(--primary)";
-            return isFocus(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
+            return isFocus(d) ? resourceNodeColors.activeFill : resourceNodeColors.defaultFill;
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
@@ -298,7 +315,7 @@ export function ForceGraph({
           if (d.type === "skill") {
             router.push(buildSkillHref(d.id));
           } else if (d.parentSkillId) {
-            const href = buildResourceResponsiveHref(d.parentSkillId, d.label, isDesktopLg);
+            const href = buildResourceHref(d.parentSkillId, d.label);
             router.push(href);
           }
         });
@@ -355,7 +372,16 @@ export function ForceGraph({
 
       simulationRef.current = simulation;
     },
-    [data, height, focusNodeId, router, centerXBias, mobileInitialScale, onNodeClick, isDesktopLg],
+    [
+      data,
+      height,
+      focusNodeId,
+      router,
+      centerXBias,
+      mobileInitialScale,
+      onNodeClick,
+      resourceNodeColors,
+    ],
   );
 
   useEffect(() => {

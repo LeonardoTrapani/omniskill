@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { SectionHeader, SectionBackdrop } from "./grid-background";
+import { LandingContainer, SectionTailSpacer } from "./design-system";
 
 const tiers = [
   {
@@ -69,7 +69,7 @@ export default function Pricing() {
     <section id="pricing" className="relative overflow-hidden">
       <SectionBackdrop />
 
-      <div className="relative z-10 mx-auto max-w-[1112px] px-4 sm:px-6 lg:px-0">
+      <LandingContainer>
         <SectionHeader
           decorator="Pricing"
           headline={
@@ -80,41 +80,37 @@ export default function Pricing() {
           subtitle="Self-host for free forever, or use our cloud for managed infrastructure."
         />
 
-        {/* Toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="mb-12 flex justify-center"
-        >
-          <div className="inline-flex border border-border">
-            <button
+        <div className="flex justify-center pb-12">
+          <div className="flex border border-border">
+            <Button
               onClick={() => setIsYearly(false)}
-              className={`px-5 py-2 text-xs font-mono transition-colors ${
+              size="lg"
+              variant="ghost"
+              className={`px-5 py-2 text-xs border-none font-mono transition-colors ${
                 !isYearly
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Monthly
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setIsYearly(true)}
-              className={`px-5 py-2 text-xs font-mono transition-colors ${
+              size="lg"
+              variant="ghost"
+              className={`px-5 py-2 text-xs border-none font-mono transition-colors ${
                 isYearly
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Yearly (-20%)
-            </button>
+            </Button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Pricing grid */}
-        <div className="grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-3">
-          {tiers.map((tier, i) => {
+        <div className="flex flex-wrap gap-px border border-border bg-border">
+          {tiers.map((tier) => {
             const price =
               typeof tier.price === "string"
                 ? tier.price
@@ -123,15 +119,11 @@ export default function Pricing() {
                   : tier.price.monthly;
 
             return (
-              <motion.div
+              <div
                 key={tier.id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: 0.06 * i }}
-                className="relative flex flex-col bg-background p-10"
+                className="relative flex min-w-[280px] flex-1 basis-full flex-col gap-6 bg-background p-10 md:basis-[calc(33.333%-1px)]"
               >
-                <p className="mb-1 text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
                   {tier.name}
                 </p>
 
@@ -141,15 +133,15 @@ export default function Pricing() {
                   </span>
                 )}
 
-                <p className="mt-3 text-xs text-muted-foreground">{tier.description}</p>
+                <p className="text-xs text-muted-foreground">{tier.description}</p>
 
-                <div className="my-6">
+                <div className="flex items-end gap-1">
                   {typeof price === "string" ? (
                     <span className="text-4xl font-semibold text-foreground">{price}</span>
                   ) : (
                     <>
                       <span className="text-4xl font-semibold text-foreground">${price}</span>
-                      <span className="ml-1 text-sm text-muted-foreground">{tier.priceUnit}</span>
+                      <span className="text-sm text-muted-foreground">{tier.priceUnit}</span>
                     </>
                   )}
                 </div>
@@ -157,29 +149,28 @@ export default function Pricing() {
                 <Button
                   variant={tier.highlight ? "default" : "outline"}
                   size="lg"
-                  className="mb-8 h-10 w-full text-xs"
+                  className="h-10 w-full text-xs"
                 >
                   {tier.cta}
                 </Button>
 
-                <div className="flex-1 space-y-0">
+                <div className="flex flex-1 flex-col">
                   {tier.features.map((feature, fi) => (
                     <div
                       key={fi}
                       className="flex items-start gap-2.5 border-b border-border py-3 text-sm text-muted-foreground last:border-b-0"
                     >
-                      <Check className="mt-0.5 size-3 shrink-0 text-primary" />
+                      <Check className="size-3 shrink-0 translate-y-0.5 text-primary" />
                       <span>{feature}</span>
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
-
-        <div className="h-20" />
-      </div>
+        <SectionTailSpacer />
+      </LandingContainer>
     </section>
   );
 }

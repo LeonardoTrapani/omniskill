@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { FolderTree } from "lucide-react";
 
@@ -21,8 +22,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SkillPanel } from "@/components/skills/skill-panel";
 import { createResourceHrefResolver } from "@/lib/skills/resource-links";
-import { dashboardRoute } from "@/lib/skills/routes";
+import { buildResourceTabHref, dashboardRoute } from "@/lib/skills/routes";
 import { trpc } from "@/lib/api/trpc";
+import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 import { ResourceContentPanel } from "@/app/vault/skills/[id]/resources/[...resourcePath]/_components/resource-content-panel";
 import { ResourceDetailHeader } from "@/app/vault/skills/[id]/resources/[...resourcePath]/_components/resource-detail-header";
 
@@ -36,6 +38,14 @@ export default function ResourceDetail({
   skillId: string;
   resourcePath: string;
 }) {
+  const router = useRouter();
+  const isDesktopLg = useIsDesktopLg();
+
+  useEffect(() => {
+    if (!isDesktopLg) return;
+    router.replace(buildResourceTabHref(skillId, resourcePath));
+  }, [isDesktopLg, router, skillId, resourcePath]);
+
   const resourceQuery = useQuery(
     trpc.skills.getResourceBySkillIdAndPath.queryOptions({ skillId, resourcePath }),
   );

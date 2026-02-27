@@ -11,7 +11,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import UserMenu from "./user-menu";
 import { SkillCommandPalette } from "./skill-command-palette";
 
-type PaletteMode = "command" | "vault" | "marketplace";
+type PaletteMode = "command" | "vault";
 
 type NavItem =
   | { label: string; href: Route; kind: "route" }
@@ -173,9 +173,18 @@ export default function Navbar() {
           </div>
 
           <div className="flex lg:hidden items-center gap-3">
-            {mounted && !isPending && session && (
-              <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
-            )}
+            {mounted &&
+              !isPending &&
+              (session ? (
+                <UserMenu onOpenCommandPalette={openCmd} onSearchVault={openVaultSearch} />
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-3 py-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150"
+                >
+                  Sign In
+                </Link>
+              ))}
           </div>
         </div>
       </nav>

@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { ComponentProps } from "react";
-import { Command, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
 import Loader from "@/components/loader";
@@ -50,7 +50,7 @@ function getSafeCallbackURL(next: string | null): string {
 function LoginLoadingState() {
   return (
     <main className="relative min-h-[calc(100vh-52px)] bg-background">
-      <div className="mx-auto flex min-h-[calc(100vh-52px)] max-w-5xl items-center justify-center px-6 py-10">
+      <div className="mx-auto flex min-h-[calc(100vh-52px)] max-w-3xl items-center justify-center px-6 py-10">
         <Loader />
       </div>
     </main>
@@ -70,15 +70,7 @@ function LoginPageContent() {
   const callbackURL = getSafeCallbackURL(searchParams.get("next"));
 
   if (!isHydrated || isPending) {
-<<<<<<<< HEAD:apps/web/src/app/(footer)/login/page.tsx
-<<<<<<<< HEAD:apps/web/src/app/(user)/login/page.tsx
     return <LoginLoadingState />;
-========
-    return <Loader />;
->>>>>>>> 8f2bad4 (feat: complete redesign):apps/web/src/app/(footer)/login/page.tsx
-========
-    return <LoginLoadingState />;
->>>>>>>> a3dbc08 (feat: tiny changes):apps/web/src/app/(user)/login/page.tsx
   }
 
   const signInWith = (provider: "google" | "github") => {
@@ -90,44 +82,43 @@ function LoginPageContent() {
   };
 
   return (
-    <main className="relative min-h-[calc(100vh-52px)] overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
+    <main className="relative min-h-[calc(100vh-52px)] bg-background">
+      {/* Grid background */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-20" />
 
-      <section className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-5xl items-center px-6 py-10 md:px-10">
-        <div className="grid w-full border border-border bg-background/90 backdrop-blur-sm lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="border-b border-border p-7 sm:p-9 lg:border-b-0 lg:border-r lg:p-10">
+      <div className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-3xl items-center px-4 py-10 sm:px-6">
+        <div className="w-full space-y-6">
+          {/* ── Header ── */}
+          <header>
             <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-primary">
-              Access Node
+              // Authentication \\
             </p>
-            <h1 className="mt-3 text-3xl font-semibold leading-tight text-foreground sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               Sign in
             </h1>
-            <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              Continue to your BETTER-SKILLS workspace to manage reusable skills across CLI and web.
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Continue to your workspace to manage skills, resources, and graph links.
             </p>
+          </header>
 
-            <div className="mt-6 border border-border bg-muted/10 p-4">
-              <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
-                Quick access
-              </p>
-              <p className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <Command className="size-3.5" aria-hidden="true" />
-                Open the command palette with{" "}
-                <span className="font-mono text-foreground">Cmd + K</span>
+          {/* ── Auth card — settings Section pattern ── */}
+          <div className="border border-border bg-background">
+            <div className="border-b border-border px-5 py-5 space-y-2">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="size-4 text-muted-foreground" aria-hidden="true" />
+                <h2 className="text-sm font-semibold uppercase font-mono text-foreground">
+                  Provider
+                </h2>
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Choose an authentication provider to access your vault.
               </p>
             </div>
-          </div>
 
-          <div className="p-7 sm:p-9 lg:p-10">
-            <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
-              Authentication
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">Choose a provider to continue.</p>
-
-            <div className="mt-6 space-y-3">
+            <div className="px-5 py-5 space-y-3">
               <Button
                 variant="outline"
-                className="h-11 w-full justify-start gap-3 px-4"
+                className="h-11 w-full justify-start gap-3 px-4 text-sm"
                 disabled={loadingProvider !== null}
                 onClick={() => signInWith("google")}
               >
@@ -141,7 +132,7 @@ function LoginPageContent() {
 
               <Button
                 variant="outline"
-                className="h-11 w-full justify-start gap-3 px-4"
+                className="h-11 w-full justify-start gap-3 px-4 text-sm"
                 disabled={loadingProvider !== null}
                 onClick={() => signInWith("github")}
               >
@@ -153,23 +144,15 @@ function LoginPageContent() {
                 Continue with GitHub
               </Button>
             </div>
-
-<<<<<<<< HEAD:apps/web/src/app/(footer)/login/page.tsx
-<<<<<<<< HEAD:apps/web/src/app/(user)/login/page.tsx
-            <p className="mt-6 inline-flex items-center gap-2 border-t border-dashed border-border pt-5 text-xs leading-5 text-muted-foreground">
-              <ShieldCheck className="size-3.5" aria-hidden="true" />
-========
-            <p className="mt-6 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
->>>>>>>> 8f2bad4 (feat: complete redesign):apps/web/src/app/(footer)/login/page.tsx
-========
-            <p className="mt-6 inline-flex items-center gap-2 border-t border-dashed border-border pt-5 text-xs leading-5 text-muted-foreground">
-              <ShieldCheck className="size-3.5" aria-hidden="true" />
->>>>>>>> a3dbc08 (feat: tiny changes):apps/web/src/app/(user)/login/page.tsx
-              You will be redirected back to your vault after authentication.
-            </p>
           </div>
+
+          {/* ── Footer note ── */}
+          <p className="inline-flex items-center gap-2 text-xs leading-5 text-muted-foreground">
+            <ShieldCheck className="size-3.5 shrink-0" aria-hidden="true" />
+            After authentication you will be redirected to your vault.
+          </p>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
