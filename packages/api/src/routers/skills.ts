@@ -13,7 +13,7 @@ import {
   syncAutoLinksForSources,
   validateMentionTargets,
 } from "../lib/link-sync";
-import { renderMentions } from "../lib/render-mentions";
+import { renderMentions, renderMentionsBatch } from "../lib/render-mentions";
 
 // -- shared enums --
 
@@ -53,6 +53,10 @@ const resourceReadOutput = resourceOutput.extend({
   skillName: z.string(),
 });
 
+const resourceInSkillOutput = resourceOutput.extend({
+  renderedContent: z.string(),
+});
+
 // -- skill output --
 
 const skillOutput = z.object({
@@ -68,7 +72,7 @@ const skillOutput = z.object({
   isDefault: z.boolean(),
   sourceUrl: z.string().nullable(),
   sourceIdentifier: z.string().nullable(),
-  resources: z.array(resourceOutput),
+  resources: z.array(resourceInSkillOutput),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -181,10 +185,20 @@ async function toSkillOutput(
     linkMentions?: boolean;
   },
 ) {
-  const renderedMarkdown = await renderMentions(row.skillMarkdown, {
-    currentSkillId: row.id,
-    linkMentions: options?.linkMentions ?? false,
-  });
+  const linkMentions = options?.linkMentions ?? false;
+  const renderedEntries = await renderMentionsBatch(
+    [
+      { markdown: row.skillMarkdown, currentSkillId: row.id },
+      ...resources.map((resource) => ({ markdown: resource.content, currentSkillId: row.id })),
+    ],
+    { linkMentions },
+  );
+
+  const renderedMarkdown = renderedEntries[0] ?? row.skillMarkdown;
+  const renderedResources = resources.map((resource, index) => ({
+    ...resource,
+    renderedContent: renderedEntries[index + 1] ?? resource.content,
+  }));
 
   return {
     id: row.id,
@@ -199,7 +213,7 @@ async function toSkillOutput(
     isDefault: row.isDefault,
     sourceUrl: row.sourceUrl,
     sourceIdentifier: row.sourceIdentifier,
-    resources,
+    resources: renderedResources,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

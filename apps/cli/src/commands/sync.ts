@@ -39,7 +39,7 @@ function toInstallableSkill(skill: SkillDetails): InstallableSkill {
     frontmatter: skill.frontmatter,
     resources: skill.resources.map((resource) => ({
       path: resource.path,
-      content: resource.content,
+      content: resource.renderedContent,
     })),
     sourceUrl: skill.sourceUrl,
     sourceIdentifier: skill.sourceIdentifier,

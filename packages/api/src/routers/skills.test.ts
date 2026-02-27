@@ -793,6 +793,21 @@ describe("skills.getById", () => {
     expect(result.resources[0]!.path).toBe("readme.md");
   });
 
+  test("includes renderedContent for resources", async () => {
+    const s = seedSkill({ ownerUserId: USER_A });
+    const target = seedResource(s.id, { path: "references/guidelines.md" });
+    seedResource(s.id, {
+      path: "references/flow.md",
+      content: `Read [[resource:${target.id}]]`,
+    });
+
+    const result = await authedCaller(USER_A).skills.getById({ id: s.id });
+    const flow = result.resources.find((resource) => resource.path === "references/flow.md");
+
+    expect(flow?.content).toBe(`Read [[resource:${target.id}]]`);
+    expect(flow?.renderedContent).toBe("Read `references/guidelines.md`");
+  });
+
   test("returns both originalMarkdown and renderedMarkdown", async () => {
     const s = seedSkill({
       ownerUserId: USER_A,

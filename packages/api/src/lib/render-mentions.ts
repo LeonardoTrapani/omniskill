@@ -10,27 +10,48 @@ import {
 
 import { parseMentions } from "./mentions";
 
-export async function renderMentions(
-  markdown: string,
+type RenderMentionsInput = {
+  markdown: string;
+  currentSkillId?: string;
+};
+
+export async function renderMentionsBatch(
+  inputs: RenderMentionsInput[],
   options?: {
-    currentSkillId?: string;
     linkMentions?: boolean;
   },
-): Promise<string> {
-  const { currentSkillId, linkMentions = false } = options ?? {};
+): Promise<string[]> {
+  if (inputs.length === 0) {
+    return [];
+  }
 
-  const mentions = parseMentions(markdown);
+  const linkMentions = options?.linkMentions ?? false;
 
-  const skillIds = mentions.filter((m) => m.type === "skill").map((m) => m.targetId);
-  const resourceIds = mentions.filter((m) => m.type === "resource").map((m) => m.targetId);
+  const skillIds = new Set<string>();
+  const resourceIds = new Set<string>();
+
+  for (const input of inputs) {
+    const mentions = parseMentions(input.markdown);
+
+    for (const mention of mentions) {
+      if (mention.type === "skill") {
+        skillIds.add(mention.targetId);
+      } else {
+        resourceIds.add(mention.targetId);
+      }
+    }
+  }
+
+  const skillIdList = [...skillIds];
+  const resourceIdList = [...resourceIds];
 
   // batch-fetch skill names
   const skillNameMap = new Map<string, string>();
-  if (skillIds.length > 0) {
+  if (skillIdList.length > 0) {
     const rows = (await db
       .select({ id: skill.id, name: skill.name })
       .from(skill)
-      .where(inArray(skill.id, skillIds))
+      .where(inArray(skill.id, skillIdList))
       .execute()) as Array<{ id: string; name: string }>;
     for (const row of rows) {
       skillNameMap.set(row.id, row.name);
@@ -39,7 +60,7 @@ export async function renderMentions(
 
   // batch-fetch resource paths + parent skill names
   const resourceInfoMap = new Map<string, MentionResourceRenderInfo>();
-  if (resourceIds.length > 0) {
+  if (resourceIdList.length > 0) {
     const rows = await db
       .select({
         id: skillResource.id,
@@ -49,7 +70,7 @@ export async function renderMentions(
       })
       .from(skillResource)
       .innerJoin(skill, eq(skill.id, skillResource.skillId))
-      .where(inArray(skillResource.id, resourceIds))
+      .where(inArray(skillResource.id, resourceIdList))
       .execute();
 
     for (const row of rows) {
@@ -61,15 +82,32 @@ export async function renderMentions(
     }
   }
 
-  const renderOptions = {
-    currentSkillId,
-    skillNameById: skillNameMap,
-    resourceInfoById: resourceInfoMap,
-  };
+  return inputs.map((input) => {
+    const renderOptions = {
+      currentSkillId: input.currentSkillId,
+      skillNameById: skillNameMap,
+      resourceInfoById: resourceInfoMap,
+    };
 
-  if (linkMentions) {
-    return renderPersistedMentionsWithLinks(markdown, renderOptions);
-  }
+    if (linkMentions) {
+      return renderPersistedMentionsWithLinks(input.markdown, renderOptions);
+    }
 
-  return renderPersistedMentionsWithoutLinks(markdown, renderOptions);
+    return renderPersistedMentionsWithoutLinks(input.markdown, renderOptions);
+  });
+}
+
+export async function renderMentions(
+  markdown: string,
+  options?: {
+    currentSkillId?: string;
+    linkMentions?: boolean;
+  },
+): Promise<string> {
+  const rendered = await renderMentionsBatch(
+    [{ markdown, currentSkillId: options?.currentSkillId }],
+    { linkMentions: options?.linkMentions },
+  );
+
+  return rendered[0] ?? markdown;
 }
