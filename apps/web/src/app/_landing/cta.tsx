@@ -1,51 +1,58 @@
 "use client";
 
-import { motion } from "motion/react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
+
+import { Button } from "@/components/ui/button";
+import { SectionBackdrop } from "./grid-background";
 
 export default function CTA() {
   return (
-    <section id="cta">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.45 }}
-        className="mx-auto py-24 text-center"
-      >
-        <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-          Ready to Get Started?
-        </p>
+    <section className="relative overflow-hidden border-t border-border">
+      <SectionBackdrop />
 
-        <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-foreground text-balance sm:text-4xl">
-          Build Your Agent&rsquo;s Second Brain
-        </h2>
+      <div className="relative z-10 mx-auto max-w-[1112px] px-4 py-32 sm:px-6 lg:px-0">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45 }}
+          className="w-full border border-border/70 bg-background/85 px-8 py-14 text-center sm:px-12"
+        >
+          <p className="mb-4 text-[11px] font-mono uppercase tracking-[0.08em] text-primary">
+            // Get Started \\
+          </p>
 
-        <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-          Open-source, free to start. Manage reusable skills from CLI&nbsp;&amp;&nbsp;web in
-          minutes.
-        </p>
+          <h2 className="mb-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Ready to build?
+          </h2>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/login?next=/vault"
-            className="group inline-flex h-11 w-full items-center justify-center gap-2 bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90 sm:w-auto"
-          >
-            Start for Free
-            <ArrowRight
-              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </Link>
-          <a
-            href="#docs"
-            className="inline-flex h-11 w-full items-center justify-center border border-border px-6 text-sm text-foreground transition-colors duration-150 hover:border-primary/40 hover:text-primary sm:w-auto"
-          >
-            View Documentation
-          </a>
-        </div>
-      </motion.div>
+          <p className="mx-auto mb-10 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Start building your agent&rsquo;s second brain for free and scale seamlessly as your
+            project expands. No credit card needed.
+          </p>
+
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              className="h-11 gap-2 px-7 text-sm"
+              render={<Link href="/login?next=/vault" />}
+            >
+              Start for Free
+              <ArrowRight className="size-3.5" data-icon="inline-end" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-11 px-7 text-sm"
+              render={<a href="#pricing" />}
+            >
+              See our plans
+            </Button>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

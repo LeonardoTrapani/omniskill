@@ -50,7 +50,7 @@ export default function DashboardView() {
 
   return (
     <div ref={dashboardRef} className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-32" />
 
       <div
         className="absolute inset-0 hidden lg:block"

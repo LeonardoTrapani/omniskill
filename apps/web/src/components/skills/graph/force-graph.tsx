@@ -195,7 +195,7 @@ export function ForceGraph({
         .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)))
         .attr("fill", (d) => {
           if (d.type === "skill") return "var(--primary)";
-          return isFocus(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+          return isFocus(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
         })
         .attr("fill-opacity", (d) => (d.type === "skill" ? 1 : 1))
         .attr("stroke", (d) => {
@@ -232,14 +232,14 @@ export function ForceGraph({
           .duration(TRANSITION_MS)
           .style("opacity", (d) => (isActive(d) ? 1 : 0.12));
 
-        // Connected resources transition to muted-foreground color; skills stay primary always
+        // Connected resources transition to lighter color; skills stay primary always
         circles
           .transition()
           .duration(TRANSITION_MS)
           .attr("fill", (d) => {
             if (d.type === "skill") return "var(--primary)"; // skills always primary
-            if (isFocus(d)) return "var(--muted-foreground)";
-            return isActive(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+            if (isFocus(d)) return "oklch(87% 0 0)";
+            return isActive(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
@@ -267,7 +267,7 @@ export function ForceGraph({
           .duration(TRANSITION_MS)
           .attr("fill", (d) => {
             if (d.type === "skill") return "var(--primary)";
-            return isFocus(d) ? "var(--muted-foreground)" : "oklch(87% 0 0)";
+            return isFocus(d) ? "oklch(87% 0 0)" : "var(--muted-foreground)";
           })
           .attr("r", (d) => (isFocus(d) ? focusRadius(d) : baseRadius(d)));
 
