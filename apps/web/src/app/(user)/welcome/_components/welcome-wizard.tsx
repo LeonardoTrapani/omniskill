@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Copy, Terminal } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, Check, Copy, Sparkles, Terminal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { dashboardRoute } from "@/lib/skills/routes";
-import { markOnboardingDone } from "@/app/vault/_components/onboarding-gate";
+import { trpc } from "@/lib/api/trpc";
 
 /* ── Step persistence (localStorage only) ── */
 
@@ -105,7 +106,7 @@ function StepSync() {
       <div>
         <h2 className="text-lg font-semibold text-foreground">Sync your skills</h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          This downloads your vault to all configured agents. On first run it will ask which agents
+          This downloads your vault to all configured agents. It will ask which agents
           you use.
         </p>
       </div>
@@ -122,16 +123,16 @@ function StepSync() {
           What happens
         </p>
         <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <span className="mt-1 inline-block size-1 shrink-0 bg-primary" />
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-1 shrink-0 bg-primary" />
             Checks authentication
           </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-1 inline-block size-1 shrink-0 bg-primary" />
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-1 shrink-0 bg-primary" />
             Downloads all skills from your vault
           </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-1 inline-block size-1 shrink-0 bg-primary" />
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-1 shrink-0 bg-primary" />
             Installs them to your selected agents
           </li>
         </ul>
@@ -140,61 +141,29 @@ function StepSync() {
   );
 }
 
-/* ── Step 3: Create Skill Tutorial ── */
+/* ── Step 3: Use with your agent ── */
 
 function StepCreateSkill() {
+  const suggestedPrompt =
+    "Use my installed better-skills vault for this task. First list which skills you will use and why. Then implement: [describe your task here]. While coding, explain which skill influenced each major choice.";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Create your first skill</h2>
+        <h2 className="text-lg font-semibold text-foreground">Use it with your agent</h2>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Skills are reusable instructions your agents can access at runtime. Here is how to create
-          one.
+          Your vault is now available to your coding agents. Open your favorite IDE or terminal TUI
+          and start a real task with skill-guided prompts.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="border border-border bg-background">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
-              From the web
-            </p>
-          </div>
-          <div className="px-4 py-3">
-            <ol className="space-y-2 text-xs text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 font-mono text-primary">01</span>
-                Open your vault and click <span className="font-medium text-foreground">New Skill</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 font-mono text-primary">02</span>
-                Write instructions in Markdown with a name and description
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 font-mono text-primary">03</span>
-                Add resources (reference docs, scripts, configs)
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="shrink-0 font-mono text-primary">04</span>
-                Run <code className="font-mono text-foreground">better-skills sync</code> to push it to your agents
-              </li>
-            </ol>
-          </div>
-        </div>
-
-        <div className="border border-border bg-background">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
-              From the CLI
-            </p>
-          </div>
-          <div className="space-y-2 px-4 py-3">
-            <CommandBlock command="better-skills create --from ./my-skill" />
-            <p className="text-xs text-muted-foreground">
-              Point it at a folder with a <code className="font-mono text-foreground">SKILL.md</code> file.
-            </p>
-          </div>
-        </div>
+      <div className="border border-border bg-muted/10 px-4 py-3">
+        <p className="text-[10px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+          Suggested Prompt
+        </p>
+        <p className="mt-2 bg-background font-mono text-[11px] leading-relaxed text-foreground">
+        {suggestedPrompt}
+      </p>
       </div>
     </div>
   );
@@ -237,12 +206,30 @@ function Stepper({ current, total }: { current: number; total: number }) {
 
 /* ── Main wizard ── */
 
-const STEP_LABELS = ["Install & Login", "Run Sync", "Create a Skill"];
+const STEP_LABELS = ["Install & Login", "Run Sync", "Use with your agent"];
 
 export default function WelcomeWizard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
+
+  const finishMutation = useMutation(
+    trpc.completeOnboarding.mutationOptions({
+      onSuccess: async () => {
+        queryClient.setQueryData(trpc.hasActivated.queryOptions().queryKey, {
+          activated: true,
+        });
+
+        await queryClient.invalidateQueries({
+          queryKey: trpc.hasActivated.queryOptions().queryKey,
+        });
+
+        clearStepStorage();
+        router.replace(dashboardRoute);
+      },
+    }),
+  );
 
   useEffect(() => {
     setStep(readSavedStep());
@@ -266,10 +253,8 @@ export default function WelcomeWizard() {
   }, [step]);
 
   const finish = useCallback(() => {
-    markOnboardingDone();
-    clearStepStorage();
-    router.replace(dashboardRoute);
-  }, [router]);
+    finishMutation.mutate();
+  }, [finishMutation]);
 
   if (!mounted) return null;
 
@@ -288,15 +273,10 @@ export default function WelcomeWizard() {
               // Getting Started \\
             </p>
             <Stepper current={step} total={TOTAL_STEPS} />
-            <p className="text-xs text-muted-foreground">
-              Step {step} of {TOTAL_STEPS}
-              <span className="mx-2 text-border">|</span>
-              {STEP_LABELS[step - 1]}
-            </p>
           </header>
 
           {/* ── Step content ── */}
-          <div className="border border-border bg-background">
+          <div className="flex min-h-[470px] flex-col border border-border bg-background">
             <div className="border-b border-border px-5 py-4">
               <div className="flex items-center gap-2.5">
                 <Terminal className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -305,41 +285,54 @@ export default function WelcomeWizard() {
                 </h2>
               </div>
             </div>
-            <div className="px-5 py-6">
+            <div className="flex-1 px-5 py-6">
               {step === 1 && <StepInstall />}
               {step === 2 && <StepSync />}
               {step === 3 && <StepCreateSkill />}
             </div>
-          </div>
+            <div className="mt-auto border-t border-border px-5 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  {step > 1 ? (
+                    <Button
+                      variant="outline"
+                      onClick={goBack}
+                      className="h-9 gap-2 border-border/70 px-4"
+                    >
+                      <ArrowLeft className="size-3.5" data-icon="inline-start" />
+                      Back
+                    </Button>
+                  ) : (
+                    <div className="h-9" />
+                  )}
+                </div>
 
-          {/* ── Navigation ── */}
-          <div className="flex items-center justify-between">
-            <div>
-              {step > 1 ? (
-                <Button variant="outline" size="sm" onClick={goBack} className="gap-2">
-                  <ArrowLeft className="size-3.5" data-icon="inline-start" />
-                  Back
-                </Button>
-              ) : (
-                <div />
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={finish} className="text-muted-foreground">
-                Skip for now
-              </Button>
-              {isLast ? (
-                <Button size="sm" onClick={finish} className="gap-2">
-                  Go to vault
-                  <ArrowRight className="size-3.5" data-icon="inline-end" />
-                </Button>
-              ) : (
-                <Button size="sm" onClick={goNext} className="gap-2">
-                  I did it, continue
-                  <ArrowRight className="size-3.5" data-icon="inline-end" />
-                </Button>
-              )}
+                <div className="flex items-center gap-2.5">
+                  <Button
+                    variant="outline"
+                    onClick={finish}
+                    disabled={finishMutation.isPending}
+                    className="h-9 border-border/70 px-4 text-muted-foreground hover:text-foreground"
+                  >
+                    Skip for now
+                  </Button>
+                  {isLast ? (
+                    <Button
+                      onClick={finish}
+                      disabled={finishMutation.isPending}
+                      className="h-9 gap-2 px-4 font-semibold"
+                    >
+                      Go to vault
+                      <ArrowRight className="size-3.5" data-icon="inline-end" />
+                    </Button>
+                  ) : (
+                    <Button onClick={goNext} className="h-9 gap-2 px-4 font-semibold">
+                      I did it, continue
+                      <ArrowRight className="size-3.5" data-icon="inline-end" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

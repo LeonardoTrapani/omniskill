@@ -122,7 +122,11 @@ export default function UserMenu({ onOpenCommandPalette, onSearchVault }: UserMe
         <span className="sr-only">Open user menu</span>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="bg-card w-64" align="end" sideOffset={8}>
+      <DropdownMenuContent
+        className="w-64 border-border/80 bg-[color-mix(in_oklab,var(--popover)_96%,var(--background))]"
+        align="end"
+        sideOffset={8}
+      >
         {/* ── Profile section ── */}
         <div className="flex items-center gap-3 px-3 py-3">
           <UserAvatar name={userName} image={userImage} size="menu" />

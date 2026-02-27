@@ -121,25 +121,13 @@ export function DotMatrix({
 /*  Shared SVG primitives                                             */
 /* ------------------------------------------------------------------ */
 
-/** 4-point star inside a circle — used at column intersections */
-function StarMark({ className }: { className?: string }) {
+/** Accent node — larger amber square used as focus marker */
+function AccentMark({ className }: { className?: string }) {
   return (
-    <svg
-      width="47"
-      height="47"
-      viewBox="0 0 47 47"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
+    <span
+      className={`pointer-events-none absolute z-100 block size-3 bg-amber-400/90 ${className ?? ""}`}
       aria-hidden="true"
-    >
-      <path
-        d="M24 18C24 21.3137 26.6863 24 30 24H34V25H30C26.6863 25 24 27.6863 24 31V35H23V31C23 27.6863 20.3137 25 17 25H13V24H17C20.3137 24 23 21.3137 23 18V14H24V18Z"
-        fill="var(--primary)"
-        fillOpacity="0.8"
-      />
-      <circle cx="23.5" cy="23.5" r="23" stroke="var(--border)" strokeOpacity="0.72" />
-    </svg>
+    />
   );
 }
 
@@ -202,6 +190,36 @@ function CurvyRect({
         <CurvyCorner key={c} rotate={c} />
       ))}
     </div>
+  );
+}
+
+/**
+ * Place a graph-like node at an absolute intersection point.
+ * `which` is kept only for call-site compatibility in the hero map.
+ */
+function Intersection({
+  x,
+  y,
+  which,
+}: {
+  x: string;
+  y: string;
+  which: ("tl" | "tr" | "bl" | "br")[];
+}) {
+  const size = 6;
+  const _shape = which;
+  return (
+    <span
+      className="pointer-events-none absolute block bg-border/55"
+      style={{
+        width: size,
+        height: size,
+        left: `calc(${x} - ${size / 2}px)`,
+        top: `calc(${y} - ${size / 2}px)`,
+      }}
+      data-shape={_shape.length}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -278,19 +296,28 @@ export function HeroGridOverlay() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <div className="absolute inset-0 lg:hidden">
-        <div className="absolute top-0 bottom-0 left-4 w-px bg-border/45" />
-        <div className="absolute top-0 bottom-0 right-4 w-px bg-border/45" />
-        <div className="absolute top-[96px] left-4 right-4 h-px bg-border/45" />
-        <div className="absolute top-[196px] left-4 right-4 h-px bg-border/45" />
-        <StarMark className="absolute left-4 top-[172px] -translate-x-1/2" />
-        <StarMark className="absolute right-4 top-[172px] translate-x-1/2" />
-        <CurvyRect className="left-0 top-24 size-[72px]" corners="all" />
-        <CurvyRect className="right-0 top-24 size-[72px]" corners="all" />
+        <div className="absolute top-0 bottom-0 left-4 w-px bg-border/40" />
+        <div className="absolute top-0 bottom-0 right-4 w-px bg-border/40" />
+        <div className="absolute top-[96px] left-4 right-4 h-px bg-border/40" />
+        <div className="absolute top-[196px] left-4 right-4 h-px bg-border/40" />
+        <AccentMark className="absolute left-4 top-[196px] -translate-x-1/2 -translate-y-1/2" />
+        <AccentMark className="absolute right-4 top-[196px] translate-x-1/2 -translate-y-1/2" />
+        <Intersection x="1rem" y="96px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 1rem)" y="96px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="1rem" y="196px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 1rem)" y="196px" which={["tl", "tr", "bl", "br"]} />
         <div className="absolute left-4 top-8 opacity-75">
           <DotBlock rows={4} cols={5} seed={2201} cellSize={4} gap={2} />
         </div>
         <div className="absolute right-4 top-8 opacity-75">
           <DotBlock rows={4} cols={5} seed={2202} cellSize={4} gap={2} />
+        </div>
+        {/* Small graph accents on mobile */}
+        <div className="absolute left-5 bottom-[120px] opacity-65">
+          <SkillGraph variant="b" />
+        </div>
+        <div className="absolute right-5 bottom-[120px] opacity-65">
+          <SkillGraph variant="b" mirror />
         </div>
       </div>
 
@@ -311,94 +338,134 @@ export function HeroGridOverlay() {
           [ GRAPH ]
         </span>
 
-        {/* Horizontal rules only on side background */}
-        <div className="absolute top-[100px] left-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[100px] right-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[200px] left-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[200px] right-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[300px] left-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[300px] right-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[400px] left-0 h-px w-[303px] bg-border/45" />
-        <div className="absolute top-[400px] right-0 h-px w-[303px] bg-border/45" />
+        {/* Horizontal rules — left side */}
+        <div className="absolute top-[100px] left-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[200px] left-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[300px] left-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[400px] left-0 h-px w-[303px] bg-border/40" />
+        {/* Horizontal rules — right side */}
+        <div className="absolute top-[100px] right-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[200px] right-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[300px] right-0 h-px w-[303px] bg-border/40" />
+        <div className="absolute top-[400px] right-0 h-px w-[303px] bg-border/40" />
 
-        {/* Left-side curvy-rect boxes along outer column */}
-        <CurvyRect
-          className="left-0 top-[100px] h-[101px] w-[101px]"
-          corners={["tl", "tr", "bl", "br"]}
-        />
-        <CurvyRect className="left-0 top-[200px] h-[101px] w-[101px]" corners={["tl", "bl"]} />
-        <CurvyRect
-          className="left-0 top-[300px] h-[101px] w-[101px]"
-          corners={["tl", "bl", "br"]}
-        />
-
-        {/* Right-side curvy-rect boxes along outer column */}
-        <CurvyRect
-          className="right-0 top-[100px] h-[101px] w-[101px]"
-          corners={["tl", "tr", "bl", "br"]}
-        />
-        <CurvyRect className="right-0 top-[200px] h-[101px] w-[101px]" corners={["tr", "br"]} />
-        <CurvyRect
-          className="right-0 top-[300px] h-[101px] w-[101px]"
-          corners={["tl", "tr", "br"]}
-        />
+        {/*
+         * Intersections along 1314px edges (left=0, right=100%).
+         * The 1314px vertical lines meet h-lines at y=100,200,300,400.
+         * These are T-intersections (line ends at edge), so 2 corners each.
+         */}
+        {/* Left edge × h-lines: tr + br (line comes from the right) */}
+        <Intersection x="0px" y="100px" which={["tr", "br"]} />
+        <Intersection x="0px" y="200px" which={["tr", "br"]} />
+        <Intersection x="0px" y="300px" which={["tr", "br"]} />
+        <Intersection x="0px" y="400px" which={["tr", "br"]} />
+        {/* Right edge × h-lines: tl + bl */}
+        <Intersection x="100%" y="100px" which={["tl", "bl"]} />
+        <Intersection x="100%" y="200px" which={["tl", "bl"]} />
+        <Intersection x="100%" y="300px" which={["tl", "bl"]} />
+        <Intersection x="100%" y="400px" which={["tl", "bl"]} />
       </div>
 
       {/* ── 1112px column ── */}
       <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[1112px] -translate-x-1/2">
-        {/* Horizontal rules stay on the side lanes */}
-        <div className="absolute top-[200px] left-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-[200px] right-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-[300px] left-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-[300px] right-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-[400px] left-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-[400px] right-0 h-px w-[202px] bg-border/45" />
+        {/* Horizontal rules — left side (reaching inward 202px) */}
+        <div className="absolute top-[200px] left-0 h-px w-[202px] bg-border/40" />
+        <div className="absolute top-[300px] left-0 h-px w-[202px] bg-border/40" />
+        <div className="absolute top-[400px] left-0 h-px w-[202px] bg-border/40" />
+        {/* Horizontal rules — right side */}
+        <div className="absolute top-[200px] right-0 h-px w-[202px] bg-border/40" />
+        <div className="absolute top-[300px] right-0 h-px w-[202px] bg-border/40" />
+        <div className="absolute top-[400px] right-0 h-px w-[202px] bg-border/40" />
 
-        {/* Curvy-rect boxes at the 1112px column edges */}
-        <CurvyRect className="left-0 top-[100px] size-[101px]" corners="all" />
-        <CurvyRect className="right-0 top-[100px] size-[101px]" corners="all" />
-        <CurvyRect className="left-0 top-[200px] size-[101px]" corners={["tl", "bl", "br"]} />
-        <CurvyRect className="right-0 top-[200px] size-[101px]" corners={["tr", "bl", "br"]} />
-        <CurvyRect className="left-0 top-[300px] size-[101px]" corners="all" />
-        <CurvyRect className="right-0 top-[300px] size-[101px]" corners="all" />
-        <CurvyRect className="left-0 top-[400px] size-[101px]" corners="all" />
-        <CurvyRect className="right-0 top-[400px] size-[101px]" corners="all" />
+        {/*
+         * 1112px vertical edges cross the 1314px h-lines at y=100,200,300,400
+         * and also the 1112px h-lines at y=200,300,400.
+         *
+         * y=100: only 1314px h-line crosses → 4-way
+         * y=200,300,400: both 1314px + 1112px h-lines → 4-way
+         */}
+        {/* Left edge (0px in 1112 container) */}
+        <Intersection x="0px" y="100px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="0px" y="200px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="0px" y="300px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="0px" y="400px" which={["tl", "tr", "bl", "br"]} />
+        {/* Right edge */}
+        <Intersection x="100%" y="100px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="200px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="300px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="400px" which={["tl", "tr", "bl", "br"]} />
 
-        {/* Second-ring inner boxes (101px inset from 1112px edge) */}
-        <CurvyRect className="left-[101px] top-[100px] size-[101px]" corners={["tl", "tr", "bl"]} />
-        <CurvyRect className="left-[101px] top-[200px] size-[101px]" corners={["tl", "bl", "br"]} />
-        <CurvyRect
-          className="right-[101px] top-[100px] size-[101px]"
-          corners={["tl", "tr", "br"]}
-        />
-        <CurvyRect
-          className="right-[101px] top-[200px] size-[101px]"
-          corners={["tr", "bl", "br"]}
-        />
-        <CurvyRect className="left-[101px] top-[300px] size-[101px]" corners="all" />
-        <CurvyRect className="right-[101px] top-[300px] size-[101px]" corners="all" />
-        <CurvyRect className="left-[101px] top-[400px] size-[101px]" corners="all" />
-        <CurvyRect className="right-[101px] top-[400px] size-[101px]" corners="all" />
+        {/*
+         * Inner vertical at 101px from each edge of 1112px
+         * (= 910px column edges). These cross h-lines at y=100..400 (1314px)
+         * and y=200..400 (1112px h-lines reach 202px inward, so they reach 101px).
+         *
+         * y=100: 1314px h-line reaches 303px into 1314px = 202px into 1112px — crosses 101px ✓
+         * y=200,300,400: both 1314px (303px) and 1112px (202px) reach past 101px ✓
+         */}
+        <Intersection x="101px" y="100px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="101px" y="200px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="101px" y="300px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="101px" y="400px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 101px)" y="100px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 101px)" y="200px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 101px)" y="300px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="calc(100% - 101px)" y="400px" which={["tl", "tr", "bl", "br"]} />
+
+        {/*
+         * Inner vertical at 202px from each edge of 1112px
+         * (end of 1112px h-lines). The 1314px h-lines extend 303px into 1314px = 202px into 1112px,
+         * so they also reach this point.
+         * y=100: 1314px h-line reaches 202px ✓ → T-intersection (h-line ends)
+         * y=200,300,400: 1112px h-line ends here + 1314px h-line passes → T-intersection
+         */}
+        <Intersection x="202px" y="100px" which={["tl", "bl"]} />
+        <Intersection x="202px" y="200px" which={["tl", "bl"]} />
+        <Intersection x="202px" y="300px" which={["tl", "bl"]} />
+        <Intersection x="202px" y="400px" which={["tl", "bl"]} />
+        <Intersection x="calc(100% - 202px)" y="100px" which={["tr", "br"]} />
+        <Intersection x="calc(100% - 202px)" y="200px" which={["tr", "br"]} />
+        <Intersection x="calc(100% - 202px)" y="300px" which={["tr", "br"]} />
+        <Intersection x="calc(100% - 202px)" y="400px" which={["tr", "br"]} />
       </div>
 
       {/* ── 910px column ── */}
-      <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[910px] -translate-x-1/2 border-x border-border/45" />
+      <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[910px] -translate-x-1/2 border-x border-border/40" />
 
       {/* ── 708px column ── */}
-      <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[708px] -translate-x-1/2 border-x border-border/45">
-        {/* Star marks aligned to hero frame edge */}
-        <StarMark className="absolute top-[176px] -left-[24px] z-[2]" />
-        <StarMark className="absolute top-[176px] -right-[24px] z-[2]" />
-        <div className="absolute top-[100px] left-0 h-px w-full bg-border/45" />
-        <div className="absolute top-[200px] left-0 h-px w-full bg-border/45" />
-        {/* Bottom curvy corners */}
-        <CurvyCorner rotate="bl" className="!bottom-0 !left-0" />
-        <CurvyCorner rotate="br" className="!bottom-0 !right-0" />
+      <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[708px] -translate-x-1/2 border-x border-border/40">
+        {/* Accent marks aligned to hero frame edge */}
+        <AccentMark className="absolute top-[200px] -left-[6px] -translate-y-1/2 z-[2]" />
+        <AccentMark className="absolute top-[200px] -right-[6px] -translate-y-1/2 z-[2]" />
+        {/* Full-width h-lines at y=100 and y=200 */}
+        <div className="absolute top-[100px] left-0 h-px w-full bg-border/40" />
+        <div className="absolute top-[200px] left-0 h-px w-full bg-border/40" />
+        {/* 708px edges × y=100: 4-way crossing (h-line spans full width) */}
+        <Intersection x="0px" y="100px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="100px" which={["tl", "tr", "bl", "br"]} />
+        {/* 708px edges × y=200: 4-way crossing */}
+        <Intersection x="0px" y="200px" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="200px" which={["tl", "tr", "bl", "br"]} />
+        {/* Bottom column endpoints as graph nodes */}
+        <Intersection x="0px" y="100%" which={["tl", "tr", "bl", "br"]} />
+        <Intersection x="100%" y="100%" which={["tl", "tr", "bl", "br"]} />
       </div>
 
-      {/* ── Narrower inner columns (visible in upper area) ── */}
-      <div className="absolute top-[100px] left-1/2 h-[101px] w-full max-w-[506px] -translate-x-1/2 border-x border-border/45" />
-      <div className="absolute top-[100px] left-1/2 h-[101px] w-full max-w-[304px] -translate-x-1/2 border-x border-border/45" />
+      {/* ── Narrower inner columns (visible y=100–201) ── */}
+      <div className="absolute top-[100px] left-1/2 h-[101px] w-full max-w-[506px] -translate-x-1/2 border-x border-border/40">
+        {/* 506px edges × y=100: T-intersection (column starts) → bl + br */}
+        <Intersection x="0px" y="0px" which={["bl", "br"]} />
+        <Intersection x="100%" y="0px" which={["bl", "br"]} />
+        {/* 506px edges × y=201: T-intersection (column ends) → tl + tr */}
+        <Intersection x="0px" y="100%" which={["tl", "tr"]} />
+        <Intersection x="100%" y="100%" which={["tl", "tr"]} />
+      </div>
+      <div className="absolute top-[100px] left-1/2 h-[101px] w-full max-w-[304px] -translate-x-1/2 border-x border-border/40">
+        <Intersection x="0px" y="0px" which={["bl", "br"]} />
+        <Intersection x="100%" y="0px" which={["bl", "br"]} />
+        <Intersection x="0px" y="100%" which={["tl", "tr"]} />
+        <Intersection x="100%" y="100%" which={["tl", "tr"]} />
+      </div>
 
       {/* ── Dot-block decorations ── */}
       {/* Top-left cluster */}
@@ -446,59 +513,280 @@ export function HeroGridOverlay() {
           <DotBlock rows={2} cols={10} seed={402} cellSize={4} gap={2} />
         </div>
       </div>
+
+      {/* ── Graph patterns — placed inside the grid cells, between rows ── */}
+      <div className="absolute top-0 bottom-0 left-1/2 w-full max-w-[1112px] -translate-x-1/2">
+        {/* Left gutter: centered within the 101px cells */}
+        <div className="absolute left-[30px] top-[120px] opacity-70">
+          <SkillGraph variant="a" />
+        </div>
+        <div className="absolute left-[115px] top-[225px] opacity-60">
+          <SkillGraph variant="c" />
+        </div>
+        <div className="absolute left-[30px] top-[330px] opacity-55">
+          <SkillGraph variant="b" />
+        </div>
+
+        {/* Right gutter: mirrored */}
+        <div className="absolute right-[30px] top-[120px] opacity-70">
+          <SkillGraph variant="a" mirror />
+        </div>
+        <div className="absolute right-[115px] top-[225px] opacity-60">
+          <SkillGraph variant="c" mirror />
+        </div>
+        <div className="absolute right-[30px] top-[330px] opacity-55">
+          <SkillGraph variant="b" mirror />
+        </div>
+      </div>
       </div>
     </div>
   );
 }
 
-export function SectionBackdrop({ className }: { className?: string }) {
+/**
+ * SkillGraph — a compact graph diagram with square nodes + orthogonal edges.
+ * Sized to fit cleanly inside the grid gutters without overlapping rules.
+ */
+function SkillGraph({
+  className,
+  mirror = false,
+  variant = "a",
+  size = "sm",
+}: {
+  className?: string;
+  mirror?: boolean;
+  variant?: "a" | "b" | "c";
+  size?: "sm" | "md";
+}) {
+  const s = size === "md" ? 1.25 : 1;
+  const nodeSize = 6 * s;
+
+  const graphs = {
+    /* L-shape: 3 nodes */
+    a: {
+      w: 36 * s,
+      h: 30 * s,
+      content: (
+        <>
+          <line x1={4 * s} y1={4 * s} x2={4 * s} y2={26 * s} stroke="var(--border)" strokeOpacity="0.52" />
+          <line x1={4 * s} y1={26 * s} x2={32 * s} y2={26 * s} stroke="var(--border)" strokeOpacity="0.45" />
+          <rect x={1 * s} y={1 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.65" />
+          <rect x={1 * s} y={23 * s} width={nodeSize} height={nodeSize} fill="var(--border)" fillOpacity="0.55" />
+          <rect x={29 * s} y={23 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.55" />
+        </>
+      ),
+    },
+    /* Staircase: 3 nodes */
+    b: {
+      w: 32 * s,
+      h: 32 * s,
+      content: (
+        <>
+          <line x1={4 * s} y1={4 * s} x2={4 * s} y2={17 * s} stroke="var(--border)" strokeOpacity="0.5" />
+          <line x1={4 * s} y1={17 * s} x2={28 * s} y2={17 * s} stroke="var(--border)" strokeOpacity="0.45" />
+          <line x1={28 * s} y1={17 * s} x2={28 * s} y2={28 * s} stroke="var(--border)" strokeOpacity="0.4" />
+          <rect x={1 * s} y={1 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.6" />
+          <rect x={1 * s} y={14 * s} width={nodeSize} height={nodeSize} fill="var(--border)" fillOpacity="0.48" />
+          <rect x={25 * s} y={25 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.5" />
+        </>
+      ),
+    },
+    /* T-shape: 3 nodes */
+    c: {
+      w: 36 * s,
+      h: 28 * s,
+      content: (
+        <>
+          <line x1={4 * s} y1={4 * s} x2={32 * s} y2={4 * s} stroke="var(--border)" strokeOpacity="0.5" />
+          <line x1={18 * s} y1={4 * s} x2={18 * s} y2={24 * s} stroke="var(--border)" strokeOpacity="0.42" />
+          <rect x={1 * s} y={1 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.6" />
+          <rect x={29 * s} y={1 * s} width={nodeSize} height={nodeSize} fill="var(--border)" fillOpacity="0.5" />
+          <rect x={15 * s} y={21 * s} width={nodeSize} height={nodeSize} fill="var(--primary)" fillOpacity="0.48" />
+        </>
+      ),
+    },
+  };
+
+  const g = graphs[variant];
+
+  return (
+    <svg
+      width={g.w}
+      height={g.h}
+      viewBox={`0 0 ${g.w} ${g.h}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+      style={mirror ? { transform: "scaleX(-1)" } : undefined}
+    >
+      {g.content}
+    </svg>
+  );
+}
+
+/**
+ * SectionBackdrop — decorative background for landing sections.
+ * `variant` gives each section a distinct but cohesive look.
+ */
+export function SectionBackdrop({
+  className,
+  variant = "default",
+}: {
+  className?: string;
+  variant?: "default" | "how-it-works" | "features" | "pricing" | "cli-demo";
+}) {
   return (
     <div
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className ?? ""}`}
       aria-hidden="true"
     >
-      <div className="absolute top-0 bottom-0 left-4 w-px bg-border/45 lg:hidden" />
-      <div className="absolute top-0 bottom-0 right-4 w-px bg-border/45 lg:hidden" />
-      <div className="absolute top-1/2 left-4 right-4 h-px bg-border/45 lg:hidden" />
-      <CurvyRect className="left-0 top-16 size-[64px] lg:hidden" corners="all" />
-      <CurvyRect className="right-0 top-16 size-[64px] lg:hidden" corners="all" />
+      {/* ── Mobile decorations ── */}
+      <div className="lg:hidden">
+        {/* Structural lines */}
+        <div className="absolute top-0 bottom-0 left-4 w-px bg-border/45" />
+        <div className="absolute top-0 bottom-0 right-4 w-px bg-border/45" />
+        <div className="absolute top-1/2 left-4 right-4 h-px bg-border/45" />
 
-      <div className="absolute top-1/2 left-1/2 h-px w-[303px] -translate-x-[657px] bg-border/45" />
-      <div className="absolute top-1/2 left-1/2 h-px w-[303px] translate-x-[354px] bg-border/45" />
+        {/* Graph accents — mobile */}
+        <div className="absolute left-6 top-20 opacity-70">
+          <SkillGraph variant="a" />
+        </div>
+        <div className="absolute right-6 top-20 opacity-70">
+          <SkillGraph variant="a" mirror />
+        </div>
 
+        {/* Corner brackets — mobile */}
+        <CurvyRect className="left-0 top-14 size-[48px]" corners={["tl", "bl"]} />
+        <CurvyRect className="right-0 top-14 size-[48px]" corners={["tr", "br"]} />
+
+        {/* Extra mobile-only elements per variant */}
+        {variant === "features" && (
+          <>
+            <div className="absolute left-6 bottom-16 opacity-55">
+              <SkillGraph variant="b" />
+            </div>
+            <div className="absolute right-6 bottom-16 opacity-55">
+              <SkillGraph variant="c" mirror />
+            </div>
+          </>
+        )}
+        {variant === "how-it-works" && (
+          <>
+            <div className="absolute right-7 bottom-20 opacity-60">
+              <SkillGraph variant="b" mirror />
+            </div>
+            <DotBlock rows={3} cols={4} seed={7701} cellSize={3} gap={2} className="absolute left-6 bottom-24 opacity-50" />
+          </>
+        )}
+        {variant === "pricing" && (
+          <>
+            <div className="absolute left-6 bottom-20 opacity-55">
+              <SkillGraph variant="c" />
+            </div>
+            <DotBlock rows={2} cols={5} seed={7702} cellSize={3} gap={2} className="absolute right-7 bottom-28 opacity-45" />
+          </>
+        )}
+        {variant === "cli-demo" && (
+          <div className="absolute right-6 bottom-16 opacity-55">
+            <SkillGraph variant="b" mirror />
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop decorations ── */}
       <div className="absolute top-0 bottom-0 left-1/2 hidden w-full max-w-[1112px] -translate-x-1/2 lg:block">
-        <div className="absolute top-24 left-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute top-24 right-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute bottom-24 left-0 h-px w-[202px] bg-border/45" />
-        <div className="absolute bottom-24 right-0 h-px w-[202px] bg-border/45" />
+        {/* Horizontal rules — structural rhythm */}
+        <div className="absolute top-20 left-0 h-px w-[140px] bg-border/45" />
+        <div className="absolute top-20 right-0 h-px w-[140px] bg-border/45" />
+        <div className="absolute bottom-20 left-0 h-px w-[140px] bg-border/45" />
+        <div className="absolute bottom-20 right-0 h-px w-[140px] bg-border/45" />
 
-        <CurvyRect className="left-0 top-10 size-[96px]" corners="all" />
-        <CurvyRect className="right-0 top-16 size-[96px]" corners="all" />
-        <CurvyRect className="left-0 bottom-16 size-[96px]" corners="all" />
-        <CurvyRect className="right-0 bottom-10 size-[96px]" corners="all" />
-        <CurvyRect className="left-[96px] top-1/2 size-[72px] -translate-y-1/2" corners="all" />
-        <CurvyRect className="right-[96px] top-1/2 size-[72px] -translate-y-1/2" corners="all" />
-
-        <StarMark className="absolute left-[96px] top-24 opacity-85" />
-        <StarMark className="absolute right-[96px] top-24 opacity-85" />
-        <StarMark className="absolute left-[150px] bottom-20 scale-[0.72] opacity-80" />
-        <StarMark className="absolute right-[150px] bottom-20 scale-[0.72] opacity-80" />
-
-        <div className="absolute left-8 top-8 opacity-75">
-          <DotBlock rows={5} cols={8} seed={904} cellSize={6} gap={2} />
-        </div>
-        <div className="absolute right-12 top-20 opacity-70">
-          <DotBlock rows={4} cols={6} seed={905} cellSize={7} gap={3} />
-        </div>
-        <div className="absolute left-20 bottom-12 opacity-70">
-          <DotBlock rows={3} cols={9} seed={906} cellSize={5} gap={2} />
-        </div>
-        <div className="absolute left-[180px] top-1/2 -translate-y-1/2 opacity-80">
-          <DotBlock rows={3} cols={12} seed={907} cellSize={4} gap={2} />
-        </div>
-        <div className="absolute right-[180px] top-1/2 -translate-y-1/2 opacity-80">
-          <DotBlock rows={3} cols={12} seed={908} cellSize={4} gap={2} />
-        </div>
+        {/* Per-variant graph decorations — positioned cleanly below/above rules */}
+        {variant === "default" && (
+          <>
+            <div className="absolute left-4 top-28 opacity-75">
+              <SkillGraph variant="a" size="md" />
+            </div>
+            <div className="absolute right-4 top-28 opacity-75">
+              <SkillGraph variant="a" size="md" mirror />
+            </div>
+            <div className="absolute left-6 bottom-28 opacity-65">
+              <SkillGraph variant="b" />
+            </div>
+            <div className="absolute right-6 bottom-28 opacity-65">
+              <SkillGraph variant="b" mirror />
+            </div>
+          </>
+        )}
+        {variant === "features" && (
+          <>
+            <div className="absolute left-4 top-28 opacity-70">
+              <SkillGraph variant="a" size="md" />
+            </div>
+            <div className="absolute right-4 top-28 opacity-70">
+              <SkillGraph variant="c" size="md" mirror />
+            </div>
+            <div className="absolute left-8 bottom-28 opacity-60">
+              <SkillGraph variant="c" />
+            </div>
+            <div className="absolute right-8 bottom-28 opacity-60">
+              <SkillGraph variant="b" mirror />
+            </div>
+            <DotBlock rows={3} cols={5} seed={5501} cellSize={4} gap={2} className="absolute left-[60px] top-24 opacity-40" />
+            <DotBlock rows={3} cols={5} seed={5502} cellSize={4} gap={2} className="absolute right-[60px] top-24 opacity-40" />
+          </>
+        )}
+        {variant === "how-it-works" && (
+          <>
+            <div className="absolute left-4 top-28 opacity-75">
+              <SkillGraph variant="b" size="md" />
+            </div>
+            <div className="absolute right-4 top-28 opacity-75">
+              <SkillGraph variant="b" size="md" mirror />
+            </div>
+            <div className="absolute left-6 bottom-28 opacity-60">
+              <SkillGraph variant="a" />
+            </div>
+            <div className="absolute right-6 bottom-28 opacity-60">
+              <SkillGraph variant="c" mirror />
+            </div>
+            <DotBlock rows={3} cols={6} seed={5503} cellSize={4} gap={2} className="absolute left-[50px] bottom-24 opacity-40" />
+            <DotBlock rows={3} cols={6} seed={5504} cellSize={4} gap={2} className="absolute right-[50px] bottom-24 opacity-40" />
+          </>
+        )}
+        {variant === "pricing" && (
+          <>
+            <div className="absolute left-4 top-28 opacity-70">
+              <SkillGraph variant="c" size="md" />
+            </div>
+            <div className="absolute right-4 top-28 opacity-70">
+              <SkillGraph variant="a" size="md" mirror />
+            </div>
+            <div className="absolute left-6 bottom-28 opacity-60">
+              <SkillGraph variant="b" />
+            </div>
+            <div className="absolute right-6 bottom-28 opacity-60">
+              <SkillGraph variant="a" mirror />
+            </div>
+          </>
+        )}
+        {variant === "cli-demo" && (
+          <>
+            <div className="absolute left-4 top-28 opacity-70">
+              <SkillGraph variant="a" size="md" />
+            </div>
+            <div className="absolute right-4 top-28 opacity-70">
+              <SkillGraph variant="b" size="md" mirror />
+            </div>
+            <div className="absolute left-8 bottom-28 opacity-55">
+              <SkillGraph variant="c" />
+            </div>
+            <div className="absolute right-8 bottom-28 opacity-55">
+              <SkillGraph variant="c" mirror />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -538,13 +826,15 @@ export function SectionDivider({ index, total, label }: SectionDividerProps) {
   const tot = String(total).padStart(2, "0");
   return (
     <div className="border-y border-border/45">
-      <div className="flex w-full justify-center px-4 py-6 sm:px-6 lg:px-0">
-        <div className="relative flex w-full max-w-[1112px] items-center gap-3 lg:px-16">
-          <span className="inline-block h-5 w-0.5 bg-primary" />
+      <div className="flex w-full justify-center py-6">
+        <div className="relative w-full max-w-[1112px] px-4 sm:px-6 lg:px-0">
+          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 bg-primary" />
+          <div className="flex items-center gap-3 lg:px-16">
           <span className="font-mono text-xs tracking-wider text-muted-foreground">
             [ <span className="text-primary">{idx}</span> / {tot} ] &middot;{" "}
             <span className="uppercase">{label}</span>
           </span>
+          </div>
         </div>
       </div>
     </div>
@@ -563,12 +853,18 @@ interface SectionHeaderProps {
 export function SectionHeader({ decorator, headline, subtitle }: SectionHeaderProps) {
   return (
     <div className="relative flex flex-col items-center gap-4 py-20 text-center lg:py-24">
-      <div className="absolute left-2 top-1/2 hidden -translate-y-1/2 lg:block">
-        <DotBlock rows={4} cols={6} seed={1401} cellSize={4} gap={2} />
-      </div>
-      <div className="absolute right-2 top-1/2 hidden -translate-y-1/2 lg:block">
-        <DotBlock rows={4} cols={6} seed={1402} cellSize={4} gap={2} />
-      </div>
+      {/* Desktop: horizontal rails — extend from heading to page edges */}
+      <div className="absolute left-0 top-1/2 hidden h-px w-[80px] bg-border/40 lg:block" />
+      <div className="absolute left-[80px] top-1/2 hidden size-1.5 -translate-y-1/2 bg-primary/40 lg:block" />
+      <div className="absolute right-0 top-1/2 hidden h-px w-[80px] bg-border/40 lg:block" />
+      <div className="absolute right-[80px] top-1/2 hidden size-1.5 -translate-y-1/2 bg-primary/40 lg:block" />
+
+      {/* Mobile: shorter rails */}
+      <div className="absolute left-0 top-1/2 h-px w-[40px] bg-border/35 lg:hidden" />
+      <div className="absolute left-[40px] top-1/2 size-1 -translate-y-1/2 bg-primary/35 lg:hidden" />
+      <div className="absolute right-0 top-1/2 h-px w-[40px] bg-border/35 lg:hidden" />
+      <div className="absolute right-[40px] top-1/2 size-1 -translate-y-1/2 bg-primary/35 lg:hidden" />
+
       <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
         // {decorator} \\
       </p>

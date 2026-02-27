@@ -58,7 +58,7 @@ const features = [
 export default function Features() {
   return (
     <section className="relative overflow-hidden">
-      <SectionBackdrop />
+      <SectionBackdrop variant="features" />
 
       <LandingContainer>
         <SectionHeader
@@ -77,7 +77,7 @@ export default function Features() {
           {features.map((feat) => (
             <div
               key={feat.label}
-              className="flex min-w-[280px] flex-1 basis-full flex-col gap-6 bg-background p-10 transition-colors hover:bg-muted/40 dark:hover:bg-muted/20 sm:basis-[calc(50%-1px)] lg:basis-[calc(33.333%-1px)]"
+              className="flex min-w-[280px] flex-1 basis-full flex-col gap-6 bg-background p-10 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-900 sm:basis-[calc(50%-1px)] lg:basis-[calc(33.333%-1px)]"
             >
               <div className="flex items-center gap-3">
                 <feat.icon className="size-4 text-primary" />

@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { db } from "@better-skills/db";
-import { skill } from "@better-skills/db/schema/skills";
+import { user } from "@better-skills/db/schema/auth";
 
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { skillsRouter } from "./skills";
@@ -25,11 +25,23 @@ export const appRouter = router({
     const userId = ctx.session.user.id;
 
     const [row] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(skill)
-      .where(and(eq(skill.ownerUserId, userId), eq(skill.isDefault, false)));
+      .select({ activated: user.onboardingCompleted })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
 
-    return { activated: (row?.count ?? 0) > 0 };
+    return { activated: row?.activated ?? false };
+  }),
+
+  completeOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    await db
+      .update(user)
+      .set({ onboardingCompleted: true })
+      .where(eq(user.id, userId));
+
+    return { activated: true };
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -43,6 +43,13 @@
       "when": 1772130224326,
       "tag": "0005_charming_power_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772212946194,
+      "tag": "0006_tidy_arclight",
+      "breakpoints": true
     }
   ]
 }

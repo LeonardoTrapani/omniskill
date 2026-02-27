@@ -67,7 +67,7 @@ export default function Pricing() {
 
   return (
     <section id="pricing" className="relative overflow-hidden">
-      <SectionBackdrop />
+      <SectionBackdrop variant="pricing" />
 
       <LandingContainer>
         <SectionHeader
@@ -121,39 +121,54 @@ export default function Pricing() {
             return (
               <div
                 key={tier.id}
-                className="relative flex min-w-[280px] flex-1 basis-full flex-col gap-6 bg-background p-10 md:basis-[calc(33.333%-1px)]"
+                className="relative flex min-w-[280px] flex-1 basis-full flex-col bg-background p-10 md:basis-[calc(33.333%-1px)]"
               >
-                <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
-                  {tier.name}
+                {/* ── Header zone: name + badge ── */}
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-muted-foreground">
+                    {tier.name}
+                  </p>
+                  {tier.badge && (
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-primary">
+                      {tier.badge}
+                    </span>
+                  )}
+                </div>
+
+                {/* ── Description zone: fixed height ── */}
+                <p className="mt-4 min-h-[40px] text-xs leading-relaxed text-muted-foreground">
+                  {tier.description}
                 </p>
 
-                {tier.badge && (
-                  <span className="absolute top-10 right-10 text-[10px] font-mono uppercase tracking-wider text-primary">
-                    {tier.badge}
-                  </span>
-                )}
-
-                <p className="text-xs text-muted-foreground">{tier.description}</p>
-
-                <div className="flex items-end gap-1">
+                {/* ── Price zone: fixed height ── */}
+                <div className="mt-4 flex h-[52px] items-end gap-1">
                   {typeof price === "string" ? (
-                    <span className="text-4xl font-semibold text-foreground">{price}</span>
+                    <span className="text-4xl font-semibold leading-none text-foreground">
+                      {price}
+                    </span>
                   ) : (
                     <>
-                      <span className="text-4xl font-semibold text-foreground">${price}</span>
-                      <span className="text-sm text-muted-foreground">{tier.priceUnit}</span>
+                      <span className="text-4xl font-semibold leading-none text-foreground">
+                        ${price}
+                      </span>
+                      <span className="pb-0.5 text-sm text-muted-foreground">{tier.priceUnit}</span>
                     </>
                   )}
                 </div>
 
+                {/* ── CTA button ── */}
                 <Button
                   variant={tier.highlight ? "default" : "outline"}
                   size="lg"
-                  className="h-10 w-full text-xs"
+                  className="mt-6 h-10 w-full text-xs"
                 >
                   {tier.cta}
                 </Button>
 
+                {/* ── Divider ── */}
+                <div className="my-6 h-px w-full bg-border" />
+
+                {/* ── Features list ── */}
                 <div className="flex flex-1 flex-col">
                   {tier.features.map((feature, fi) => (
                     <div

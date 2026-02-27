@@ -32,6 +32,11 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
     }
   };
 
+  const skillBadgeText =
+    skillCount > 0
+      ? `${skillCount} ${skillCount === 1 ? "skill" : "skills"} in your vault`
+      : "Open source & free";
+
   return (
     <section className="relative flex min-h-[calc(100vh-52px)] flex-col items-center justify-center overflow-hidden lg:min-h-[calc(90vh-52px)]">
       <HeroGridOverlay />
@@ -48,7 +53,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
               className="gap-2 border-primary/30 bg-background/80 px-3.5 py-1.5 text-xs font-normal text-muted-foreground backdrop-blur-sm"
             >
               <span className="inline-block size-1.5 bg-primary" />
-              {skillCount > 0 ? `${skillCount} skills in the registry` : "Open source & free"}
+              {skillBadgeText}
             </Badge>
           </motion.div>
 
@@ -77,22 +82,33 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.24 }}
-            className="flex w-full max-w-xl flex-col items-center gap-3 sm:flex-row sm:justify-center sm:px-0 px-6"
+            className="flex w-full sm:w-auto max-w-xl flex-col items-center gap-3 px-4 sm:px-6 lg:px-0"
           >
-            <Button
-              size="lg"
-              className="h-11 w-full gap-2 px-7 text-sm sm:w-auto"
-              render={<Link href={ctaHref} />}
-            >
-              {mounted && session ? "Go to Vault" : "Get Started"}
-              <ArrowRight className="size-3.5" data-icon="inline-end" />
-            </Button>
+            <div className="flex w-full flex-row gap-3">
+              <Button
+                size="lg"
+                className="h-11 min-w-0 flex-1 gap-2 px-4 text-sm sm:px-7"
+                render={<Link href={ctaHref} />}
+              >
+                {mounted && session ? "Go to Vault" : "Get Started"}
+                <ArrowRight className="size-3.5" data-icon="inline-end" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-11 min-w-0 flex-1 px-4 text-sm sm:px-7"
+                render={<Link href="#pricing" />}
+              >
+                See Pricing
+              </Button>
+            </div>
 
             <Button
               variant="outline"
               size="lg"
               onClick={handleCopy}
-              className="group h-11 w-full justify-between gap-3 border-border bg-background/80 px-4 font-mono text-xs font-normal text-muted-foreground backdrop-blur-sm hover:border-primary/40 hover:text-foreground sm:w-auto"
+              className="group h-11 w-full sm:w-auto justify-between gap-4 border-border bg-background/80 px-4 font-mono text-xs font-normal text-muted-foreground backdrop-blur-sm hover:text-foreground"
             >
               <span className="flex min-w-0 items-center gap-2 text-left">
                 <span className="shrink-0 text-primary/60">$</span>

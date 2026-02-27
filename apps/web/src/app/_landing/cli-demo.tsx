@@ -161,9 +161,10 @@ export default function CliDemo() {
 
   return (
     <section className="relative overflow-hidden">
-      <SectionBackdrop />
+      <SectionBackdrop variant="cli-demo" />
 
       <LandingContainer>
+        <SectionTailSpacer />
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -184,7 +185,7 @@ export default function CliDemo() {
             </p>
 
             <Button
-              className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+              className="h-11 gap-2 border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors"
               render={<Link href="/skills" />}
             >
                 Learn more
@@ -194,17 +195,17 @@ export default function CliDemo() {
 
           <div className="bg-muted/[0.25] lg:w-3/5">
             <div className="flex border-b border-border/70">
-              <div className="flex min-w-28 items-center gap-2 border-r border-border/70 px-4 py-3 sm:min-w-32 sm:gap-3 sm:px-5 sm:py-4">
+              <div className="flex w-auto items-center gap-2 border-r border-border/70 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
                 <span className="inline-block size-2 border border-border/80 bg-muted sm:size-2.5" />
                 <span className="inline-block size-2 border border-border/80 bg-muted sm:size-2.5" />
                 <span className="inline-block size-2 border border-border/80 bg-muted sm:size-2.5" />
               </div>
-              <div className="px-5 py-3 font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground sm:px-6 sm:py-4 sm:text-sm">
+              <div className="px-5 py-3 font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground sm:px-6 sm:py-4">
                 Terminal
               </div>
             </div>
 
-            <div className="flex min-h-[380px] flex-col items-center justify-center gap-8 px-6 py-10 text-center">
+            <div className="flex min-h-[380px] flex-col items-center justify-center gap-4 px-6 py-10 text-center">
               <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 {iconItems.map((item) => {
                   const Icon = item.icon;
@@ -228,20 +229,22 @@ export default function CliDemo() {
                 variant="outline"
                 size="lg"
                 onClick={handleCopy}
-                className="group h-auto w-full max-w-[700px] justify-between border-border/70 bg-background px-4 py-3 font-mono text-sm font-normal text-foreground hover:border-primary/35 sm:px-6 sm:text-[1rem]"
+                className="group h-11 w-full max-w-[700px] justify-between gap-3 border-border/70 bg-background px-4 font-mono text-xs font-normal text-foreground hover:border-primary/35 sm:h-auto sm:px-6 sm:py-3 sm:text-sm"
               >
-                <span className="flex truncate gap-3 text-left">
-                  <span className="text-primary">$</span>
-                  {command}
+                <span className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                  <span className="shrink-0 text-primary">$</span>
+                  <span className="truncate">{command}</span>
                 </span>
-                {copied ? (
-                  <Check className="size-4 shrink-0 text-primary sm:size-5" />
-                ) : (
-                  <Copy className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground sm:size-5" />
-                )}
+                <span className="inline-flex size-6 shrink-0 items-center justify-center border border-border/70 bg-background sm:size-7">
+                  {copied ? (
+                    <Check className="size-3 text-primary sm:size-4" />
+                  ) : (
+                    <Copy className="size-3 text-muted-foreground transition-colors group-hover:text-foreground sm:size-4" />
+                  )}
+                </span>
               </Button>
 
-              <p className="max-w-sm font-mono text-sm leading-relaxed text-muted-foreground">
+              <p className="max-w-sm font-mono text-xs leading-relaxed text-muted-foreground">
                 Works with Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and more
               </p>
             </div>

@@ -86,7 +86,7 @@ function LoginPageContent() {
       {/* Grid background */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-20" />
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-3xl items-center px-4 py-10 sm:px-6">
+      <div className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-xl items-center px-4 py-10 sm:px-6">
         <div className="w-full space-y-6">
           {/* ── Header ── */}
           <header>
