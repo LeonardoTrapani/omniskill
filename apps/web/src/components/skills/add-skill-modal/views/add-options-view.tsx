@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,8 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { SelectedSkill } from "@/hooks/skills/use-modal-machine";
-import { invalidateSkillCollectionQueries } from "@/lib/skills/invalidate-skill-queries";
-import { buildSkillHref, dashboardRoute } from "@/lib/skills/routes";
+import { buildSkillHref } from "@/lib/skills/routes";
 import { trpc } from "@/lib/api/trpc";
 
 interface AddOptionsViewProps {
@@ -48,20 +47,6 @@ export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) 
   });
 
   const alreadyInVault = Boolean(existingVaultSkill);
-
-  const duplicateMutation = useMutation(
-    trpc.skills.duplicate.mutationOptions({
-      onSuccess: async () => {
-        await invalidateSkillCollectionQueries();
-        toast.success(`"${skill.name}" added to your vault`);
-        onClose();
-        router.push(dashboardRoute);
-      },
-      onError: (error) => {
-        toast.error(`Failed to add skill: ${error.message}`);
-      },
-    }),
-  );
 
   if (alreadyInVault) {
     return (
@@ -114,19 +99,16 @@ export default function AddOptionsView({ skill, onClose }: AddOptionsViewProps) 
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel onClick={onClose} disabled={duplicateMutation.isPending}>
+        <AlertDialogCancel onClick={onClose}>
           Cancel
         </AlertDialogCancel>
         <AlertDialogAction
-          disabled={duplicateMutation.isPending || ownerSkillsQuery.isLoading}
-          onClick={() => duplicateMutation.mutate({ id: skill.id })}
+          disabled={ownerSkillsQuery.isLoading}
+          onClick={() => {
+            toast.error("Adding public skills is temporarily unavailable");
+          }}
         >
-          {duplicateMutation.isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Adding...
-            </>
-          ) : ownerSkillsQuery.isLoading ? (
+          {ownerSkillsQuery.isLoading ? (
             <>
               <Loader2 className="size-4 animate-spin" />
               Checking...

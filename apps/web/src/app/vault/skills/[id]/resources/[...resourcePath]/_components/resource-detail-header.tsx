@@ -55,15 +55,6 @@ export function ResourceDetailHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground font-mono">
-        <span className="inline-flex items-center gap-1.5">
-          {resourceKind === "reference" ? (
-            <FileText className="size-3" aria-hidden="true" />
-          ) : (
-            <FileTerminal className="size-3" aria-hidden="true" />
-          )}
-          {resourceKind}
-        </span>
-        <span className="text-border">|</span>
         <span>Updated {formatDisplayDate(updatedAt)}</span>
         <span className="text-border">|</span>
         <Link

@@ -5,14 +5,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { trpc } from "@/lib/api/trpc";
 
-type SkillSearchScope = "own" | "all";
-type SkillSearchVisibility = "public" | "private";
-
 interface UseSkillSearchOptions {
   query: string;
   enabled?: boolean;
-  scope?: SkillSearchScope;
-  visibility?: SkillSearchVisibility;
   initialLimit?: number;
   limitStep?: number;
   maxLimit?: number;
@@ -33,8 +28,6 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 export function useSkillSearch({
   query,
   enabled = true,
-  scope = "all",
-  visibility = "public",
   initialLimit = 5,
   limitStep = 5,
   maxLimit = 50,
@@ -54,9 +47,7 @@ export function useSkillSearch({
   const queryResult = useQuery({
     ...trpc.skills.search.queryOptions({
       query: debouncedQuery,
-      scope,
       limit,
-      visibility,
     }),
     placeholderData: keepPreviousData,
     enabled: shouldRunQuery,

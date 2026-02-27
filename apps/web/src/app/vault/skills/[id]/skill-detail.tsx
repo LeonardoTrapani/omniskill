@@ -88,8 +88,8 @@ function SkillDetailInner({ id }: { id: string }) {
   const skillId = data?.id ?? id;
   const isOwnedByViewer = data?.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data?.isDefault ?? false;
-  const canManageSkill = data?.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
-  const canAddToVault = data?.visibility === "public" && !isOwnedByViewer;
+  const canManageSkill = isOwnedByViewer && !isDefaultSkill;
+  const canAddToVault = false;
 
   /* ── Desktop: intercept resource clicks to open as tab ── */
   const handleOpenResourceTab = useCallback(
@@ -202,7 +202,7 @@ function SkillDetailInner({ id }: { id: string }) {
     slug: data.slug,
     name: data.name,
     description: data.description,
-    visibility: data.visibility as "public" | "private",
+    visibility: "private" as const,
     isDefaultSkill,
     sourceIdentifier: data.sourceIdentifier,
     sourceUrl: data.sourceUrl,

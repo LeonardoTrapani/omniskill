@@ -238,7 +238,7 @@ export default function SkillEdit({ id }: { id: string }) {
 
   const isOwnedByViewer = data.ownerUserId != null && data.ownerUserId === session?.user?.id;
   const isDefaultSkill = data.isDefault;
-  const canEditSkill = data.visibility === "private" && isOwnedByViewer && !isDefaultSkill;
+  const canEditSkill = isOwnedByViewer && !isDefaultSkill;
 
   /* ---- Not editable ---- */
   if (!canEditSkill) {
