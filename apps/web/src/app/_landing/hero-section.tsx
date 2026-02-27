@@ -35,7 +35,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
   const skillBadgeText =
     skillCount > 0
       ? `${skillCount} ${skillCount === 1 ? "skill" : "skills"} in your vault`
-      : "Open source & free";
+      : "Open source";
 
   return (
     <section className="relative flex min-h-[calc(100vh-52px)] flex-col items-center justify-center overflow-hidden lg:min-h-[calc(90vh-52px)]">

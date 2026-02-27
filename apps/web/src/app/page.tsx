@@ -28,8 +28,8 @@ export default async function Home() {
       <SectionDivider index={3} total={TOTAL_SECTIONS} label="Developer Experience" />
       <CliDemo />
 
-      <SectionDivider index={4} total={TOTAL_SECTIONS} label="Pricing" />
-      <Pricing />
+      {/* <SectionDivider index={4} total={TOTAL_SECTIONS} label="Pricing" /> */}
+      {/* <Pricing /> */}
 
       <SectionDivider index={5} total={TOTAL_SECTIONS} label="Get Started" />
       <CTA />

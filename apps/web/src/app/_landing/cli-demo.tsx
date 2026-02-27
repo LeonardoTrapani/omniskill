@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LandingContainer, SectionTailSpacer } from "./design-system";
 import { authClient } from "@/lib/auth/auth-client";
 
-const command = "npx -y better-skills-cli@latest init --all --browser";
+const command = "curl -fsSL https://better-skills.dev/install | bash";
 
 function ClaudeIcon() {
   return (
@@ -238,7 +238,7 @@ export default function CliDemo() {
                 variant="outline"
                 size="lg"
                 onClick={handleCopy}
-                className="group h-11 w-full max-w-[700px] justify-between gap-3 border-border/70 bg-background px-4 font-mono text-xs font-normal text-foreground sm:h-auto sm:px-6 sm:py-3 sm:text-sm"
+                className="group h-11 sm:w-auto w-full max-w-[700px] justify-between gap-4 sm:gap-8 border-border/70 bg-background px-4 font-mono text-xs font-normal text-foreground sm:h-auto sm:px-6 sm:py-3 sm:text-sm"
               >
                 <span className="flex min-w-0 flex-1 items-center gap-2 text-left">
                   <span className="shrink-0 text-primary">$</span>
