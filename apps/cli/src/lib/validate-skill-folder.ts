@@ -1,6 +1,8 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
+import { parseMentions } from "@better-skills/api/lib/mentions";
+
 import { collectNewResourceMentionPaths, normalizeResourcePath } from "./new-resource-mentions";
 
 const RESOURCE_DIRS = ["references", "scripts", "assets"] as const;
@@ -10,7 +12,7 @@ export type SkillFolderValidationResult = {
   errors: string[];
   warnings: string[];
   resourceCount: number;
-  newMentionPathCount: number;
+  mentionCount: number;
 };
 
 function splitFrontmatter(skillMarkdown: string): { frontmatter: string | null; body: string } {
@@ -72,37 +74,64 @@ async function collectLocalResources(folder: string): Promise<Set<string>> {
   return resources;
 }
 
-/**
- * Scan all .md resource files for [[resource:new:...]] mentions and return
- * the deduplicated set of mentioned paths (combined with SKILL.md mentions).
- */
-async function collectAllMentionPaths(
+type MentionCounts = {
+  newPaths: string[];
+  uuidResourceCount: number;
+  total: number;
+};
+
+// We count two kinds of resource mentions to decide if every local file
+// is accounted for:
+//
+//   1. [[resource:new:<path>]] — always internal, maps directly to a file
+//   2. [[resource:<uuid>]]    — could be internal or external; we only
+//      count it when the uuid belongs to this skill's own resources.
+//      Clone writes a .resource-ids.json map so we can tell the difference.
+//
+// The total of (1) + (2) should equal the number of local resource files.
+// If it doesn't, something is missing a mention.
+async function collectAllResourceMentions(
   folder: string,
   skillMdBody: string,
   localResources: Set<string>,
-): Promise<string[]> {
-  const seen = new Set<string>();
-  const paths: string[] = [];
+): Promise<MentionCounts> {
+  const newPathSet = new Set<string>();
+  const uuidSet = new Set<string>();
 
-  const addPaths = (newPaths: string[]) => {
-    for (const p of newPaths) {
-      if (!seen.has(p)) {
-        seen.add(p);
-        paths.push(p);
-      }
+  // load uuid→path map written by clone; absent for newly authored skills
+  const resourceIds: Record<string, string> = await readFile(
+    join(folder, ".resource-ids.json"),
+    "utf8",
+  )
+    .then((raw) => JSON.parse(raw))
+    .catch(() => ({}));
+  const internalIds = new Set(Object.keys(resourceIds).map((id) => id.toLowerCase()));
+
+  const scanMarkdown = (text: string) => {
+    for (const p of collectNewResourceMentionPaths(text)) newPathSet.add(p);
+    for (const m of parseMentions(text)) {
+      // skip external resource mentions and skill mentions
+      if (m.type !== "resource") continue;
+      if (internalIds.size > 0 && !internalIds.has(m.targetId)) continue;
+      uuidSet.add(m.targetId);
     }
   };
 
-  addPaths(collectNewResourceMentionPaths(skillMdBody));
+  scanMarkdown(skillMdBody);
 
   for (const resourcePath of localResources) {
     if (!resourcePath.endsWith(".md")) continue;
     const content = await readFile(join(folder, resourcePath), "utf8").catch(() => null);
     if (!content) continue;
-    addPaths(collectNewResourceMentionPaths(content));
+    scanMarkdown(content);
   }
 
-  return paths;
+  const newPaths = [...newPathSet];
+  return {
+    newPaths,
+    uuidResourceCount: uuidSet.size,
+    total: newPathSet.size + uuidSet.size,
+  };
 }
 
 export async function validateSkillFolder(folder: string): Promise<SkillFolderValidationResult> {
@@ -116,7 +145,7 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
       errors: [`not a directory: ${folder}`],
       warnings,
       resourceCount: 0,
-      newMentionPathCount: 0,
+      mentionCount: 0,
     };
   }
 
@@ -129,7 +158,7 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
       errors: ["SKILL.md not found"],
       warnings,
       resourceCount: 0,
-      newMentionPathCount: 0,
+      mentionCount: 0,
     };
   }
 
@@ -148,10 +177,9 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
   }
 
   const localResources = await collectLocalResources(folder);
-  const mentionPaths = await collectAllMentionPaths(folder, body, localResources);
-  const mentionPathSet = new Set(mentionPaths);
-  const missing = mentionPaths.filter((path) => !localResources.has(path));
+  const mentions = await collectAllResourceMentions(folder, body, localResources);
 
+  const missing = mentions.newPaths.filter((path) => !localResources.has(path));
   if (missing.length > 0) {
     errors.push("missing local resources for :new: mention tokens:");
     errors.push(...missing.map((path) => `  - ${path}`));
@@ -161,15 +189,22 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
     warnings.push("no local resources found under references/, scripts/, or assets/");
   }
 
-  const unreferenced = [...localResources].filter((path) => !mentionPathSet.has(path));
+  if (localResources.size > 0 && mentions.total < localResources.size) {
+    const uncovered = localResources.size - mentions.total;
 
-  if (unreferenced.length > 0) {
-    warnings.push(
-      [
-        `${unreferenced.length} resource file(s) not referenced by any [[resource:new:...]] mention:`,
-        ...unreferenced.map((path) => `  - ${path}`),
-      ].join("\n"),
-    );
+    if (mentions.uuidResourceCount === 0) {
+      // all mentions are :new: — we know exactly which files are uncovered
+      const newPathSet = new Set(mentions.newPaths);
+      const unreferenced = [...localResources].filter((path) => !newPathSet.has(path));
+      warnings.push(
+        [
+          `${uncovered} resource file(s) not referenced by any mention:`,
+          ...unreferenced.map((path) => `  - ${path}`),
+        ].join("\n"),
+      );
+    } else {
+      warnings.push(`${uncovered} resource file(s) not referenced by any mention`);
+    }
   }
 
   return {
@@ -177,7 +212,7 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
     errors,
     warnings,
     resourceCount: localResources.size,
-    newMentionPathCount: mentionPaths.length,
+    mentionCount: mentions.total,
   };
 }
 

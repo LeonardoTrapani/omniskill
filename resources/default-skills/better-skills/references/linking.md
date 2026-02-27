@@ -49,6 +49,35 @@ Use this when documenting or explaining the mention syntax itself.
 The backslash is stripped in rendered output, so readers see the
 literal `\[[resource:...]]` form without the escape.
 
+## Cross-skill links
+
+Use `\[[skill:<uuid>]]` to point users toward a related skill. Placement
+matters — embed links where the reader actually needs the pointer, not in
+a generic "Related Skills" section at the bottom.
+
+Good: inline in the section where the context is relevant.
+
+```
+## React Integration
+
+When writing React components that use atoms, also consult
+\[[skill:<uuid>]] for render and bundle performance patterns.
+```
+
+Bad: a catch-all list at the end of SKILL.md.
+
+```
+## Related Skills
+
+- \[[skill:<uuid>]]
+- \[[skill:<uuid>]]
+```
+
+Links can go in **reference files**, not just SKILL.md. If a reference
+covers a subtopic that overlaps with another skill, put the
+`\[[skill:<uuid>]]` link there — that way it loads just-in-time when the
+agent reads the reference, rather than always consuming context.
+
 ## Rules
 
 1. Never use bare markdown links (`[text](references/foo.md)`) for

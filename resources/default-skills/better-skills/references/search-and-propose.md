@@ -23,7 +23,10 @@ better-skills get <slug-or-uuid>
 ## Proposal format
 
 1. Candidate skill(s) and why they match.
-2. Suggested action: link from existing skill, or import.
+2. For each link: the specific file and section where the
+   `\[[skill:<uuid>]]` mention should go. Prefer the most relevant
+   reference file and section over SKILL.md. See
+   [[resource:new:references/linking.md]] for placement rules.
 3. Exact command(s) to run once approved.
 
 For linking, update target markdown with valid UUID mentions using the

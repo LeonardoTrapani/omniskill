@@ -18,7 +18,7 @@ export async function validateCommand() {
 
   ui.log.success("validation passed");
   ui.log.info(`- resources: ${result.resourceCount}`);
-  ui.log.info(`- :new: mention paths: ${result.newMentionPathCount}`);
+  ui.log.info(`- resource mentions: ${result.mentionCount}`);
 
   for (const warning of result.warnings) {
     ui.log.warn(`warning: ${warning}`);

@@ -1,4 +1,4 @@
-import { mkdir, readdir, rm, stat } from "node:fs/promises";
+import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { parseMentions } from "@better-skills/api/lib/mentions";
@@ -205,6 +205,11 @@ export async function cloneCommand() {
     const result = await writeSkillFolder(toInstallableSkill(skill), targetDir, {
       markdownVariant: "original",
     });
+    // write uuid→path map so validate can tell which [[resource:<uuid>]]
+    // mentions are internal (this skill's own resources) vs external
+    const resourceIds = Object.fromEntries(skill.resources.map((r) => [r.id, r.path]));
+    await writeFile(resolve(targetDir, ".resource-ids.json"), JSON.stringify(resourceIds, null, 2));
+
     s.stop(pc.green(`cloned ${skill.slug}`));
 
     if (result.skippedResources.length > 0) {
