@@ -13,16 +13,10 @@ import {
   normalizeResourcePath,
   resolveNewResourceMentionsToUuids,
 } from "@better-skills/markdown/new-resource-mentions";
+import { parseMentions } from "@better-skills/markdown/persisted-mentions";
 
 type ResourceKind = (typeof skillResource.$inferInsert)["kind"];
 type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-type PersistedMentionType = "skill" | "resource";
-
-interface PersistedMention {
-  type: PersistedMentionType;
-  targetId: string;
-}
 
 type AutoLinkSource =
   | {
@@ -117,34 +111,6 @@ const BINARY_EXTENSIONS = new Set([
 ]);
 
 const NEW_MENTION_MARKDOWN_EXTENSIONS = new Set([".md", ".mdx", ".txt"]);
-const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const PERSISTED_MENTION_RE = new RegExp(
-  String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`,
-  "gi",
-);
-
-function parsePersistedMentions(markdown: string): PersistedMention[] {
-  const seen = new Set<string>();
-  const mentions: PersistedMention[] = [];
-
-  let match: RegExpExecArray | null;
-  PERSISTED_MENTION_RE.lastIndex = 0;
-
-  while ((match = PERSISTED_MENTION_RE.exec(markdown)) !== null) {
-    const type = match[1]!.toLowerCase() as PersistedMentionType;
-    const targetId = match[2]!.toLowerCase();
-    const mentionKey = `${type}:${targetId}`;
-
-    if (seen.has(mentionKey)) {
-      continue;
-    }
-
-    seen.add(mentionKey);
-    mentions.push({ type, targetId });
-  }
-
-  return mentions;
-}
 
 async function syncMarkdownAutoLinksForSources(
   tx: DbTx,
@@ -176,7 +142,7 @@ async function syncMarkdownAutoLinksForSources(
       .delete(skillLink)
       .where(and(sourceCondition, sql`${skillLink.metadata}->>'origin' = 'markdown-auto'`));
 
-    const mentions = parsePersistedMentions(source.markdown);
+    const mentions = parseMentions(source.markdown);
 
     if (mentions.length === 0) {
       continue;

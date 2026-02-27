@@ -70,6 +70,7 @@
         "@better-skills/api": "workspace:*",
         "@better-skills/auth": "workspace:*",
         "@better-skills/env": "workspace:*",
+        "@better-skills/markdown": "workspace:*",
         "@mdxeditor/editor": "^3.52.4",
         "@tanstack/react-query": "^5.90.12",
         "@trpc/client": "catalog:",

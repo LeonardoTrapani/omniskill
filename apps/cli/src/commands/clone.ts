@@ -1,7 +1,7 @@
 import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { parseMentions } from "@better-skills/api/lib/mentions";
+import { parseMentions } from "@better-skills/markdown/persisted-mentions";
 import pc from "picocolors";
 
 import { readErrorMessage } from "../lib/errors";

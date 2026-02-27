@@ -40,21 +40,26 @@ Escaped tokens are treated as literal text and never become links.
 Shared markdown-safe primitives:
 
 - `new-resource-mentions` handles `:new:` path collection/normalization/resolution.
-- All mention regexes use `(?<!\\)` negative lookbehind to skip backslash-escaped tokens.
+- `persisted-mentions` handles UUID mention parse/remap/invalid-token detection.
+- `mention-hrefs` centralizes mention URL query + href builders.
+- `render-persisted-mentions` renders stored mention tokens to plain labels (download)
+  or linked markdown (frontend).
+- Mention regexes use `(?<!\\)` negative lookbehind to skip backslash-escaped tokens.
 
 ### `packages/api`
 
 Source of truth for persisted mention parsing and link writing:
 
-- `src/lib/mentions.ts`: parse/remap/invalid token detection for UUID mentions.
+- `src/lib/mentions.ts`: re-exported shared persisted mention helpers.
 - `src/lib/link-sync.ts`: validate targets and write auto links.
-- `src/lib/render-mentions.ts`: resolve persisted mentions to user-facing markdown labels/links.
+- `src/lib/render-mentions.ts`: DB lookup + call shared markdown renderer.
 
 ### `apps/web`
 
 Editor and UI mention URL handling:
 
-- `mention-markdown.ts` converts between rendered links and storage mention tokens.
+- `mention-markdown.ts` converts between rendered links and storage mention tokens,
+  using shared mention query parsing and href builders.
 - markdown render components route mention links to skill/resource pages.
 
 ### `apps/cli`
@@ -174,17 +179,10 @@ What is already centralized:
 
 What is still duplicated (known tech debt):
 
-- UUID mention token regex/constants exist in multiple places:
-  - `packages/api/src/lib/mentions.ts`
-  - `packages/api/src/lib/render-mentions.ts`
-  - `packages/auth/src/default-skills.ts`
-  - `apps/web/src/features/skills/components/mention-markdown.ts`
-
-Reason today:
-
-- API needs strict storage parsing and validation.
-- Web also parses mention query params and editor markdown link forms.
-- These concerns overlap partially but are not fully extracted into a shared package API yet.
+- Route-shape checks for mention href parsing (e.g. `/vault/skills/` vs
+  `/dashboard/skills/`) still live in web, because they are app-router concerns.
+- Auto-link write strategies are still split between API and auth default-sync
+  entrypoints, even though parsing/render primitives are shared.
 
 ## Invariants
 
@@ -192,4 +190,5 @@ Reason today:
 - Mention targets must exist and belong to the same owner.
 - Auto links are tagged with `metadata.origin = "markdown-auto"`.
 - Auto links are replace-on-write per source; manual links remain.
-- Parsing ignores fenced code blocks, inline code, and escaped tokens.
+- Parsing currently includes fenced code blocks and inline code; only escaped
+  tokens are ignored.

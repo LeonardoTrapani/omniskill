@@ -1,17 +1,20 @@
-const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/g;
-const MENTION_QUERY_RE = new RegExp(`^(skill|resource):(${UUID_RE})$`, "i");
-const SCHEME_RE = /^[a-z][a-z\d+\-.]*:/i;
+import {
+  buildResourceMentionHref as buildSharedResourceMentionHref,
+  buildSkillMentionHref as buildSharedSkillMentionHref,
+} from "@better-skills/markdown/mention-hrefs";
+import {
+  createPersistedMentionRegex,
+  formatPersistedMentionQuery,
+  parsePersistedMentionQuery,
+  type MentionType,
+} from "@better-skills/markdown/persisted-mentions";
 
-type MentionType = "skill" | "resource";
+const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/g;
+const SCHEME_RE = /^[a-z][a-z\d+\-.]*:/i;
 
 interface MentionTarget {
   type: MentionType;
   targetId: string;
-}
-
-function getMentionTokenRegex() {
-  return new RegExp(String.raw`(?<!\\)\[\[(skill|resource):(${UUID_RE})\]\]`, "gi");
 }
 
 function decodeMaybe(value: string) {
@@ -93,22 +96,14 @@ export function parseMentionHref(rawHref: string): MentionTarget | null {
   const mention = parsed.searchParams.get("mention");
   if (!mention) return null;
 
-  const mentionMatch = MENTION_QUERY_RE.exec(mention);
-  if (!mentionMatch) return null;
+  const parsedMention = parsePersistedMentionQuery(mention);
+  if (!parsedMention) return null;
 
-  const type = mentionMatch[1]!.toLowerCase() as MentionType;
-  const targetId = mentionMatch[2]!.toLowerCase();
-  return { type, targetId };
-}
-
-function buildMentionQuery(type: MentionType, targetId: string) {
-  const params = new URLSearchParams({ mention: `${type}:${targetId}` });
-  return `?${params.toString()}`;
+  return parsedMention;
 }
 
 export function buildSkillMentionHref(skillId: string) {
-  const normalizedSkillId = skillId.toLowerCase();
-  return `/vault/skills/${encodeURIComponent(normalizedSkillId)}${buildMentionQuery("skill", normalizedSkillId)}`;
+  return buildSharedSkillMentionHref(skillId);
 }
 
 export function buildResourceMentionHref(
@@ -116,15 +111,7 @@ export function buildResourceMentionHref(
   resourcePath: string,
   resourceId: string,
 ) {
-  const normalizedSkillId = skillId.toLowerCase();
-  const normalizedResourceId = resourceId.toLowerCase();
-  const encodedPath = resourcePath
-    .split("/")
-    .filter(Boolean)
-    .map((part) => encodeURIComponent(part))
-    .join("/");
-
-  return `/vault/skills/${encodeURIComponent(normalizedSkillId)}/resources/${encodedPath}${buildMentionQuery("resource", normalizedResourceId)}`;
+  return buildSharedResourceMentionHref(skillId, resourcePath, resourceId);
 }
 
 function normalizeLabel(label: string) {
@@ -172,7 +159,7 @@ export function storageMarkdownToEditorMarkdown(options: {
     }
   }
 
-  const mentionTokenRegex = getMentionTokenRegex();
+  const mentionTokenRegex = createPersistedMentionRegex();
 
   return originalMarkdown.replace(mentionTokenRegex, (_match, rawType: string, rawId: string) => {
     const type = rawType.toLowerCase() as MentionType;
@@ -189,14 +176,14 @@ export function storageMarkdownToEditorMarkdown(options: {
 }
 
 export function editorMarkdownToStorageMarkdown(editorMarkdown: string) {
-  const mentionTokenRegex = getMentionTokenRegex();
+  const mentionTokenRegex = createPersistedMentionRegex();
 
   const linkedMentions = editorMarkdown.replace(
     MARKDOWN_LINK_REGEX,
     (match, _label: string, href: string) => {
       const mention = parseMentionHref(href);
       if (!mention) return match;
-      return `[[${mention.type}:${mention.targetId}]]`;
+      return `[[${formatPersistedMentionQuery(mention.type, mention.targetId)}]]`;
     },
   );
 

@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
-import { parseMentions } from "@better-skills/api/lib/mentions";
+import { parseMentions } from "@better-skills/markdown/persisted-mentions";
 
 import { collectNewResourceMentionPaths, normalizeResourcePath } from "./new-resource-mentions";
 
