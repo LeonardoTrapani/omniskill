@@ -19,6 +19,9 @@ description: |
 - CLI command reference → [[resource:new:references/commands.md]]
 - Authoring guidelines → [[resource:new:references/authoring.md]]
 
+**Routing:** GitHub URL / skills.sh link / external source → Create.
+Existing local skill folders → Onboard.
+
 ## Rules
 
 1. Every resource file must have a `\[[resource:new:<path>]]` mention — either

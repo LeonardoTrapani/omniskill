@@ -33,6 +33,12 @@ tmp_root="$(mktemp -d)"
 git clone --depth 1 <repo-url> "$tmp_root/repo"
 ```
 
+If the repo root contains `SKILL.md` directly, the repo itself is the skill:
+
+```bash
+skill_dir="$tmp_root/repo"
+```
+
 If the URL points to a subdirectory, copy that subfolder out as `$skill_dir`.
 
 ### C. Other URL (blog post, docs page, npm package, etc.)
@@ -60,11 +66,27 @@ Create `SKILL.md` at `"$skill_dir/SKILL.md"` and resource files inside
 
 Follow [[resource:new:references/linking.md]]. In short:
 
-1. For every resource file, add a `\[[resource:new:<path>]]` mention in
-   SKILL.md or in another resource file.
+1. Replace **every** reference to a local resource file with
+   `\[[resource:new:<path>]]` — in SKILL.md **and** inside resource files.
+   Multiple mentions of the same file are valid; the CLI deduplicates.
 
-2. Replace any bare markdown links to local resources
-   (e.g. `[text](references/foo.md)`) with `\[[resource:new:references/foo.md]]`.
+2. Bare markdown links (`[text](references/foo.md)`) and plain-text paths
+   (`references/foo.md`) are both forbidden. Every occurrence must be a
+   mention token.
+
+Before:
+
+```
+See [Quick Reference](references/quick-reference.md) for details.
+Also consult references/code-patterns.md for examples.
+```
+
+After:
+
+```
+See \[[resource:new:references/quick-reference.md]] for details.
+Also consult \[[resource:new:references/code-patterns.md]] for examples.
+```
 
 ## Step 3: Validate
 
@@ -73,6 +95,11 @@ better-skills validate "$skill_dir"
 ```
 
 Fix any errors and warnings before proceeding.
+
+After validate passes, scan SKILL.md **and every resource file** for
+remaining bare markdown links (`[text](references/...)`) or plain-text
+paths to local files. `validate` catches missing mentions but does not
+detect leftover bare links — fix those manually.
 
 ## Step 4: Create
 

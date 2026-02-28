@@ -80,9 +80,14 @@ agent reads the reference, rather than always consuming context.
 
 ## Rules
 
-1. Never use bare markdown links (`[text](references/foo.md)`) for
-   internal resource references. Always use mention tokens.
+1. Never use bare markdown links (`[text](references/foo.md)`) or
+   plain-text paths (`references/foo.md`) for internal resource
+   references. Every occurrence must be a mention token.
 2. One mention per resource file, minimum. No resource should exist
    without a matching mention.
-3. `better-skills validate` catches missing mentions — run it before
-   every create or update.
+3. If a file is referenced in multiple places, use the mention token at
+   every location. The CLI deduplicates — multiple mentions of the same
+   path are fine.
+4. `better-skills validate` catches missing mentions — run it before
+   every create or update. It does not detect leftover bare links, so
+   check those manually.

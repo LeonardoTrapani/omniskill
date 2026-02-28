@@ -1,6 +1,8 @@
 # Onboard Unmanaged Skills
 
-Use this when user asks to bring unmanaged local skills into the vault.
+Use this when user asks to bring existing unmanaged local skill folders
+into the vault. Do NOT use for GitHub URLs, skills.sh links, or any
+external source — those follow the Create flow.
 
 ## Read first
 
