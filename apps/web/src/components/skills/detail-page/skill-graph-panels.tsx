@@ -94,29 +94,43 @@ export function DesktopSkillGraphPanel({
   isError,
   focusNodeId,
   onNodeClick,
+  showTitle = true,
 }: {
   data?: GraphData;
   isLoading: boolean;
   isError: boolean;
   focusNodeId: string;
   onNodeClick?: OnNodeClick;
+  showTitle?: boolean;
 }) {
+  const graphContent = (
+    <div className="relative min-h-0 flex-1 overflow-hidden">
+      <SkillGraphPanelContent
+        data={data}
+        isLoading={isLoading}
+        isError={isError}
+        focusNodeId={focusNodeId}
+        mobile={false}
+        onNodeClick={onNodeClick}
+      />
+    </div>
+  );
+
+  if (!showTitle) {
+    return (
+      <div className="flex h-full min-h-0 flex-col border border-border bg-background/90 backdrop-blur-sm md:border-none">
+        {graphContent}
+      </div>
+    );
+  }
+
   return (
     <SkillPanel
       icon={<Network className="size-3.5 text-muted-foreground" aria-hidden="true" />}
       title="Skill Graph"
       className="flex h-full min-h-0 flex-col md:border-none"
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        <SkillGraphPanelContent
-          data={data}
-          isLoading={isLoading}
-          isError={isError}
-          focusNodeId={focusNodeId}
-          mobile={false}
-          onNodeClick={onNodeClick}
-        />
-      </div>
+      {graphContent}
     </SkillPanel>
   );
 }

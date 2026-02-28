@@ -648,6 +648,7 @@ function SkillDetailInner({ id }: { id: string }) {
                 isError={graphQuery.isError}
                 focusNodeId={focusNodeId}
                 onNodeClick={handleGraphNodeClick}
+                showTitle={false}
               />
             }
             resourcesContent={
