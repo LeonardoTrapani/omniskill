@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { describe, expect, test } from "bun:test";
 
-import { validateSkillFolder } from "./validate-skill-folder";
+import { assertValidSkillFolder, validateSkillFolder } from "./validate-skill-folder";
 
 async function createTempSkillFolder(name: string): Promise<string> {
   return await mkdtemp(join(tmpdir(), `${name}-`));
@@ -95,6 +95,37 @@ describe("validateSkillFolder", () => {
     expect(result.mentionCount).toBe(1);
     expect(result.warnings.length).toBe(1);
     expect(result.warnings[0]).toContain("references/orphan.md");
+  });
+
+  test("assertValidSkillFolder fails when warnings are present", async () => {
+    const folder = await createTempSkillFolder("better-skills-validate-assert-warning");
+    await mkdir(join(folder, "references"), { recursive: true });
+    await writeFile(join(folder, "references", "used.md"), "content\n", "utf8");
+    await writeFile(join(folder, "references", "orphan.md"), "orphan\n", "utf8");
+    await writeFile(
+      join(folder, "SKILL.md"),
+      [
+        "---",
+        "name: test skill",
+        "description: validate",
+        "---",
+        "",
+        "See [[resource:new:references/used.md]]",
+      ].join("\n"),
+      "utf8",
+    );
+
+    let thrown: unknown;
+
+    try {
+      await assertValidSkillFolder(folder);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeTruthy();
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toContain("resource file(s) not referenced by any mention");
   });
 
   test("collects mentions from resource .md files too", async () => {

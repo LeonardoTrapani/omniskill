@@ -11,7 +11,7 @@ export async function validateCommand() {
 
   const result = await validateSkillFolder(folder);
 
-  if (!result.ok) {
+  if (!result.ok || result.warnings.length > 0) {
     ui.log.error(formatValidationFailure(result));
     process.exit(1);
   }
@@ -19,8 +19,4 @@ export async function validateCommand() {
   ui.log.success("validation passed");
   ui.log.info(`- resources: ${result.resourceCount}`);
   ui.log.info(`- resource mentions: ${result.mentionCount}`);
-
-  for (const warning of result.warnings) {
-    ui.log.warn(`warning: ${warning}`);
-  }
 }

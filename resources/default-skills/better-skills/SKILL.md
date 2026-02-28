@@ -25,8 +25,8 @@ Existing local skill folders → Onboard.
 ## Rules
 
 1. Every resource file must have a `\[[resource:new:<path>]]` mention — either
-   in SKILL.md or in another resource. Run `better-skills validate` and fix
-   all warnings before create/update.
+   in SKILL.md or in another resource. `better-skills validate` is strict:
+   any warning fails validation. Never run create/update until validate exits clean.
 2. Never use bare markdown links for internal resource references.
 3. Always read [[resource:new:references/authoring.md]] before creating or
    editing a skill.

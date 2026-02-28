@@ -31,7 +31,7 @@ The clone writes the folder in update-ready format: `SKILL.md` +
 better-skills validate <folder>
 ```
 
-Fix any errors and warnings before proceeding.
+Validation is strict: any warning fails. Fix all issues before proceeding.
 
 5. Update the skill:
 

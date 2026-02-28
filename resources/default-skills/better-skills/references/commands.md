@@ -32,8 +32,8 @@ better-skills validate <dir>
 Both `create` and `update` resolve `\[[resource:new:...]]` mentions to
 `\[[resource:<uuid>]]` in SKILL.md and all resource file content.
 
-`validate` checks frontmatter, `:new:` mention targets, and warns about
-resource files missing a mention reference.
+`validate` checks frontmatter and `:new:` mention targets, and fails when
+resource files are missing mention references.
 
 ## Delete
 
@@ -56,5 +56,5 @@ The CLI auto-detects non-interactive environments (no TTY, `AGENT=1`,
 `OPENCODE=1`, `CI=true`) and suppresses spinners.
 
 - Destructive commands require `--yes` in non-interactive mode.
-- create/update/import print JSON on success (`id`, `slug`, `name`).
+- create/update print JSON on success (`id`, `slug`, `name`).
 - Failures return non-zero with actionable error text.

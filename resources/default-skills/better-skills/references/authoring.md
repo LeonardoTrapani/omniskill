@@ -34,7 +34,7 @@ See [[resource:new:references/linking.md]] for the full reference on mention
 tokens (draft, persisted, and escaped forms).
 
 Key rule: every file under `references/`, `scripts/`, or `assets/` MUST have a
-matching mention. `better-skills validate` warns about unlinked files.
+matching mention. `better-skills validate` fails when any resource is unlinked.
 
 Update behavior:
 
@@ -80,6 +80,6 @@ Skills are for agents, not humans. To keep the context window lean:
 2. SKILL.md is a router pointing to specific flow/reference docs.
 3. Every resource file is referenced by a `\[[resource:new:...]]` mention.
 4. Command examples use real CLI syntax.
-5. Folder passes `better-skills validate` with zero warnings before create/update.
+5. Folder passes `better-skills validate` with zero warnings (warnings are fatal).
 6. No redundant instructions for things the agent already does well.
 7. Terminology is consistent across all files.

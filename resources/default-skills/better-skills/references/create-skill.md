@@ -15,13 +15,23 @@ Every path below must produce a `$skill_dir` folder containing at least a
 
 URL pattern: `https://skills.sh/<org>/<repo>/<skill-name>`
 
-The path segments map directly to a GitHub repo and subfolder:
+The path segments map to a GitHub repo plus the skill folder name. Clone first,
+then resolve the folder using common layouts:
 
 ```bash
 tmp_root="$(mktemp -d)"
 git clone --depth 1 https://github.com/<org>/<repo>.git "$tmp_root/repo"
-skill_dir="$tmp_root/<skill-name>"
-cp -r "$tmp_root/repo/<skill-name>" "$skill_dir"
+
+if [ -d "$tmp_root/repo/skills/<skill-name>" ]; then
+  skill_dir="$tmp_root/repo/skills/<skill-name>"
+elif [ -d "$tmp_root/repo/<skill-name>" ]; then
+  skill_dir="$tmp_root/repo/<skill-name>"
+elif [ -f "$tmp_root/repo/SKILL.md" ]; then
+  skill_dir="$tmp_root/repo"
+else
+  # locate the folder containing SKILL.md for <skill-name>, then set skill_dir
+  exit 1
+fi
 ```
 
 ### B. GitHub URL
@@ -74,6 +84,10 @@ Follow [[resource:new:references/linking.md]]. In short:
    (`references/foo.md`) are both forbidden. Every occurrence must be a
    mention token.
 
+3. If any resource file still has no inbound mention, add a short list in
+   SKILL.md (for example `## Resource Index`) with one
+   `\[[resource:new:<path>]]` mention per missing file.
+
 Before:
 
 ```
@@ -94,7 +108,7 @@ Also consult \[[resource:new:references/code-patterns.md]] for examples.
 better-skills validate "$skill_dir"
 ```
 
-Fix any errors and warnings before proceeding.
+Validation is strict: any warning fails. Fix all issues before proceeding.
 
 After validate passes, scan SKILL.md **and every resource file** for
 remaining bare markdown links (`[text](references/...)`) or plain-text

@@ -18,8 +18,8 @@ UUID-based `\[[resource:<uuid>]]` tokens on create/update.
 
 Every file under `references/`, `scripts/`, or `assets/` MUST have a
 matching `\[[resource:new:<path>]]` mention somewhere — in SKILL.md or
-in another resource file. `better-skills validate` warns about unlinked
-files.
+in another resource file. `better-skills validate` fails if any file is
+unlinked.
 
 ## Persisted mentions (after create/update)
 
@@ -88,6 +88,6 @@ agent reads the reference, rather than always consuming context.
 3. If a file is referenced in multiple places, use the mention token at
    every location. The CLI deduplicates — multiple mentions of the same
    path are fine.
-4. `better-skills validate` catches missing mentions — run it before
-   every create or update. It does not detect leftover bare links, so
-   check those manually.
+4. `better-skills validate` catches missing mentions and fails on warnings.
+   Run it before every create or update. It does not detect leftover bare
+   links, so check those manually.

@@ -46,7 +46,7 @@ For each selected skill:
    markdown links to `\[[resource:new:<path>]]` form and ensure every resource
    file has a matching mention.
 2. Verify frontmatter has required `name` and `description` fields.
-3. Run `better-skills validate <work-folder>` — fix all errors and warnings.
+3. Run `better-skills validate <work-folder>` — validation is strict; fix all issues.
 
 ## Step 4: Route to create or update
 

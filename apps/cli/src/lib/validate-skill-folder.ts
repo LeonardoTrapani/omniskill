@@ -185,10 +185,6 @@ export async function validateSkillFolder(folder: string): Promise<SkillFolderVa
     errors.push(...missing.map((path) => `  - ${path}`));
   }
 
-  if (localResources.size === 0) {
-    warnings.push("no local resources found under references/, scripts/, or assets/");
-  }
-
   if (localResources.size > 0 && mentions.total < localResources.size) {
     const uncovered = localResources.size - mentions.total;
 
@@ -229,7 +225,7 @@ export function formatValidationFailure(result: SkillFolderValidationResult): st
 export async function assertValidSkillFolder(folder: string): Promise<SkillFolderValidationResult> {
   const result = await validateSkillFolder(folder);
 
-  if (!result.ok) {
+  if (!result.ok || result.warnings.length > 0) {
     throw new Error(formatValidationFailure(result));
   }
 
