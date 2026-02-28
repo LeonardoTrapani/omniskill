@@ -23,11 +23,13 @@ export function ResourceTabContent({
   skillName,
   resourcePath,
   resources,
+  onResourceNavigate,
 }: {
   skillId: string;
   skillName?: string;
   resourcePath: string;
   resources: SkillResourceReference[];
+  onResourceNavigate?: (resource: SkillResourceReference) => void;
 }) {
   const { data, isLoading, isError } = useResourceContent(skillId, resourcePath);
 
@@ -39,8 +41,9 @@ export function ResourceTabContent({
         skillId,
         skillName,
         findResourceByHref,
+        onResourceNavigate,
       }),
-    [skillId, skillName, findResourceByHref],
+    [skillId, skillName, findResourceByHref, onResourceNavigate],
   );
 
   if (isLoading) {

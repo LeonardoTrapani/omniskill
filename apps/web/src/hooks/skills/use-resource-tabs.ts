@@ -58,12 +58,15 @@ export function useResourceTabs({
   skillId,
   skillSlug,
   resources,
+  isReady,
 }: {
   skillId: string;
   skillSlug: string;
   resources: SkillResourceReference[];
+  isReady: boolean;
 }) {
   const searchParams = useSearchParams();
+  const [hasHydratedFromUrl, setHasHydratedFromUrl] = useState(false);
 
   /* ── Derive initial state from URL ── */
   const initialReferencesParam = searchParams.get("references");
@@ -115,6 +118,10 @@ export function useResourceTabs({
     return skillId;
   });
 
+  useEffect(() => {
+    setHasHydratedFromUrl(false);
+  }, [skillId]);
+
   /* ── Derived values ── */
   const tabs: ContentTab[] = useMemo(
     () => [skillTab, ...openResourceTabs],
@@ -149,13 +156,22 @@ export function useResourceTabs({
 
     setOpenResourceTabs((prev) => (areTabsEqual(prev, nextTabs) ? prev : nextTabs));
     setActiveTabId((prev) => (prev === nextActiveTabId ? prev : nextActiveTabId));
-  }, [searchParams, resourcesById, resources, skillId]);
+
+    if (isReady) {
+      setHasHydratedFromUrl(true);
+    }
+  }, [searchParams, resourcesById, resources, skillId, isReady]);
 
   /* ── URL sync ── */
   useEffect(() => {
-    const currentReferencesParam = searchParams.get("references") ?? "";
-    const currentActiveTabParam = searchParams.get("activeTab") ?? "";
-    const currentLegacyResourceParam = searchParams.get("resource");
+    if (!isReady || !hasHydratedFromUrl) {
+      return;
+    }
+
+    const currentParams = new URLSearchParams(window.location.search);
+    const currentReferencesParam = currentParams.get("references") ?? "";
+    const currentActiveTabParam = currentParams.get("activeTab") ?? "";
+    const currentLegacyResourceParam = currentParams.get("resource");
 
     const desiredReferencesParam = openResourceTabs.map((tab) => tab.id).join(",");
     const desiredActiveTabParam = activeTab.kind === "skill" ? "skill" : activeTab.id;
@@ -168,7 +184,7 @@ export function useResourceTabs({
       return;
     }
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(currentParams.toString());
 
     if (desiredReferencesParam.length > 0) {
       params.set("references", desiredReferencesParam);
@@ -186,9 +202,8 @@ export function useResourceTabs({
       ? `${window.location.pathname}?${newSearch}`
       : window.location.pathname;
 
-    // Use window.history to avoid Next.js Route type constraints
     window.history.replaceState(window.history.state, "", newUrl);
-  }, [activeTab, openResourceTabs, searchParams]);
+  }, [activeTab, openResourceTabs, isReady, hasHydratedFromUrl]);
 
   /* ── Actions ── */
   const openResource = useCallback((resource: SkillResourceReference) => {

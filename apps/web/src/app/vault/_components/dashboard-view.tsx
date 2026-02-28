@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Hexagon, Warehouse } from "lucide-react";
 
 import DeleteSkillDialog from "@/app/vault/_components/delete-skill-dialog";
 import MySkillsTable from "@/app/vault/_components/my-skills-table";
 import SkillGraph from "@/app/vault/_components/skill-graph";
+import { cn } from "@/lib/utils";
 
 export default function DashboardView() {
   const [mobileTab, setMobileTab] = useState<"graph" | "vault">("graph");
@@ -44,10 +46,6 @@ export default function DashboardView() {
     };
   }, []);
 
-  const handleMobileTabChange = (tab: "graph" | "vault") => {
-    setMobileTab(tab);
-  };
-
   return (
     <div ref={dashboardRef} className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-32" />
@@ -60,7 +58,51 @@ export default function DashboardView() {
         <SkillGraph height={backgroundHeight} variant="background" />
       </div>
 
-      <div className="relative z-10 mx-auto space-y-6 pb-14 lg:pb-0 lg:pr-6 lg:pointer-events-none">
+      {/* Top tab bar – mobile only */}
+      <div
+        className="relative z-20 flex border-b border-border bg-background/90 backdrop-blur-sm lg:hidden"
+        role="tablist"
+        aria-label="Dashboard content tabs"
+      >
+        <button
+          type="button"
+          id="dashboard-content-tab-graph"
+          role="tab"
+          aria-controls="dashboard-content-panel-graph"
+          aria-selected={mobileTab === "graph"}
+          tabIndex={mobileTab === "graph" ? 0 : -1}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-[10px] font-mono uppercase tracking-wider transition-colors",
+            mobileTab === "graph"
+              ? "text-foreground border-b-2 border-primary -mb-[1px]"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          onClick={() => setMobileTab("graph")}
+        >
+          <Hexagon className="size-3" aria-hidden="true" />
+          Graph
+        </button>
+        <button
+          type="button"
+          id="dashboard-content-tab-vault"
+          role="tab"
+          aria-controls="dashboard-content-panel-vault"
+          aria-selected={mobileTab === "vault"}
+          tabIndex={mobileTab === "vault" ? 0 : -1}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 text-[10px] font-mono uppercase tracking-wider transition-colors",
+            mobileTab === "vault"
+              ? "text-foreground border-b-2 border-primary -mb-[1px]"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+          onClick={() => setMobileTab("vault")}
+        >
+          <Warehouse className="size-3" aria-hidden="true" />
+          My Vault
+        </button>
+      </div>
+
+      <div className="relative z-10 mx-auto space-y-6 lg:pr-6 lg:pointer-events-none">
         <div ref={panelsGridRef} className="relative">
           <div className="lg:hidden space-y-6 lg:pointer-events-auto">
             <div
@@ -100,45 +142,6 @@ export default function DashboardView() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 border-t border-border bg-background/90 backdrop-blur-sm lg:hidden"
-        role="tablist"
-        aria-label="Dashboard content tabs"
-      >
-        <button
-          type="button"
-          id="dashboard-content-tab-graph"
-          role="tab"
-          aria-controls="dashboard-content-panel-graph"
-          aria-selected={mobileTab === "graph"}
-          tabIndex={mobileTab === "graph" ? 0 : -1}
-          className={`h-12 w-full border-r border-border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-            mobileTab === "graph"
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => handleMobileTabChange("graph")}
-        >
-          Graph
-        </button>
-        <button
-          type="button"
-          id="dashboard-content-tab-vault"
-          role="tab"
-          aria-controls="dashboard-content-panel-vault"
-          aria-selected={mobileTab === "vault"}
-          tabIndex={mobileTab === "vault" ? 0 : -1}
-          className={`h-12 w-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-            mobileTab === "vault"
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => handleMobileTabChange("vault")}
-        >
-          My Vault
-        </button>
       </div>
 
       <DeleteSkillDialog
