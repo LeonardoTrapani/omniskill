@@ -4,7 +4,7 @@ import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Check, Download, Loader2, Paperclip, Plus, Trash2 } from "lucide-react";
+import { Check, Download, Loader2, Plus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -28,7 +28,6 @@ import {
 import { markdownUrlTransform } from "@/components/markdown/markdown-url-transform";
 import type { GraphNode } from "@/components/skills/graph/force-graph";
 import { ResourceList } from "@/components/skills/resource-list";
-import { SkillPanel } from "@/components/skills/skill-panel";
 import { Button } from "@/components/ui/button";
 import { useAddSkillFlow } from "@/hooks/skills/use-add-skill-flow";
 import { useMentionAutocomplete, type MentionItem } from "@/hooks/skills/use-mention-autocomplete";
@@ -605,26 +604,6 @@ function SkillDetailInner({ id }: { id: string }) {
               </article>
             )}
           </div>
-
-          <SkillPanel
-            icon={<Paperclip className="size-3.5 text-muted-foreground" aria-hidden="true" />}
-            title="Resources"
-            trailing={
-              <span className="text-[10px] text-muted-foreground">
-                {data.resources.length} file{data.resources.length !== 1 ? "s" : ""}
-              </span>
-            }
-            collapsible
-            defaultOpen={data.resources.length > 0}
-            isEmpty={data.resources.length === 0}
-          >
-            <ResourceList
-              resources={data.resources}
-              skillId={data.id}
-              skillName={data.name}
-              emptyMessage="No resources attached."
-            />
-          </SkillPanel>
         </div>
       </div>
 

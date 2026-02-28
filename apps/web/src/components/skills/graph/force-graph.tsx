@@ -164,7 +164,7 @@ export function ForceGraph({
         .attr("width", width)
         .attr("height", height)
         .attr("fill", "url(#graph-grid)")
-        .attr("opacity", 0.3);
+        .attr("opacity", 0.5);
 
       const g = svg.append("g");
 
