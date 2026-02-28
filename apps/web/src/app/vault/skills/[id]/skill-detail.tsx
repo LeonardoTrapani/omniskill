@@ -176,42 +176,50 @@ function SkillDetailInner({ id }: { id: string }) {
 
   return (
     <main className="relative min-h-screen bg-background lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:overflow-hidden">
-      <div className="relative p-5 sm:px-6 lg:hidden">
+      <div className="relative p-4 pb-6 sm:p-6 lg:hidden">
         <div className="mx-auto max-w-3xl">
           <SkillDetailHeader
             {...headerProps}
             viewingResource={mobileSection === "content" ? viewingResourceLabel : null}
           />
 
-          <MobileSectionControl
-            value={mobileSection}
-            onChange={setMobileSection}
-            resourceCount={resources.length}
-          />
+          <div className="overflow-hidden border border-border bg-background/90">
+            <MobileSectionControl
+              value={mobileSection}
+              onChange={setMobileSection}
+              resourceCount={resources.length}
+            />
 
-          {mobileSection === "content" && tabs.length > 1 && (
-            <div className="overflow-hidden border-x border-b border-border bg-background/70">
-              <ContentTabBar
-                tabs={tabs}
-                activeTabId={activeTabId}
-                onSwitch={handleMobileTabSwitch}
-                onClose={closeTab}
-              />
-            </div>
-          )}
+            {mobileSection === "content" && tabs.length > 1 && (
+              <div className="border-b border-border bg-background/70">
+                <ContentTabBar
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  onSwitch={handleMobileTabSwitch}
+                  onClose={closeTab}
+                />
+              </div>
+            )}
 
-          <div className="py-5">
-            {mobileSection === "content" &&
-              (activeTab.kind === "skill" ? (
-                <article className="min-w-0 break-words">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={mobileMarkdownComponents}
-                    urlTransform={markdownUrlTransform}
-                  >
-                    {data.renderedMarkdown || data.originalMarkdown}
-                  </ReactMarkdown>
-                </article>
+            <div
+              id="skill-mobile-section-panel-content"
+              role="tabpanel"
+              aria-labelledby="skill-mobile-section-tab-content"
+              hidden={mobileSection !== "content"}
+              className={mobileSection === "content" ? "block" : "hidden"}
+            >
+              {activeTab.kind === "skill" ? (
+                <div className="px-4 py-5 sm:px-5">
+                  <article className="min-w-0 break-words">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={mobileMarkdownComponents}
+                      urlTransform={markdownUrlTransform}
+                    >
+                      {data.renderedMarkdown || data.originalMarkdown}
+                    </ReactMarkdown>
+                  </article>
+                </div>
               ) : (
                 activeResourcePath && (
                   <ResourceTabContent
@@ -220,38 +228,59 @@ function SkillDetailInner({ id }: { id: string }) {
                     resourcePath={activeResourcePath}
                     resources={resources}
                     onResourceNavigate={handleOpenResourceTab}
+                    compact
                   />
                 )
-              ))}
+              )}
+            </div>
 
-            {mobileSection === "resources" && (
-              <MobileResourceList resources={resources} onSelect={handleOpenResourceTab} />
-            )}
+            <div
+              id="skill-mobile-section-panel-resources"
+              role="tabpanel"
+              aria-labelledby="skill-mobile-section-tab-resources"
+              hidden={mobileSection !== "resources"}
+              className={mobileSection === "resources" ? "block" : "hidden"}
+            >
+              <MobileResourceList
+                resources={resources}
+                onSelect={handleOpenResourceTab}
+                framed={false}
+              />
+            </div>
 
-            {mobileSection === "graph" &&
-              (graphQuery.isLoading ? (
-                <div className="flex h-[320px] items-center justify-center">
+            <div
+              id="skill-mobile-section-panel-graph"
+              role="tabpanel"
+              aria-labelledby="skill-mobile-section-tab-graph"
+              hidden={mobileSection !== "graph"}
+              className={
+                mobileSection === "graph" ? "relative min-h-[360px] overflow-hidden" : "hidden"
+              }
+            >
+              {graphQuery.isLoading ? (
+                <div className="flex h-[360px] items-center justify-center">
                   <Loader2
                     className="size-4 animate-spin text-muted-foreground"
                     aria-hidden="true"
                   />
                 </div>
               ) : graphQuery.isError ? (
-                <div className="flex h-[320px] items-center justify-center">
+                <div className="flex h-[360px] items-center justify-center">
                   <p className="text-xs text-muted-foreground">Failed to load graph</p>
                 </div>
               ) : graphQuery.data ? (
-                <div className="relative overflow-hidden border border-border">
+                <>
                   <GridBackground className="opacity-32" />
                   <ForceGraph
                     data={graphQuery.data}
                     focusNodeId={focusNodeId}
-                    height={400}
+                    height={380}
                     onNodeClick={handleGraphNodeClick}
                     mobileInitialScale={0.9}
                   />
-                </div>
-              ) : null)}
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

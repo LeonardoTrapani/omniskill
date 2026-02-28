@@ -20,12 +20,14 @@ export function ResourceTabContent({
   resourcePath,
   resources,
   onResourceNavigate,
+  compact = false,
 }: {
   skillId: string;
   skillName?: string;
   resourcePath: string;
   resources: SkillResourceReference[];
   onResourceNavigate?: (resource: SkillResourceReference) => void;
+  compact?: boolean;
 }) {
   const { data, isLoading, isError } = useResourceContent(skillId, resourcePath);
 
@@ -60,10 +62,12 @@ export function ResourceTabContent({
   }
 
   const canRender = canRenderResourceAsMarkdown(data.path, data.kind);
+  const contentClass = compact ? "px-4 py-5 sm:px-5" : "max-w-4xl mx-auto px-8 xl:px-12 py-8";
+  const articleClass = compact ? "min-w-0 break-words" : "min-w-0 break-words lg:mt-3";
 
   if (!canRender) {
     return (
-      <div className="max-w-4xl mx-auto px-8 xl:px-12 py-8">
+      <div className={contentClass}>
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-5 py-8 text-center">
           <FileText className="size-8 text-neutral-300" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">This file cannot be rendered as markdown.</p>
@@ -73,8 +77,8 @@ export function ResourceTabContent({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-8 xl:px-12 py-8">
-      <article className="min-w-0 break-words lg:mt-3">
+    <div className={contentClass}>
+      <article className={articleClass}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={markdownComponents}
