@@ -101,7 +101,7 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 className="h-11 min-w-0 flex-1 gap-2 text-sm justify-center items-center"
                 render={
                   <Link
-                    href="https://github.com/paoloauletta/better-skills"
+                    href="https://github.com/leonardotrapani/better-skills"
                     target="_blank"
                     rel="noopener noreferrer"
                   />

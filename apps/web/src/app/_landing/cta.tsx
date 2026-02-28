@@ -102,14 +102,6 @@ export default function CTA() {
               {mounted && session ? "Go to Vault" : "Get Started"}
               <ArrowRight className="size-3.5" />
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-11 px-7 text-sm"
-              render={<Link href="#pricing" />}
-            >
-              See our plans
-            </Button>
           </div>
         </motion.div>
       </LandingContainer>
