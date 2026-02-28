@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, Copy, Sparkles, Terminal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { GridBackground } from "@/components/ui/grid-background";
 import { dashboardRoute } from "@/lib/skills/routes";
 import { trpc } from "@/lib/api/trpc";
 
@@ -261,7 +262,7 @@ export default function WelcomeWizard() {
 
   return (
     <main className="relative min-h-[calc(100vh-52px)] bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_72%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-20" />
+      <GridBackground intensity={72} className="opacity-20" />
 
       <div className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-2xl items-center px-4 py-10 sm:px-6">
         <div className="w-full space-y-8">

@@ -164,7 +164,7 @@ export function ForceGraph({
         .attr("width", width)
         .attr("height", height)
         .attr("fill", "url(#graph-grid)")
-        .attr("opacity", 0.5);
+        .attr("opacity", 0.3);
 
       const g = svg.append("g");
 
@@ -451,7 +451,7 @@ export function ForceGraph({
     <div
       ref={containerRef}
       style={{ height }}
-      className={cn("relative w-full overflow-hidden bg-background", className)}
+      className={cn("relative w-full overflow-hidden", className)}
     >
       {tooltip ? createPortal(tooltip, document.body) : null}
 

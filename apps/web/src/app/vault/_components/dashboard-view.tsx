@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Hexagon, Warehouse } from "lucide-react";
 
 import DeleteSkillDialog from "@/app/vault/_components/delete-skill-dialog";
+import { GridBackground } from "@/components/ui/grid-background";
 import MySkillsTable from "@/app/vault/_components/my-skills-table";
 import SkillGraph from "@/app/vault/_components/skill-graph";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ export default function DashboardView() {
 
   return (
     <div ref={dashboardRef} className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_74%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-32" />
+      <GridBackground className="opacity-32" />
 
       <div
         className="absolute inset-0 hidden lg:block"

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { CheckCircle2, ShieldCheck, TerminalSquare, XCircle } from "lucide-react";
 
+import { GridBackground } from "@/components/ui/grid-background";
 import { buildDeviceAuthorizationHref, buildLoginHref } from "@/lib/skills/routes";
 import { authClient } from "@/lib/auth/auth-client";
 import Loader from "@/components/loader";
@@ -114,7 +115,7 @@ function DeviceAuthorizationContent() {
 
   return (
     <main className="relative min-h-[calc(100vh-52px)] overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_65%,transparent)_1px,transparent_1px)] bg-[size:34px_34px] opacity-30" />
+      <GridBackground intensity={65} className="opacity-30" />
 
       <section className="relative mx-auto flex min-h-[calc(100vh-52px)] w-full max-w-3xl items-center px-4 py-10 sm:px-6">
         <Card className="w-full border border-border bg-background/90 backdrop-blur-sm">

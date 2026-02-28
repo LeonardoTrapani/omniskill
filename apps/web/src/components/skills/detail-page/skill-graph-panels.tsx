@@ -6,6 +6,7 @@ import {
   type OnNodeClick,
 } from "@/components/skills/graph/force-graph";
 import { GraphFill } from "@/components/skills/graph-fill";
+import { GridBackground } from "@/components/ui/grid-background";
 import { SkillPanel } from "@/components/skills/skill-panel";
 
 function SkillGraphPanelContent({
@@ -44,9 +45,15 @@ function SkillGraphPanelContent({
   }
 
   return mobile ? (
-    <ForceGraph data={data} focusNodeId={focusNodeId} height={360} onNodeClick={onNodeClick} />
+    <div className="relative overflow-hidden">
+      <GridBackground className="opacity-32" />
+      <ForceGraph data={data} focusNodeId={focusNodeId} height={360} onNodeClick={onNodeClick} />
+    </div>
   ) : (
-    <GraphFill data={data} focusNodeId={focusNodeId} onNodeClick={onNodeClick} />
+    <>
+      <GridBackground className="opacity-32" />
+      <GraphFill data={data} focusNodeId={focusNodeId} onNodeClick={onNodeClick} />
+    </>
   );
 }
 
