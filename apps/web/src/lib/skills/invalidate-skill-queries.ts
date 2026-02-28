@@ -21,6 +21,9 @@ export async function invalidateSkillEditQueries(skillId: string) {
     queryClient.invalidateQueries({
       queryKey: trpc.skills.getById.queryKey({ id: skillId }),
     }),
+    queryClient.invalidateQueries({
+      queryKey: trpc.skills.getById.queryKey({ id: skillId, linkMentions: true }),
+    }),
     invalidateSkillCollectionQueries(skillId),
   ]);
 }

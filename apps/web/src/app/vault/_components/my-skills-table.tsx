@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { buildSkillEditHref, buildSkillHref } from "@/lib/skills/routes";
+import { buildSkillHref } from "@/lib/skills/routes";
 import { trpc } from "@/lib/api/trpc";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +131,7 @@ export default function MySkillsTable({ onDelete, height, className }: MySkillsT
                       disabled={skill.isDefault}
                       onClick={() => {
                         if (!skill.isDefault) {
-                          router.push(buildSkillEditHref(skill.id));
+                          router.push(`${buildSkillHref(skill.id)}?mode=edit`);
                         }
                       }}
                     >

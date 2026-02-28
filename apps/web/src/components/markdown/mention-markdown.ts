@@ -9,7 +9,7 @@ import {
   type MentionType,
 } from "@better-skills/markdown/persisted-mentions";
 
-const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\(([^)]+)\)/g;
+const MARKDOWN_LINK_REGEX = /\[((?:`[^`]*`|\\.|[^\]])+)\]\(([^)]+)\)/g;
 const SCHEME_RE = /^[a-z][a-z\d+\-.]*:/i;
 
 interface MentionTarget {

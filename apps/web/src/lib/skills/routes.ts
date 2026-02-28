@@ -9,8 +9,8 @@ export function buildSkillHref(skillId: string) {
   return `/vault/skills/${encodedId}` as Route;
 }
 
-export function buildSkillEditHref(skillId: string) {
-  return `${buildSkillHref(skillId)}/edit` as Route;
+export function buildSkillCreateHref() {
+  return "/vault/skills/new" as Route;
 }
 
 export function buildResourceHref(skillId: string, resourcePath: string) {
@@ -65,7 +65,6 @@ export function resolveEditorNavigationHref(skillId: string, href: string): Rout
 
   const url = new URL(href, "http://localhost");
   const skillHref = buildSkillHref(skillId);
-  const editHref = buildSkillEditHref(skillId);
 
   if (url.pathname === dashboardRoute) {
     return dashboardRoute;
@@ -73,10 +72,6 @@ export function resolveEditorNavigationHref(skillId: string, href: string): Rout
 
   if (url.pathname === skillHref) {
     return skillHref;
-  }
-
-  if (url.pathname === editHref) {
-    return editHref;
   }
 
   const resourcePrefix = `${skillHref}/resources/`;

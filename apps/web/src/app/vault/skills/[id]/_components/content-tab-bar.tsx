@@ -11,11 +11,13 @@ export function ContentTabBar({
   activeTabId,
   onSwitch,
   onClose,
+  isEditing = false,
 }: {
   tabs: ContentTab[];
   activeTabId: string;
   onSwitch: (tabId: string) => void;
   onClose: (tabId: string) => void;
+  isEditing?: boolean;
 }) {
   const activeRef = useRef<HTMLButtonElement>(null);
 
@@ -47,6 +49,15 @@ export function ContentTabBar({
             {isActive && <span className="absolute inset-x-0 bottom-0 h-[2px] bg-primary" />}
 
             <span className="max-w-[160px] truncate">{tab.label}</span>
+            {isSkillTab && isEditing && (
+              <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-amber-500">
+                <span className="relative flex size-1.5">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-500 opacity-75" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-amber-500" />
+                </span>
+                Editing
+              </span>
+            )}
 
             {/* Close button (not on skill tab) */}
             {!isSkillTab && (

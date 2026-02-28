@@ -4,9 +4,9 @@ import type { Route } from "next";
 
 import { getInternalDashboardHref, parseMentionHref } from "@/components/markdown/mention-markdown";
 import { ResourceHoverLink } from "@/components/skills/resource-link";
+import { SkillHoverLink } from "@/components/skills/skill-link";
 import { Separator } from "@/components/ui/separator";
 import type { SkillResourceReference } from "@/lib/skills/resource-links";
-import { buildSkillHref } from "@/lib/skills/routes";
 
 export function createMarkdownComponents(options: {
   skillId: string;
@@ -54,12 +54,12 @@ export function createMarkdownComponents(options: {
       if (mention?.type === "skill") {
         const targetId = mention.targetId;
         return (
-          <Link
-            href={buildSkillHref(targetId)}
+          <SkillHoverLink
+            skillId={targetId}
             className="text-primary underline underline-offset-4 break-all"
           >
             {children}
-          </Link>
+          </SkillHoverLink>
         );
       }
 

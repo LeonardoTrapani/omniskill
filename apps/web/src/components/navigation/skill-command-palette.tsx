@@ -31,7 +31,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/skills/use-skill-search";
 import { authClient } from "@/lib/auth/auth-client";
 import { trpc } from "@/lib/api/trpc";
-import { buildResourceResponsiveHref } from "@/lib/skills/routes";
+import { buildResourceResponsiveHref, buildSkillCreateHref } from "@/lib/skills/routes";
 import { cn } from "@/lib/utils";
 import { useIsDesktopLg } from "@/hooks/use-is-desktop-lg";
 import {
@@ -291,7 +291,7 @@ export function SkillCommandPalette({
         description: "Start from scratch",
         icon: <Plus className="size-4" />,
         keywords: ["create", "new", "skill", "add"],
-        action: () => runAndClose(() => {}),
+        action: () => runAndClose(() => navigateTo(buildSkillCreateHref())),
       },
       {
         id: "settings",

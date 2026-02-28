@@ -91,8 +91,9 @@ export function useMentionAutocomplete(options: {
   skillId?: string;
   editorContainerRef: React.RefObject<HTMLElement | null>;
   onInsert: (item: MentionItem, mentionRange: Range, query: string) => void;
+  active?: boolean;
 }) {
-  const { skillId, editorContainerRef, onInsert } = options;
+  const { skillId, editorContainerRef, onInsert, active = true } = options;
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -209,6 +210,10 @@ export function useMentionAutocomplete(options: {
   );
 
   useEffect(() => {
+    if (!active) {
+      return;
+    }
+
     const container = editorContainerRef.current;
     if (!container) {
       return;
@@ -235,7 +240,7 @@ export function useMentionAutocomplete(options: {
       container.removeEventListener("keyup", onEditorActivity, { capture: true });
       container.removeEventListener("click", onEditorActivity, { capture: true });
     };
-  }, [editorContainerRef, checkForMention, handleKeyDown]);
+  }, [active, editorContainerRef, checkForMention, handleKeyDown]);
 
   return {
     open,

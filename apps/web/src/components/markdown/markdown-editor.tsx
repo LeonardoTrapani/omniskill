@@ -33,7 +33,7 @@ export default function MarkdownEditor({
 
   return (
     <MDXEditor
-      className={resolvedTheme === "dark" ? "dark-theme dark-editor md:p-5 p-3" : "md:p-5 p-3"}
+      className={resolvedTheme === "dark" ? "dark-theme dark-editor" : ""}
       contentEditableClassName="mdx-editor-content"
       {...(overlayContainer ? { overlayContainer } : {})}
       plugins={[

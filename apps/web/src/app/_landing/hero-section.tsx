@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { Copy, Check, ArrowRight } from "lucide-react";
+import { Copy, Check, ArrowRight, Github } from "lucide-react";
 import { motion } from "motion/react";
 
 import { authClient } from "@/lib/auth/auth-client";
@@ -72,10 +72,9 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.18 }}
-            className="max-w-md text-base leading-relaxed text-muted-foreground sm:px-0 px-6"
+            className="max-w-lg text-base leading-relaxed text-muted-foreground sm:px-0 px-6"
           >
-            Build, share, and manage a graph of reusable skills for your AI agents. It&rsquo;s also
-            open source.
+            Build, share, and manage a graph of reusable skills for your AI agents.
           </motion.p>
 
           <motion.div
@@ -90,17 +89,28 @@ export default function HeroSection({ skillCount }: { skillCount: number }) {
                 className="h-11 min-w-0 flex-1 gap-2 px-4 text-sm sm:px-7"
                 render={<Link href={ctaHref} />}
               >
-                {mounted && session ? "Go to Vault" : "Get Started"}
-                <ArrowRight className="size-3.5" data-icon="inline-end" />
+                <span className="flex items-center gap-2">
+                  {mounted && session ? "Go to Vault" : "Get Started"}
+                  <ArrowRight className="size-3.5" data-icon="inline-end" />
+                </span>
               </Button>
 
               <Button
                 variant="outline"
                 size="lg"
-                className="h-11 min-w-0 flex-1 px-4 text-sm sm:px-7"
-                render={<Link href="#pricing" />}
+                className="h-11 min-w-0 flex-1 gap-2 text-sm justify-center items-center"
+                render={
+                  <Link
+                    href="https://github.com/paoloauletta/better-skills"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
               >
-                See Pricing
+                <span className="flex items-center gap-2">
+                  See on GitHub
+                  <Github className="size-3.5" />
+                </span>
               </Button>
             </div>
 
