@@ -117,6 +117,7 @@ function SkillDetailInner({ id }: { id: string }) {
   const hasMountedRef = useRef(false);
   const initialMarkdownRef = useRef("");
   const lastSubmittedMarkdownRef = useRef("");
+  const [draftMarkdown, setDraftMarkdown] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
   const getActiveEditor = useCallback(
@@ -157,6 +158,7 @@ function SkillDetailInner({ id }: { id: string }) {
     if (!data) return;
     initialMarkdownRef.current = editorMarkdown;
     lastSubmittedMarkdownRef.current = editorMarkdown;
+    setDraftMarkdown(editorMarkdown);
     setHasChanges(false);
   }, [data, editorMarkdown]);
 
@@ -260,6 +262,7 @@ function SkillDetailInner({ id }: { id: string }) {
 
   const exitEditMode = useCallback(() => {
     getActiveEditor()?.setMarkdown(initialMarkdownRef.current);
+    setDraftMarkdown(initialMarkdownRef.current);
     setHasChanges(false);
     setIsEditing(false);
   }, [getActiveEditor]);
@@ -288,21 +291,43 @@ function SkillDetailInner({ id }: { id: string }) {
   }, [exitEditMode, pendingAction, router]);
 
   const handleSave = useCallback(() => {
-    const markdown = getActiveEditor()?.getMarkdown();
+    const markdown = getActiveEditor()?.getMarkdown() ?? draftMarkdown;
     if (markdown == null || !data) return;
     lastSubmittedMarkdownRef.current = markdown;
     saveMutation.mutate({
       id: data.id,
       skillMarkdown: editorMarkdownToStorageMarkdown(markdown),
     });
-  }, [data, getActiveEditor, saveMutation]);
+  }, [data, draftMarkdown, getActiveEditor, saveMutation]);
 
-  const handleChange = useCallback(() => {
+  const handleChange = useCallback((nextMarkdown: string) => {
     if (!hasMountedRef.current) return;
-    const currentMarkdown = getActiveEditor()?.getMarkdown();
-    if (currentMarkdown == null) return;
-    setHasChanges(currentMarkdown !== initialMarkdownRef.current);
-  }, [getActiveEditor]);
+    setDraftMarkdown(nextMarkdown);
+    setHasChanges(nextMarkdown !== initialMarkdownRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!hasChanges || saveMutation.isPending) {
+        return;
+      }
+
+      handleSave();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleSave, hasChanges, isEditing, saveMutation.isPending]);
 
   const handleMentionInsert = useCallback(
     (item: MentionItem, mentionRange: Range, query: string) => {
@@ -365,8 +390,10 @@ function SkillDetailInner({ id }: { id: string }) {
 
           if (cleanedMarkdown !== afterInsertMarkdown) {
             activeEditor?.setMarkdown(cleanedMarkdown);
+            setDraftMarkdown(cleanedMarkdown);
             setHasChanges(cleanedMarkdown !== initialMarkdownRef.current);
           } else {
+            setDraftMarkdown(afterInsertMarkdown);
             setHasChanges(afterInsertMarkdown !== initialMarkdownRef.current);
           }
         }
@@ -394,6 +421,7 @@ function SkillDetailInner({ id }: { id: string }) {
 
       if (updatedMarkdown !== currentMarkdown) {
         activeEditor?.setMarkdown(updatedMarkdown);
+        setDraftMarkdown(updatedMarkdown);
         setHasChanges(updatedMarkdown !== initialMarkdownRef.current);
       }
     },
@@ -556,12 +584,14 @@ function SkillDetailInner({ id }: { id: string }) {
               <SkillEditEditorPanel
                 id={id}
                 hasChanges={hasChanges}
-                markdown={editorMarkdown}
+                markdown={draftMarkdown}
                 editorRef={mobileEditorRef}
                 editorContainerRef={mobileEditorContainerRef}
                 mention={mention}
                 onChange={handleChange}
                 onNavigate={guardedNavigate}
+                previewMarkdown={draftMarkdown}
+                previewComponents={mobileMarkdownComponents}
               />
             ) : (
               <article className="min-w-0 break-words">
@@ -721,12 +751,14 @@ function SkillDetailInner({ id }: { id: string }) {
                   <SkillEditEditorPanel
                     id={id}
                     hasChanges={hasChanges}
-                    markdown={editorMarkdown}
+                    markdown={draftMarkdown}
                     editorRef={desktopEditorRef}
                     editorContainerRef={desktopEditorContainerRef}
                     mention={mention}
                     onChange={handleChange}
                     onNavigate={guardedNavigate}
+                    previewMarkdown={draftMarkdown}
+                    previewComponents={desktopMarkdownComponents}
                   />
                 ) : (
                   <article className="min-w-0 break-words">

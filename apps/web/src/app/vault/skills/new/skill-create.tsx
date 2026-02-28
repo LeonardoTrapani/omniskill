@@ -171,6 +171,25 @@ export default function SkillCreate() {
     });
   }, [name, slug, description, markdown, createMutation, getActiveEditor]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (!canCreate || createMutation.isPending) {
+        return;
+      }
+
+      handleCreate();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [canCreate, createMutation.isPending, handleCreate]);
+
   const handleNameChange = useCallback(
     (value: string) => {
       setName(value);

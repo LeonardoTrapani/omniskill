@@ -103,7 +103,7 @@ export async function backupCommand() {
     ui.log.info(pc.dim(`work: ${result.workDir}`));
     ui.log.info(
       pc.dim(
-        `summary: copied=${result.copiedCount}, skipped=${result.skippedCount}, failed=${result.failedCount}`,
+        `summary: discovered=${result.discoveredCount}, copied=${result.copiedCount}, skipped=${result.skippedCount}, failed=${result.failedCount}`,
       ),
     );
 

@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, stat } from "node:fs/promises";
+import { cp, mkdir, readdir, realpath, stat } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
@@ -138,31 +138,46 @@ async function listSkillDirs(root: DiscoveryRoot): Promise<string[]> {
     return [];
   }
 
+  const visited = new Set<string>();
+  const pending = [root.path];
   const folders: string[] = [];
 
-  if (root.includeSelf) {
-    const selfSkill = await stat(join(root.path, "SKILL.md")).catch(() => null);
-    if (selfSkill?.isFile()) {
-      folders.push(root.path);
-    }
-  }
+  while (pending.length > 0) {
+    const currentDir = pending.pop()!;
+    const resolvedDir = await realpath(currentDir).catch(() => currentDir);
 
-  const entries = await readdir(root.path, { withFileTypes: true });
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() && !entry.isSymbolicLink()) {
+    if (visited.has(resolvedDir)) {
       continue;
     }
 
-    const skillDir = join(root.path, entry.name);
-    const skillFile = await stat(join(skillDir, "SKILL.md")).catch(() => null);
+    visited.add(resolvedDir);
 
-    if (skillFile?.isFile()) {
-      folders.push(skillDir);
+    const skillFile = await stat(join(currentDir, "SKILL.md")).catch(() => null);
+    const isRoot = currentDir === root.path;
+
+    if (skillFile?.isFile() && (!isRoot || root.includeSelf)) {
+      folders.push(currentDir);
+    }
+
+    const entries = await readdir(currentDir, { withFileTypes: true }).catch(() => []);
+
+    for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
+      if (!entry.isDirectory() && !entry.isSymbolicLink()) {
+        continue;
+      }
+
+      const childDir = join(currentDir, entry.name);
+      const childStat = await stat(childDir).catch(() => null);
+
+      if (!childStat?.isDirectory()) {
+        continue;
+      }
+
+      pending.push(childDir);
     }
   }
 
-  return folders;
+  return folders.toSorted((a, b) => a.localeCompare(b));
 }
 
 function toBackupFolderName(index: number, folderPath: string): string {

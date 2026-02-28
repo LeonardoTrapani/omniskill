@@ -42,6 +42,7 @@ Shared markdown-safe primitives:
 - `new-resource-mentions` handles `:new:` path collection/normalization/resolution.
 - `persisted-mentions` handles UUID mention parse/remap/invalid-token detection.
 - `mention-hrefs` centralizes mention URL query + href builders.
+- `editor-mentions` centralizes href parsing plus storage<->editor markdown conversion.
 - `render-persisted-mentions` renders stored mention tokens to plain labels (download)
   or linked markdown (frontend).
 - Mention regexes use `(?<!\\)` negative lookbehind to skip backslash-escaped tokens.
@@ -59,7 +60,7 @@ Source of truth for persisted mention parsing and link writing:
 Editor and UI mention URL handling:
 
 - `mention-markdown.ts` converts between rendered links and storage mention tokens,
-  using shared mention query parsing and href builders.
+  by delegating to shared `@better-skills/markdown/editor-mentions` helpers.
 - markdown render components route mention links to skill/resource pages.
 
 ### `apps/cli`
@@ -179,8 +180,8 @@ What is already centralized:
 
 What is still duplicated (known tech debt):
 
-- Route-shape checks for mention href parsing (e.g. `/vault/skills/` vs
-  `/dashboard/skills/`) still live in web, because they are app-router concerns.
+- Route-prefix configuration still lives in web (app-router concern), even though
+  parser/rewriter logic is shared.
 - Auto-link write strategies are still split between API and auth default-sync
   entrypoints, even though parsing/render primitives are shared.
 
