@@ -1,16 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  Calendar,
-  Check,
-  Eye,
-  FileText,
-  Loader2,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Calendar, Eye, FileText } from "lucide-react";
 
 import { SkillDescription } from "@/components/skills/skill-description";
 import { Button } from "@/components/ui/button";
@@ -26,19 +15,8 @@ export function SkillDetailHeader({
   sourceUrl,
   updatedAt,
   resourcesCount,
-  canAddToVault,
-  canManageSkill,
-  onAddToVault,
-  onDelete,
-  onEdit,
-  onSave,
-  onDiscard,
-  isEditing = false,
-  hasChanges = false,
-  isSaving = false,
   compact = false,
   viewingResource,
-  showCompactActions = true,
 }: {
   slug: string;
   name: string;
@@ -48,19 +26,8 @@ export function SkillDetailHeader({
   sourceUrl?: string | null;
   updatedAt: string | Date;
   resourcesCount: number;
-  canAddToVault: boolean;
-  canManageSkill: boolean;
-  onAddToVault: () => void;
-  onDelete: () => void;
-  onEdit: () => void;
-  onSave: () => void;
-  onDiscard: () => void;
-  isEditing?: boolean;
-  hasChanges?: boolean;
-  isSaving?: boolean;
   compact?: boolean;
   viewingResource?: string | null;
-  showCompactActions?: boolean;
 }) {
   const viewingResourceName = viewingResource
     ? (viewingResource.split("/").filter(Boolean).at(-1) ?? viewingResource)
@@ -174,59 +141,6 @@ export function SkillDetailHeader({
             )}
           </div>
         </div>
-
-        {showCompactActions && (canAddToVault || canManageSkill) && (
-          <div className="flex items-center gap-3 pt-1">
-            {canAddToVault && !isEditing && (
-              <Button size="sm" className="w-full hover:bg-primary/90" onClick={onAddToVault}>
-                Add to Vault
-                <Plus className="size-3.5" />
-              </Button>
-            )}
-            {canManageSkill &&
-              (isEditing ? (
-                <>
-                  <Button variant="outline" size="sm" onClick={onDiscard}>
-                    Discard
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
-                    disabled={!hasChanges || isSaving}
-                    onClick={onSave}
-                  >
-                    {isSaving ? (
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Check className="size-3.5" aria-hidden="true" />
-                    )}
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={onEdit}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="Edit skill"
-                  >
-                    <Pencil className="size-3" aria-hidden="true" />
-                    EDIT
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onDelete}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono text-red-400/70 transition-colors hover:text-red-400"
-                    aria-label="Delete skill"
-                  >
-                    <Trash2 className="size-3" aria-hidden="true" />
-                    DELETE
-                  </button>
-                </>
-              ))}
-          </div>
-        )}
       </header>
     );
   }
@@ -237,64 +151,29 @@ export function SkillDetailHeader({
         <nav className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
           <Link
             href={dashboardRoute}
-            className="transition-colors duration-150 hover:text-foreground"
+            className="shrink-0 transition-colors duration-150 hover:text-foreground"
           >
             skills
           </Link>
-          <span className="text-border">/</span>
-          <span className="truncate font-medium text-foreground">{slug}</span>
-        </nav>
-
-        <div className="flex shrink-0 items-center gap-3">
-          {canAddToVault && !isEditing && (
-            <Button size="default" className="hover:bg-primary/90" onClick={onAddToVault}>
-              Add to Vault
-              <Plus className="size-3.5" />
-            </Button>
+          <span className="shrink-0 text-border">/</span>
+          <span
+            className={
+              viewingResourceName
+                ? "min-w-0 max-w-[34%] truncate whitespace-nowrap font-medium text-foreground"
+                : "min-w-0 truncate whitespace-nowrap font-medium text-foreground"
+            }
+          >
+            {slug}
+          </span>
+          {viewingResourceName && (
+            <>
+              <span className="shrink-0 text-border">/</span>
+              <span className="min-w-0 flex-1 truncate whitespace-nowrap text-foreground">
+                {viewingResourceName}
+              </span>
+            </>
           )}
-          {canManageSkill &&
-            (isEditing ? (
-              <>
-                <Button variant="outline" size="sm" onClick={onDiscard}>
-                  Discard
-                </Button>
-                <Button
-                  size="sm"
-                  className="border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
-                  disabled={!hasChanges || isSaving}
-                  onClick={onSave}
-                >
-                  {isSaving ? (
-                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Check className="size-3.5" aria-hidden="true" />
-                  )}
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={onEdit}
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label="Edit skill"
-                >
-                  <Pencil className="size-3" aria-hidden="true" />
-                  EDIT
-                </button>
-                <button
-                  type="button"
-                  onClick={onDelete}
-                  className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono text-red-400/70 transition-colors hover:text-red-400"
-                  aria-label="Delete skill"
-                >
-                  <Trash2 className="size-3" aria-hidden="true" />
-                  DELETE
-                </button>
-              </>
-            ))}
-        </div>
+        </nav>
       </div>
 
       <div className="space-y-2">

@@ -14,11 +14,7 @@ import { SkillPageLoadingState } from "@/components/skills/detail-page/skill-pag
 import { SkillPageShell } from "@/components/skills/detail-page/skill-page-shell";
 import { createMarkdownComponents } from "@/components/markdown/markdown-components";
 import { ResourceList } from "@/components/skills/resource-list";
-import {
-  canRenderResourceAsMarkdown,
-  getResourceDownloadName,
-  getResourceMimeType,
-} from "@/components/markdown/resource-file";
+import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { Separator } from "@/components/ui/separator";
 import { SkillPanel } from "@/components/skills/skill-panel";
 import { createResourceHrefResolver } from "@/lib/skills/resource-links";
@@ -88,8 +84,6 @@ export default function ResourceDetail({
 
   const resource = resourceQuery.data;
   const parentSkillName = skillQuery.data?.name ?? resource.skillName;
-  const resourceDownloadName = getResourceDownloadName(resource.path, `${resource.id}.txt`);
-  const resourceMimeType = getResourceMimeType(resource.path);
   const canRenderMarkdown = canRenderResourceAsMarkdown(resource.path, resource.kind);
 
   return (
@@ -116,10 +110,7 @@ export default function ResourceDetail({
           <ResourceContentPanel
             canRenderMarkdown={canRenderMarkdown}
             renderedContent={resource.renderedContent}
-            rawContent={resource.content}
             markdownComponents={markdownComponents}
-            downloadName={resourceDownloadName}
-            mimeType={resourceMimeType}
           />
 
           <SkillPanel

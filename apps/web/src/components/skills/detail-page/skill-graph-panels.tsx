@@ -62,11 +62,13 @@ export function MobileSkillGraphPanel({
   isLoading,
   isError,
   focusNodeId,
+  onNodeClick,
 }: {
   data?: GraphData;
   isLoading: boolean;
   isError: boolean;
   focusNodeId: string;
+  onNodeClick?: OnNodeClick;
 }) {
   return (
     <div className="lg:hidden">
@@ -82,6 +84,7 @@ export function MobileSkillGraphPanel({
           isError={isError}
           focusNodeId={focusNodeId}
           mobile
+          onNodeClick={onNodeClick}
         />
       </SkillPanel>
     </div>

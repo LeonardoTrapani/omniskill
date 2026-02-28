@@ -2,15 +2,13 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { Search, Plus, ArrowRight, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { useAddSkillFlow } from "@/hooks/skills/use-add-skill-flow";
 import { buildSkillHref } from "@/lib/skills/routes";
 import { useSkillSearch } from "@/hooks/skills/use-skill-search";
 import { trpc } from "@/lib/api/trpc";
 import { cn } from "@/lib/utils";
-import AddSkillModal from "@/components/skills/add-skill-modal";
 
 /* ── Row reveal animation ──────────────────────────────────────────── */
 const ROW_ANIMATION_STYLE = `
@@ -31,7 +29,6 @@ let lastSearchKey = "";
 interface SkillsTableProps {
   limit?: number;
   showSearch?: boolean;
-  showViewAll?: boolean;
   infiniteScroll?: boolean;
   initialSearch?: string;
   className?: string;
@@ -40,15 +37,11 @@ interface SkillsTableProps {
 export default function SkillsTable({
   limit,
   showSearch = true,
-  showViewAll = true,
   infiniteScroll = false,
   initialSearch = "",
   className,
 }: SkillsTableProps) {
   const [search, setSearch] = useState(initialSearch);
-  const { selectedSkill, modalOpen, openAddSkillFlow, closeAddSkillFlow } = useAddSkillFlow({
-    loginNext: "/skills",
-  });
 
   const pageSize = limit ?? 50;
   const hasSearchQuery = search.trim().length > 0;
@@ -231,37 +224,25 @@ export default function SkillsTable({
             {!tableLoading &&
               !tableError &&
               skills.map((skill, index) => (
-                <div
+                <Link
                   key={skill.id}
+                  href={buildSkillHref(skill.id)}
                   style={getRowStyle(skill.id)}
-                  className="group flex items-center justify-between gap-4 border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/50"
+                  className="group flex items-center gap-4 border-b border-border px-5 py-2.5 transition-colors hover:bg-secondary/50"
                 >
                   <span className="text-sm text-neutral-300 tabular-nums shrink-0">
                     {index + 1}
                   </span>
 
-                  <Link href={buildSkillHref(skill.id)} className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
-                        {skill.name}
-                      </span>
-                      <span className="text-[10px] font-sans text-muted-foreground truncate">
-                        {getDescription(skill)}
-                      </span>
-                    </div>
-                  </Link>
-
-                  <div className="flex shrink-0 justify-end">
-                    <button
-                      type="button"
-                      onClick={() => openAddSkillFlow(skill)}
-                      className="flex items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all duration-150 hover:border-primary/40 hover:text-primary"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span className="hidden sm:inline">Add</span>
-                    </button>
+                  <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                      {skill.name}
+                    </span>
+                    <span className="text-[10px] font-sans text-muted-foreground truncate">
+                      {getDescription(skill)}
+                    </span>
                   </div>
-                </div>
+                </Link>
               ))}
 
             {(infiniteScroll || hasSearchQuery) && !tableLoading && !tableError && (
@@ -289,30 +270,14 @@ export default function SkillsTable({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-border px-5 py-3 flex items-center justify-between">
+          <div className="border-t border-border px-5 py-3 flex items-center">
             <span className="text-xs text-muted-foreground font-mono">
               {skills.length} skill{skills.length !== 1 ? "s" : ""}
               {hasSearchQuery ? (hasMoreResults ? "+" : "") : nextCursor ? "+" : ""}
             </span>
-            {showViewAll && (
-              <Link
-                href="/skills"
-                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/90 transition-colors"
-              >
-                View all skills
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            )}
           </div>
         </div>
       </div>
-
-      <AddSkillModal
-        key={selectedSkill?.id ?? "none"}
-        open={modalOpen}
-        onClose={closeAddSkillFlow}
-        initialSkill={selectedSkill}
-      />
     </section>
   );
 }

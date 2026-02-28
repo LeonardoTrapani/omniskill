@@ -1,17 +1,13 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { Download, FileText, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import { FileText, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { createMarkdownComponents } from "@/components/markdown/markdown-components";
 import { markdownUrlTransform } from "@/components/markdown/markdown-url-transform";
-import {
-  canRenderResourceAsMarkdown,
-  getResourceDownloadName,
-  getResourceMimeType,
-} from "@/components/markdown/resource-file";
+import { canRenderResourceAsMarkdown } from "@/components/markdown/resource-file";
 import { useResourceContent } from "@/hooks/skills/use-resource-tabs";
 import {
   createResourceHrefResolver,
@@ -64,38 +60,10 @@ export function ResourceTabContent({
   }
 
   const canRender = canRenderResourceAsMarkdown(data.path, data.kind);
-  const downloadName = getResourceDownloadName(data.path, `${data.id}.txt`);
-  const mimeType = getResourceMimeType(data.path);
-
-  const handleDownload = useCallback(() => {
-    const blob = new Blob([data.content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = downloadName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [data.content, downloadName, mimeType]);
-
-  const downloadAction = (
-    <div className="mb-4 flex items-center justify-end">
-      <button
-        type="button"
-        onClick={handleDownload}
-        className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <Download className="size-3" aria-hidden="true" />
-        DOWNLOAD FILE
-      </button>
-    </div>
-  );
 
   if (!canRender) {
     return (
       <div className="max-w-4xl mx-auto px-8 xl:px-12 py-8">
-        {downloadAction}
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-5 py-8 text-center">
           <FileText className="size-8 text-neutral-300" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">This file cannot be rendered as markdown.</p>
@@ -106,8 +74,7 @@ export function ResourceTabContent({
 
   return (
     <div className="max-w-4xl mx-auto px-8 xl:px-12 py-8">
-      {downloadAction}
-      <article className="min-w-0 break-words">
+      <article className="min-w-0 break-words lg:mt-3">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={markdownComponents}

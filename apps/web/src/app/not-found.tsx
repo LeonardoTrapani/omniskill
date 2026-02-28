@@ -422,14 +422,6 @@ export default function NotFound() {
               <ArrowLeft className="size-3.5" data-icon="inline-start" />
               Back to home
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-11 px-7 text-sm"
-              render={<Link href="/skills" />}
-            >
-              Browse skills
-            </Button>
           </motion.div>
 
           {/* Bottom decorative label */}

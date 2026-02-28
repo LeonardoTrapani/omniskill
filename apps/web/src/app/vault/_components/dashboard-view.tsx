@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Hexagon, Warehouse } from "lucide-react";
 
-import DeleteSkillDialog from "@/app/vault/_components/delete-skill-dialog";
 import { GridBackground } from "@/components/ui/grid-background";
 import MySkillsTable from "@/app/vault/_components/my-skills-table";
 import SkillGraph from "@/app/vault/_components/skill-graph";
@@ -15,10 +14,6 @@ export default function DashboardView() {
   const [backgroundHeight, setBackgroundHeight] = useState(680);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const panelsGridRef = useRef<HTMLDivElement>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
 
   useEffect(() => {
     const updatePanelHeight = () => {
@@ -123,34 +118,19 @@ export default function DashboardView() {
               hidden={mobileTab !== "vault"}
               className={mobileTab === "vault" ? "" : "hidden"}
             >
-              <MySkillsTable
-                height={panelHeight}
-                onDelete={(skillId, skillName) => setDeleteTarget({ id: skillId, name: skillName })}
-              />
+              <MySkillsTable height={panelHeight} />
             </div>
           </div>
 
           <div className="hidden lg:block" style={{ height: backgroundHeight }}>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-6">
               <div className="pointer-events-auto h-[75svh] w-[min(380px,calc(100vw-3rem))]">
-                <MySkillsTable
-                  className="h-full shadow-[0_20px_45px_color-mix(in_oklab,var(--background)_45%,transparent)]"
-                  onDelete={(skillId, skillName) =>
-                    setDeleteTarget({ id: skillId, name: skillName })
-                  }
-                />
+                <MySkillsTable className="h-full shadow-[0_20px_45px_color-mix(in_oklab,var(--background)_45%,transparent)]" />
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <DeleteSkillDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        skillId={deleteTarget?.id ?? null}
-        skillName={deleteTarget?.name ?? null}
-      />
     </div>
   );
 }

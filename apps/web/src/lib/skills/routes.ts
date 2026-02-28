@@ -9,10 +9,6 @@ export function buildSkillHref(skillId: string) {
   return `/vault/skills/${encodedId}` as Route;
 }
 
-export function buildSkillCreateHref() {
-  return "/vault/skills/new" as Route;
-}
-
 export function buildResourceHref(skillId: string, resourcePath: string) {
   const encodedPath = encodeResourcePath(resourcePath);
 
@@ -56,43 +52,4 @@ export function buildDeviceAuthorizationHref(userCode?: string) {
   }
 
   return `${deviceRoute}?user_code=${encodeURIComponent(userCode)}` as Route;
-}
-
-export function resolveEditorNavigationHref(skillId: string, href: string): Route | null {
-  if (!href.startsWith("/")) {
-    return null;
-  }
-
-  const url = new URL(href, "http://localhost");
-  const skillHref = buildSkillHref(skillId);
-
-  if (url.pathname === dashboardRoute) {
-    return dashboardRoute;
-  }
-
-  if (url.pathname === skillHref) {
-    return skillHref;
-  }
-
-  const resourcePrefix = `${skillHref}/resources/`;
-  if (url.pathname.startsWith(resourcePrefix)) {
-    const encodedPath = url.pathname.slice(resourcePrefix.length);
-    if (!encodedPath) {
-      return null;
-    }
-
-    const decodedPath = encodedPath
-      .split("/")
-      .filter(Boolean)
-      .map((segment) => decodeURIComponent(segment))
-      .join("/");
-
-    if (!decodedPath) {
-      return null;
-    }
-
-    return buildResourceHref(skillId, decodedPath);
-  }
-
-  return null;
 }
